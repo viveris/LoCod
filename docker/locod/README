@@ -1,0 +1,16 @@
+# Locod docker image
+This Dockerfile allows to generate the LoCoD docker image. It is based on the vivado docker image.
+
+## Building docker image
+This image shall be built after the vivado image.
+
+Run the command below to build the image :
+
+	docker build -t locod:0.2 .
+
+When image is built, it is viewable in docker images list:
+
+	root@dockerHugo:~/docker/vivado# docker images 
+	REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+	locod               0.2                 1cad0cd4a5eb        31 minutes ago      78.1GB
+
