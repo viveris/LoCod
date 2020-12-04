@@ -7,12 +7,16 @@ close all
 
 % Load Image
 
-load('mandi_input_image'); 
+load('mandi_input_image');
 
 % Motif bayer   |B G|
 %               |G R|
 
 Imagette   =   I(1+500:1024+500,1+1500:1024+1500); %crop image
+
+
+fileID = fopen('imagette.bin', 'w');
+fwrite(fileID, Imagette);
 
 %
 
