@@ -20,6 +20,9 @@
 /* Physical memory ADDR */
 #define MEM_DMA_BASE 0x40000000
 
+#define DMA_ADDR(phy_addr) (phy_addr - MEM_DMA_BASE) >> 2
+
+
 void set_in_1(uint32_t value);
 void set_in_2(uint32_t value);
 void set_out_1(uint32_t value);
@@ -30,6 +33,6 @@ int init_dma();
 int map_sync(void *virt_ptr, size_t len);
 int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr);
 int unmap_phys_addr(void *virt_ptr, size_t len);
-
+void print_ctrl_st_reg(void);
 
 #endif /* __MAP_MEMORY_H__ */

@@ -16,13 +16,6 @@ union reg_ctrl {
 		unsigned int st_end           : 1;
 	} bits;
 };
-/* TODO remove if bitfield ok */
-#define REG_CTRL_BIT_RESET       1<<1
-#define REG_CTRL_BIT_AUTORESTART 1<<2
-#define REG_ST_BIT_RESET         1<<3
-#define REG_ST_BIT_START         1<<4
-#define REG_ST_BIT_RUN           1<<8
-#define REG_ST_BIT_END           1<<9
 
 #define REG_IN_1                 0xA0020000
 #define REG_IN_2                 0xA0030000
@@ -52,7 +45,7 @@ static int open_devmem()
 	/* /dev/mem is an interface allowing to access the physical memory addr */
 	fd = open("/dev/mem", O_RDWR);
 	if (fd == -1) {
-		perror("Cannot open /dev/mem file\n");
+		perror("Cannot open /dev/mem file");
 		return -1;
 	}
 
@@ -71,7 +64,7 @@ int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr)
 	/* Map physical address in virtual mem, virtual mem addr is stored in virt_ptr */
 	*virt_ptr = mmap(NULL, len, PROT_WRITE | PROT_READ, MAP_SHARED, fd, phy_addr);
 	if (*virt_ptr == MAP_FAILED) {
-		perror("Cannot mmap\n");
+		perror("Cannot mmap");
 		return -1;
 	}
 
@@ -81,7 +74,7 @@ int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr)
 int map_sync(void *virt_ptr, size_t len)
 {
 	if ( msync(virt_ptr, sizeof(int), MS_SYNC) ) {
-		perror("Cannot sync\n");
+		perror("Cannot sync");
 		return -1;
 	}
 
@@ -91,7 +84,7 @@ int map_sync(void *virt_ptr, size_t len)
 int unmap_phys_addr(void *virt_ptr, size_t len)
 {
 	if ( munmap(virt_ptr, sizeof(int)) ) {
-		perror("Cannot unmap\n");
+		perror("Cannot unmap");
 		return -1;
 	}
 
@@ -196,5 +189,20 @@ void set_in_2(uint32_t value)
 void set_out_1(uint32_t value)
 {
 	*ptr_reg_out_1 = value;
+}
+
+void print_ctrl_st_reg(void)
+{
+	union reg_ctrl reg_ctrl_val = { 0 };
+	reg_ctrl_val.reg = ptr_reg_ctrl_st->reg ;
+
+	fprintf(stdout, "Ctrl / Status register value : 0x%X\n", reg_ctrl_val.reg);
+	fprintf(stdout, "Start bit = %u\n", reg_ctrl_val.bits.ctrl_start);
+	fprintf(stdout, "Reset bit = %u\n", reg_ctrl_val.bits.ctrl_reset);
+	fprintf(stdout, "Autorestart bit = %u\n", reg_ctrl_val.bits.ctrl_autorestart);
+	fprintf(stdout, "Status reset bit = %u\n", reg_ctrl_val.bits.st_reset);
+	fprintf(stdout, "Status start bit = %u\n", reg_ctrl_val.bits.st_start);
+	fprintf(stdout, "Status running bit = %u\n", reg_ctrl_val.bits.st_run);
+	fprintf(stdout, "Status end bit = %u\n", reg_ctrl_val.bits.st_end);
 }
 
