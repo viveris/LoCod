@@ -15,8 +15,8 @@ void multiplication(int *a, int *b, int *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	int a = atoi(argv[1]);
-	int b = atoi(argv[2]);
+	int a = 16;
+	int b = 4;
 	int result = 0;
 
 	struct param param_a = { 0 };
@@ -31,7 +31,7 @@ int main(int argc, char **argv)
 	param_result.p = &result;
 	param_result.len = sizeof(int);
 
-	FPGA(add, param_a, param_b, param_result);
+	FPGA(addition, param_a, param_b, param_result);
 	fprintf(stdout, "Add result = %d\n", result);
 
 	CPU(multiplication, &a, &b, &result);
