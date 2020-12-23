@@ -1,2 +1,29 @@
 # LoCoD
 
+## Tips for petalinux build for ultra96 board
+First, export Hardware from Vivado.
+
+Second, create petalinux project
+
+    petalinux-create -t project -n ultra96-locod --template zynqMP
+
+Third, get hardware description in petalinux project
+
+    petalinux-config --get-hw-description ../project_path/
+
+Forth, configure petalinux project for ultra96 board
+
+    petalinux-config ---> DTG Settings ---> (zcu100-revc) MACHINE_NAME
+    petalinux-config ---> u-boot Configuration ---> (xilinx_zynqmp_zcu100_revC_defconfig) u-boot config target
+    petalinux-config ---> Yocto Settings ---> (ultra96-zynqmp) YOCTO_MACHINE_NAME
+
+Build project
+
+    petalinux-build
+
+Build boot imgages
+
+    petalinux-package --boot --format BIN --fsbl images/linux/zynqmp_fsbl.elf --u-boot images/linux/u-boot.elf --pmufw images/linux/pmufw.elf --fpga images/linux/system.bit
+
+
+
