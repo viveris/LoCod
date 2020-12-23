@@ -20,7 +20,7 @@
 /* Physical memory ADDR */
 #define MEM_DMA_BASE 0x40000000
 
-#define DMA_ADDR(phy_addr) (phy_addr - MEM_DMA_BASE) >> 2
+#define DMA_ADDR(phy_addr) (phy_addr - MEM_DMA_BASE)
 
 
 void set_in_1(uint32_t value);

@@ -43,7 +43,7 @@ static uint32_t *ptr_reg_iter        = NULL;
 static int open_devmem()
 {
 	/* /dev/mem is an interface allowing to access the physical memory addr */
-	fd = open("/dev/mem", O_RDWR);
+	fd = open("/dev/mem", O_RDWR | O_SYNC);
 	if (fd == -1) {
 		perror("Cannot open /dev/mem file");
 		return -1;
