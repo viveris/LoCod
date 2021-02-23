@@ -1,6 +1,6 @@
 CC ?= gcc
 CFLAGS += -I../../src
-OBJ = map_memory.o main.o
+OBJ = map_memory.o time_measure.o main.o
 BAMBU_OPT = --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 -DLOCOD_FPGA
 
 all: locod-cpu fpga
@@ -9,6 +9,9 @@ main.o: main.c ../../src/map_memory.h ../../src/locod.h
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 map_memory.o: ../../src/map_memory.c ../../src/map_memory.h
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+time_measure.o: ../../src/time_measure.c ../../src/time_measure.h
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 locod-cpu: $(OBJ)

@@ -17,6 +17,8 @@
 /* Inlcude for usleep */
 #include <time.h>
 
+#define FPGA_FREQ_Hz 100000000 /* 100 Mhz */
+
 /* Physical memory ADDR */
 #define MEM_DMA_BASE 0x40000000
 
@@ -26,6 +28,7 @@
 void set_in_1(uint32_t value);
 void set_in_2(uint32_t value);
 void set_out_1(uint32_t value);
+uint32_t get_reg_dur();
 
 int wait_process();
 int start_process();

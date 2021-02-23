@@ -176,6 +176,12 @@ int wait_process()
 	return 0;
 }
 
+uint32_t get_reg_dur()
+{
+	fprintf(stdout, "%u %u", *ptr_reg_dur_latched, *ptr_reg_dur);
+	return *ptr_reg_dur_latched;
+}
+
 void set_in_1(uint32_t value)
 {
 	*ptr_reg_in_1 = value;
