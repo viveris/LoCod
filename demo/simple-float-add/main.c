@@ -19,15 +19,15 @@ int main(int argc, char **argv)
 	float b = 3.34;
 	float result = 0;
 
-	struct param param_a = { 0 };
+	struct fpga_param param_a = { 0 };
 	param_a.p = &a;
 	param_a.len = sizeof(float);
 
-	struct param param_b = { 0 };
+	struct fpga_param param_b = { 0 };
 	param_b.p = &b;
 	param_b.len = sizeof(float);
 
-	struct param param_result = { 0 };
+	struct fpga_param param_result = { 0 };
 	param_result.p = &result;
 	param_result.len = sizeof(float);
 

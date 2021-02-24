@@ -1,5 +1,6 @@
 *.swp
 *.o
 *.v
-locod-cpu
-bambu
+*locod-cpu
+*bambu
+cscope.out

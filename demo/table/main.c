@@ -27,15 +27,15 @@ int main(int argc, char **argv)
 	b[0] = 3;
 	b[1] = 5;
 
-	struct param param_a = { 0 };
+	struct fpga_param param_a = { 0 };
 	param_a.p = a;
 	param_a.len = 2*sizeof(int);
 
-	struct param param_b = { 0 };
+	struct fpga_param param_b = { 0 };
 	param_b.p = b;
 	param_b.len = 2*sizeof(int);
 
-	struct param param_result = { 0 };
+	struct fpga_param param_result = { 0 };
 	param_result.p = result;
 	param_result.len = 2*sizeof(int);
 

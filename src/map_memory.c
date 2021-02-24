@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "map_memory.h"
 
 /* Registers ADDR */
@@ -26,11 +28,10 @@ union reg_ctrl {
 
 #define REG_MODE                 0x4
 
-#define POLL_PERIOD_US           100
+#define POLL_PERIOD_US           1
 
 /* File descriptor for /dev/mem open */
 static int fd = -1;
-
 
 union  reg_ctrl *ptr_reg_ctrl_st     = NULL;
 static uint32_t *ptr_reg_in_1        = NULL;
@@ -39,6 +40,11 @@ static uint32_t *ptr_reg_out_1       = NULL;
 static uint32_t *ptr_reg_dur         = NULL;
 static uint32_t *ptr_reg_dur_latched = NULL;
 static uint32_t *ptr_reg_iter        = NULL;
+
+#ifdef TIME_MEASURE
+struct timespec ts_acc_start = { 0 };
+struct timespec ts_acc_end = { 0 };
+#endif /* TIME_MEASURE */
 
 static int open_devmem()
 {
@@ -150,6 +156,65 @@ int init_dma()
 	return 0;
 }
 
+int cp_param_to_fpga(void *fpga_a, struct fpga_param *a,
+                     void *fpga_b, struct fpga_param *b)
+{
+#ifdef TIME_MEASURE
+	struct timespec t1;
+	struct timespec t2;
+	if (clock_gettime(CLOCK_MONOTONIC, &t1)) {
+		perror("Cannot get time\n");
+		return -1;
+	}
+#endif /* TIME_MEASURE */
+
+	memcpy(fpga_a, a->p, a->len);
+	memcpy(fpga_b, b->p, b->len);
+
+#ifdef TIME_MEASURE
+	if (clock_gettime(CLOCK_MONOTONIC, &t2)) {
+		perror("Cannot get time\n");
+		return -1;
+	}
+	struct timespec t_memcpy = diff_ts(&t1, &t2);
+	fprintf(stdout,
+	        "Copy parameters from CPU to FPGA: %zu "
+	        "bytes in %zu s and %zu ns\n",
+	        a->len + b->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
+#endif /* TIME_MEASURE */
+
+	return 0;
+}
+
+int cp_result_from_fpga(void *fpga_result, struct fpga_param *result)
+{
+#ifdef TIME_MEASURE
+	struct timespec t1;
+	struct timespec t2;
+	if (clock_gettime(CLOCK_MONOTONIC, &t1)) {
+		perror("Cannot get time\n");
+		return -1;
+	}
+#endif /* TIME_MEASURE */
+
+	memcpy(result->p, fpga_result, result->len);
+
+#ifdef TIME_MEASURE
+	if (clock_gettime(CLOCK_MONOTONIC, &t2)) {
+		perror("Cannot get time\n");
+		return -1;
+	}
+	struct timespec t_memcpy = diff_ts(&t1, &t2);
+	fprintf(stdout,
+	        "Copy result from FPGA to CPU: %zu "
+	        "bytes in %zu s and %zu ns\n",
+	        result->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
+#endif /* TIME_MEASURE */
+
+	return 0;
+
+}
+
 int start_process()
 {
 	if (ptr_reg_ctrl_st == NULL) {
@@ -158,6 +223,13 @@ int start_process()
 	}
 
 	ptr_reg_ctrl_st->bits.ctrl_start = 1;
+
+#ifdef TIME_MEASURE
+	if (clock_gettime(CLOCK_MONOTONIC, &ts_acc_start)) {
+		perror("Cannot get time\n");
+		return -1;
+	}
+#endif /* TIME_MEASURE */
 
 	return 0;
 }
@@ -173,12 +245,23 @@ int wait_process()
 		usleep(POLL_PERIOD_US);
 	}
 
+#ifdef TIME_MEASURE
+	if (clock_gettime(CLOCK_MONOTONIC, &ts_acc_end)) {
+		perror("Cannot get time\n");
+		return -1;
+	}
+
+	struct timespec t_processing = diff_ts(&ts_acc_start, &ts_acc_end);
+	fprintf(stdout, "Processing time: %zu s and %zu ns\n",
+	        t_processing.tv_sec, t_processing.tv_nsec);
+	fprintf(stdout, "Processing time from FPGA: %u ns\n", get_time_ns_FPGA());
+#endif /* TIME_MEASURE */
+
 	return 0;
 }
 
 uint32_t get_reg_dur()
 {
-	fprintf(stdout, "%u %u", *ptr_reg_dur_latched, *ptr_reg_dur);
 	return *ptr_reg_dur_latched;
 }
 
