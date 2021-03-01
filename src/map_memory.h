@@ -39,8 +39,8 @@ uint32_t get_reg_dur();
 int cp_param_to_fpga(void *fpga_a, struct fpga_param *a,
                      void *fpga_b, struct fpga_param *b);
 int cp_result_from_fpga(void *fpga_result, struct fpga_param *result);
-int wait_process();
-int start_process();
+int wait_accelerator();
+int start_accelerator();
 int init_dma();
 int map_sync(void *virt_ptr, size_t len);
 int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr);

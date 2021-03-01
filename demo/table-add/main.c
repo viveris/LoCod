@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	param_result.len = 2*sizeof(int);
 
 	FPGA(addition, param_a, param_b, param_result);
+	wait_accelerator();
 	fprintf(stdout, "Add result0 = %d\n", result[0]);
 	fprintf(stdout, "Add result1 = %d\n", result[1]);
 
