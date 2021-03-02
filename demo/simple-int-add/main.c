@@ -2,12 +2,12 @@
 #include "locod.h"
 #endif
 
-void addition(float *a, float *b, float *result)
+void addition(int *a, int *b, int *result)
 {
 	*result = *a + *b;
 }
 
-void multiplication(float *a, float *b, float *result)
+void multiplication(int *a, int *b, int *result)
 {
 	*result = *a * *b;
 }
@@ -15,26 +15,26 @@ void multiplication(float *a, float *b, float *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	float a = 16.25;
-	float b = 3.34;
-	float result = 0;
+	int a = 16;
+	int b = 4;
+	int result = 0;
 
 	struct fpga_param param_a = { 0 };
 	param_a.p = &a;
-	param_a.len = sizeof(float);
+	param_a.len = sizeof(int);
 
 	struct fpga_param param_b = { 0 };
 	param_b.p = &b;
-	param_b.len = sizeof(float);
+	param_b.len = sizeof(int);
 
 	struct fpga_param param_result = { 0 };
 	param_result.p = &result;
-	param_result.len = sizeof(float);
+	param_result.len = sizeof(int);
 
 	FPGA(addition, param_a, param_b, param_result);
-	fprintf(stdout, "Add result = %f\n", result);
+	fprintf(stdout, "Add result = %d\n", result);
 
 	CPU(multiplication, &a, &b, &result);
-	fprintf(stdout, "Mul result = %f\n", result);
+	fprintf(stdout, "Mul result = %d\n", result);
 }
 #endif

@@ -1,0 +1,74 @@
+image:
+  name: locod:0.3
+
+Build-table-add:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/table-add
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/table-add/locod-cpu
+      - demo/table-add/addition.v
+    expire_in: 1 day
+
+Build-table-mul:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/table-mul
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/table-mul/locod-cpu
+      - demo/table-mul/multiplication.v
+    expire_in: 1 day
+
+Build-int-add:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/simple-int-add
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/simple-int-add/locod-cpu
+      - demo/simple-int-add/addition.v
+    expire_in: 1 day
+
+Build-int-mul:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/simple-int-mul
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/simple-int-mul/locod-cpu
+      - demo/simple-int-mul/multiplication.v
+    expire_in: 1 day
+
+Build-float-add:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/simple-float-add
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/simple-float-add/locod-cpu
+      - demo/simple-float-add/addition.v
+    expire_in: 1 day
+
+Build-float-mul:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/simple-float-mul
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/simple-float-mul/locod-cpu
+      - demo/simple-float-mul/multiplication.v
+    expire_in: 1 day

@@ -39,11 +39,13 @@ int main(int argc, char **argv)
 	param_result.p = result;
 	param_result.len = 2*sizeof(int);
 
-	FPGA(addition, param_a, param_b, param_result);
+
+	CPU(addition, a, b, result);
 	fprintf(stdout, "Add result0 = %d\n", result[0]);
 	fprintf(stdout, "Add result1 = %d\n", result[1]);
 
-	CPU(multiplication, a, b, result);
+
+	FPGA(multiplication, param_a, param_b, param_result);
 	fprintf(stdout, "Mul result0 = %d\n", result[0]);
 	fprintf(stdout, "Mul result1 = %d\n", result[1]);
 }
