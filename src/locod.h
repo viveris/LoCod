@@ -26,8 +26,7 @@ struct param {
 	set_in_1(DMA_ADDR(phy_a)); \
 	set_in_2(DMA_ADDR(phy_b)); \
 	set_out_1(DMA_ADDR(phy_result)); \
-	start_process(); \
-	wait_process(); \
+	start_accelerator(); \
 	cp_result_from_fpga(fpga_result, &output); \
 	} while(0)
 

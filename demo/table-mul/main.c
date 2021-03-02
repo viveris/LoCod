@@ -46,6 +46,7 @@ int main(int argc, char **argv)
 
 
 	FPGA(multiplication, param_a, param_b, param_result);
+	wait_accelerator();
 	fprintf(stdout, "Mul result0 = %d\n", result[0]);
 	fprintf(stdout, "Mul result1 = %d\n", result[1]);
 }

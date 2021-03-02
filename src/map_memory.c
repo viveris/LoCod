@@ -215,7 +215,7 @@ int cp_result_from_fpga(void *fpga_result, struct fpga_param *result)
 
 }
 
-int start_process()
+int start_accelerator()
 {
 	if (ptr_reg_ctrl_st == NULL) {
 		fprintf(stdout, "%s not initialized\n", __func__);
@@ -234,7 +234,7 @@ int start_process()
 	return 0;
 }
 
-int wait_process()
+int wait_accelerator()
 {
 	if (ptr_reg_ctrl_st == NULL) {
 		fprintf(stdout, "%s not initialized\n", __func__);
