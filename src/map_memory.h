@@ -49,5 +49,6 @@ int init_dma();
 int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr);
 int unmap_phys_addr(void *virt_ptr, size_t len);
 void print_ctrl_st_reg(void);
+void dump_memory(void *ptr, size_t len);
 
 #endif /* __MAP_MEMORY_H__ */

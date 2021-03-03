@@ -172,6 +172,7 @@ int init_dma()
 	return 0;
 }
 
+#define MEMCPY_LEN 8
 int cp_param_to_fpga(struct fpga_param *param)
 {
 #ifdef TIME_MEASURE
@@ -193,7 +194,20 @@ int cp_param_to_fpga(struct fpga_param *param)
 		perror("Cannot mmap");
 		return -1;
 	}
-	memcpy(mmap_ptr, param->p, param->len);
+
+	/* A Bus error is encountered when we do a memcpy > to 8 bytes
+	   So the copy is limited to maximum 8 bytes */
+	int i;
+	size_t cp_len = MEMCPY_LEN;
+	for (i = 0; i<param->len; i += MEMCPY_LEN) {
+		if (i + MEMCPY_LEN > param->len) {
+			cp_len = param->len - i;
+		} else {
+			cp_len = MEMCPY_LEN;
+		}
+		fprintf(stdout, "%s - i=%d  cp_len=%zu\n", __func__, i, cp_len);
+		memcpy(mmap_ptr + i, param->p + i, cp_len);
+	}
 	munmap(mmap_ptr, param->len);
 
 #ifdef TIME_MEASURE
@@ -232,7 +246,30 @@ int cp_result_from_fpga(struct fpga_param *result)
 		perror("Cannot mmap");
 		return -1;
 	}
-	memcpy(result->p, mmap_ptr + mmapped.result_offset, result->len);
+
+	/* A Bus error is encountered when we do a memcpy > to 8 bytes
+	   So the copy is limited to maximum 8 bytes */
+	int i;
+	size_t cp_len = MEMCPY_LEN;
+	/* If result offset is not aligned on MEMCPY_LEN bytes 
+	   first copy shall be inferior to MEMCPY_LEN */
+	if (mmapped.result_offset % MEMCPY_LEN) {
+		cp_len = MEMCPY_LEN - mmapped.result_offset % MEMCPY_LEN;
+		i = cp_len;
+		memcpy(result->p, mmap_ptr + mmapped.result_offset, cp_len);
+	}
+
+	for (i; i<result->len; i += MEMCPY_LEN) {
+		if (i + MEMCPY_LEN > result->len) {
+			cp_len = result->len - i;
+		} else {
+			cp_len = MEMCPY_LEN;
+		}
+		/* TODO debug */
+		fprintf(stdout, "%s - i=%d  cp_len=%zu\n", __func__, i, cp_len);
+		memcpy(result->p + i, mmap_ptr + mmapped.result_offset + i, cp_len);
+	}
+
 	munmap(mmap_ptr, result->len);
 
 #ifdef TIME_MEASURE
@@ -336,3 +373,14 @@ void print_ctrl_st_reg(void)
 	fprintf(stdout, "Status end bit = %u\n", reg_ctrl_val.bits.st_end);
 }
 
+void dump_memory(void *ptr, size_t len)
+{
+	int i;
+	for (i=0; i<len; i++) {
+		if (i%16 == 0) {
+			fprintf(stdout, "\n");
+		}
+		fprintf(stdout, "%.2X ", ((unsigned char *)ptr)[i]);
+	}
+	fprintf(stdout, "\n");
+}
