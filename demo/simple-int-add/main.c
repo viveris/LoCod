@@ -2,40 +2,50 @@
 #include "locod.h"
 #endif
 
-void addition(int *a, int *b, int *result)
+struct param_test {
+	int a;
+	int b;
+};
+
+void addition(struct param_test *param, int *result)
 {
-	*result = *a + *b;
+	*result = param->a + param->b;
 }
 
-void multiplication(int *a, int *b, int *result)
+void multiplication(struct param_test *param, int *result)
 {
-	*result = *a * *b;
+	*result = param->a * param->b;
 }
 
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	int a = 16;
-	int b = 4;
 	int result = 0;
+	struct param_test param = { 0 };
+
+	if (argc < 3) {
+		param.a = 5;
+		param.b = 7;
+	} else {
+		param.a = atoi(argv[1]);
+		param.b = atoi(argv[2]);
+	}
+
+	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
 
 	struct fpga_param param_a = { 0 };
-	param_a.p = &a;
-	param_a.len = sizeof(int);
-
-	struct fpga_param param_b = { 0 };
-	param_b.p = &b;
-	param_b.len = sizeof(int);
+	param_a.p = &param;
+	param_a.len = sizeof(struct param_test);
 
 	struct fpga_param param_result = { 0 };
 	param_result.p = &result;
 	param_result.len = sizeof(int);
 
-	FPGA(addition, param_a, param_b, param_result);
+	FPGA(addition, param_a, param_result);
 	wait_accelerator();
-	fprintf(stdout, "Add result = %d\n", result);
+	fprintf(stdout, "A + B = %d\n", result);
 
-	CPU(multiplication, &a, &b, &result);
-	fprintf(stdout, "Mul result = %d\n", result);
+	CPU(multiplication, &param, &result);
+	fprintf(stdout, "A x B = %d\n", result);
 }
 #endif

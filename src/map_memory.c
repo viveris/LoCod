@@ -156,8 +156,7 @@ int init_dma()
 	return 0;
 }
 
-int cp_param_to_fpga(void *fpga_a, struct fpga_param *a,
-                     void *fpga_b, struct fpga_param *b)
+int cp_param_to_fpga(void *fpga_a, struct fpga_param *a)
 {
 #ifdef TIME_MEASURE
 	struct timespec t1;
@@ -169,7 +168,6 @@ int cp_param_to_fpga(void *fpga_a, struct fpga_param *a,
 #endif /* TIME_MEASURE */
 
 	memcpy(fpga_a, a->p, a->len);
-	memcpy(fpga_b, b->p, b->len);
 
 #ifdef TIME_MEASURE
 	if (clock_gettime(CLOCK_MONOTONIC, &t2)) {
@@ -180,7 +178,7 @@ int cp_param_to_fpga(void *fpga_a, struct fpga_param *a,
 	fprintf(stdout,
 	        "Copy parameters from CPU to FPGA: %zu "
 	        "bytes in %zu s and %zu ns\n",
-	        a->len + b->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
+	        a->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
 #endif /* TIME_MEASURE */
 
 	return 0;
