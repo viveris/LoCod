@@ -30,6 +30,13 @@ union reg_ctrl {
 
 #define POLL_PERIOD_US           1
 
+struct mmap_area {
+	off_t phy_addr;
+	off_t param_offset;
+	off_t result_offset;
+};
+struct mmap_area mmapped = { 0 };
+
 /* File descriptor for /dev/mem open */
 static int fd = -1;
 
@@ -68,7 +75,12 @@ int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr)
 	}
 
 	/* Map physical address in virtual mem, virtual mem addr is stored in virt_ptr */
-	*virt_ptr = mmap(NULL, len, PROT_WRITE | PROT_READ, MAP_SHARED, fd, phy_addr);
+	*virt_ptr = mmap(NULL,
+	                 len,
+	                 PROT_WRITE | PROT_READ,
+	                 MAP_SHARED,
+	                 fd,
+	                 phy_addr);
 	if (*virt_ptr == MAP_FAILED) {
 		perror("Cannot mmap");
 		return -1;
@@ -77,14 +89,18 @@ int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr)
 	return 0;
 }
 
-int map_sync(void *virt_ptr, size_t len)
+void init_accelerator_memory(off_t phy_addr,
+                             off_t param_offset,
+                             off_t result_offset)
 {
-	if ( msync(virt_ptr, sizeof(int), MS_SYNC) ) {
-		perror("Cannot sync");
-		return -1;
-	}
+	/* TODO debug */
+	fprintf(stdout,
+	        "Init accelerator memory : Addr=0x%ld, param off=%ld, result off=%ld\n",
+	        phy_addr, param_offset, result_offset);
 
-	return 0;
+	mmapped.phy_addr = phy_addr;
+	mmapped.param_offset = param_offset;
+	mmapped.result_offset = result_offset;
 }
 
 int unmap_phys_addr(void *virt_ptr, size_t len)
@@ -156,7 +172,7 @@ int init_dma()
 	return 0;
 }
 
-int cp_param_to_fpga(void *fpga_a, struct fpga_param *a)
+int cp_param_to_fpga(struct fpga_param *param)
 {
 #ifdef TIME_MEASURE
 	struct timespec t1;
@@ -167,7 +183,18 @@ int cp_param_to_fpga(void *fpga_a, struct fpga_param *a)
 	}
 #endif /* TIME_MEASURE */
 
-	memcpy(fpga_a, a->p, a->len);
+	void *mmap_ptr = mmap(NULL,
+	                      param->len,
+	                      PROT_WRITE | PROT_READ,
+	                      MAP_SHARED,
+	                      fd,
+	                      MEM_DMA_BASE + mmapped.param_offset);
+	if (mmap_ptr == MAP_FAILED) {
+		perror("Cannot mmap");
+		return -1;
+	}
+	memcpy(mmap_ptr, param->p, param->len);
+	munmap(mmap_ptr, param->len);
 
 #ifdef TIME_MEASURE
 	if (clock_gettime(CLOCK_MONOTONIC, &t2)) {
@@ -178,13 +205,13 @@ int cp_param_to_fpga(void *fpga_a, struct fpga_param *a)
 	fprintf(stdout,
 	        "Copy parameters from CPU to FPGA: %zu "
 	        "bytes in %zu s and %zu ns\n",
-	        a->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
+	        param->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
 #endif /* TIME_MEASURE */
 
 	return 0;
 }
 
-int cp_result_from_fpga(void *fpga_result, struct fpga_param *result)
+int cp_result_from_fpga(struct fpga_param *result)
 {
 #ifdef TIME_MEASURE
 	struct timespec t1;
@@ -195,7 +222,18 @@ int cp_result_from_fpga(void *fpga_result, struct fpga_param *result)
 	}
 #endif /* TIME_MEASURE */
 
-	memcpy(result->p, fpga_result, result->len);
+	void *mmap_ptr = mmap(NULL,
+	                      mmapped.param_offset + result->len,
+	                      PROT_WRITE | PROT_READ,
+	                      MAP_SHARED,
+	                      fd,
+	                      MEM_DMA_BASE);
+	if (mmap_ptr == MAP_FAILED) {
+		perror("Cannot mmap");
+		return -1;
+	}
+	memcpy(result->p, mmap_ptr + mmapped.result_offset, result->len);
+	munmap(mmap_ptr, result->len);
 
 #ifdef TIME_MEASURE
 	if (clock_gettime(CLOCK_MONOTONIC, &t2)) {
@@ -215,6 +253,9 @@ int cp_result_from_fpga(void *fpga_result, struct fpga_param *result)
 
 int start_accelerator()
 {
+	/* TODO debug */
+	fprintf(stdout, "Starting processing of accelerator\n");
+
 	if (ptr_reg_ctrl_st == NULL) {
 		fprintf(stdout, "%s not initialized\n", __func__);
 		return -1;
@@ -232,7 +273,7 @@ int start_accelerator()
 	return 0;
 }
 
-int wait_accelerator()
+int wait_accelerator(struct fpga_param *result)
 {
 	if (ptr_reg_ctrl_st == NULL) {
 		fprintf(stdout, "%s not initialized\n", __func__);
@@ -242,6 +283,8 @@ int wait_accelerator()
 	while (ptr_reg_ctrl_st->bits.st_end != 1) {
 		usleep(POLL_PERIOD_US);
 	}
+
+	cp_result_from_fpga(result);
 
 #ifdef TIME_MEASURE
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_acc_end)) {

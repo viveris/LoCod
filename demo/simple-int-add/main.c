@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	param_result.len = sizeof(int);
 
 	FPGA(addition, param_a, param_result);
-	wait_accelerator();
+	wait_accelerator(&param_result);
 	fprintf(stdout, "A + B = %d\n", result);
 
 	CPU(multiplication, &param, &result);

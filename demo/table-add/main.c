@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 	param_result.len = 2*sizeof(int);
 
 	FPGA(addition, param_a, param_result);
-	wait_accelerator();
+	wait_accelerator(&param_result);
 	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 + B2 = %d\n", result[1]);
 
