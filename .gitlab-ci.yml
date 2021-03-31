@@ -1,6 +1,18 @@
 image:
   name: locod:0.3
 
+Build-picture-demo:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/picture-demo/
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/picture-demo/locod-cpu
+      - demo/picture-demo/addition.v
+    expire_in: 1 day
+
 Build-table-add:
   script:
     - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin

@@ -49,5 +49,12 @@ int init_dma();
 int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr);
 int unmap_phys_addr(void *virt_ptr, size_t len);
 void print_ctrl_st_reg(void);
+void dump_memory(void *ptr, size_t len);
+
+#ifdef DEBUG
+#define DEBUG_PRINT(...) do{ fprintf( stdout, __VA_ARGS__ ); } while( 0 )
+#else
+#define DEBUG_PRINT(...) do{ } while ( 0 )
+#endif
 
 #endif /* __MAP_MEMORY_H__ */

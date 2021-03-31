@@ -74,6 +74,9 @@ int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr)
 		}
 	}
 
+	DEBUG_PRINT("%s - mmap of phy addr 0x%ld with size %zu bytes",
+	            __func__, phy_addr, len);
+
 	/* Map physical address in virtual mem, virtual mem addr is stored in virt_ptr */
 	*virt_ptr = mmap(NULL,
 	                 len,
@@ -93,10 +96,8 @@ void init_accelerator_memory(off_t phy_addr,
                              off_t param_offset,
                              off_t result_offset)
 {
-	/* TODO debug */
-	fprintf(stdout,
-	        "Init accelerator memory : Addr=0x%ld, param off=%ld, result off=%ld\n",
-	        phy_addr, param_offset, result_offset);
+	DEBUG_PRINT("%s - Init accelerator memory : Addr=0x%ld, param off=%ld, result off=%ld\n",
+	        __func__, phy_addr, param_offset, result_offset);
 
 	mmapped.phy_addr = phy_addr;
 	mmapped.param_offset = param_offset;
@@ -116,7 +117,7 @@ int unmap_phys_addr(void *virt_ptr, size_t len)
 int init_dma()
 {
 	if (fd != -1) {
-		fprintf(stdout, "Already initialized \n");
+		fprintf(stdout, "%s - Already initialized \n", __func__);
 		return -1;
 	}
 
@@ -167,11 +168,12 @@ int init_dma()
 	*(ptr_reg_iter + REG_MODE) = 0xFFFFFFFF;
 	(ptr_reg_ctrl_st + REG_MODE)->reg = 0x0000FF00;
 
-	fprintf(stdout, "Mapping and register mode is initialized\n");
+	fprintf(stdout, "Mapping and register are initialized\n");
 
 	return 0;
 }
 
+#define MEMCPY_LEN 8
 int cp_param_to_fpga(struct fpga_param *param)
 {
 #ifdef TIME_MEASURE
@@ -193,7 +195,20 @@ int cp_param_to_fpga(struct fpga_param *param)
 		perror("Cannot mmap");
 		return -1;
 	}
-	memcpy(mmap_ptr, param->p, param->len);
+
+	/* A Bus error is encountered when we do a memcpy > to 8 bytes
+	   So the copy is limited to maximum 8 bytes */
+	int i;
+	size_t cp_len = MEMCPY_LEN;
+	for (i = 0; i<param->len; i += MEMCPY_LEN) {
+		if (i + MEMCPY_LEN > param->len) {
+			cp_len = param->len - i;
+		} else {
+			cp_len = MEMCPY_LEN;
+		}
+		DEBUG_PRINT("%s - i=%d  cp_len=%zu\n", __func__, i, cp_len);
+		memcpy(mmap_ptr + i, param->p + i, cp_len);
+	}
 	munmap(mmap_ptr, param->len);
 
 #ifdef TIME_MEASURE
@@ -232,7 +247,30 @@ int cp_result_from_fpga(struct fpga_param *result)
 		perror("Cannot mmap");
 		return -1;
 	}
-	memcpy(result->p, mmap_ptr + mmapped.result_offset, result->len);
+
+	/* A Bus error is encountered when we do a memcpy > to 8 bytes
+	   So the copy is limited to maximum 8 bytes */
+	int i;
+	size_t cp_len = MEMCPY_LEN;
+	/* If result offset is not aligned on MEMCPY_LEN bytes 
+	   first copy shall be inferior to MEMCPY_LEN */
+	if (mmapped.result_offset % MEMCPY_LEN) {
+		cp_len = MEMCPY_LEN - mmapped.result_offset % MEMCPY_LEN;
+		i = cp_len;
+		memcpy(result->p, mmap_ptr + mmapped.result_offset, cp_len);
+	}
+
+	for (i; i<result->len; i += MEMCPY_LEN) {
+		if (i + MEMCPY_LEN > result->len) {
+			cp_len = result->len - i;
+		} else {
+			cp_len = MEMCPY_LEN;
+		}
+		/* TODO debug */
+		DEBUG_PRINT("%s - i=%d  cp_len=%zu\n", __func__, i, cp_len);
+		memcpy(result->p + i, mmap_ptr + mmapped.result_offset + i, cp_len);
+	}
+
 	munmap(mmap_ptr, result->len);
 
 #ifdef TIME_MEASURE
@@ -253,8 +291,7 @@ int cp_result_from_fpga(struct fpga_param *result)
 
 int start_accelerator()
 {
-	/* TODO debug */
-	fprintf(stdout, "Starting processing of accelerator\n");
+	DEBUG_PRINT("Starting processing of accelerator\n");
 
 	if (ptr_reg_ctrl_st == NULL) {
 		fprintf(stdout, "%s not initialized\n", __func__);
@@ -280,11 +317,13 @@ int wait_accelerator(struct fpga_param *result)
 		return -1;
 	}
 
+	DEBUG_PRINT("%s - Start polling\n", __func__);
+
 	while (ptr_reg_ctrl_st->bits.st_end != 1) {
 		usleep(POLL_PERIOD_US);
 	}
 
-	cp_result_from_fpga(result);
+	DEBUG_PRINT("%s - End polling\n", __func__);
 
 #ifdef TIME_MEASURE
 	if (clock_gettime(CLOCK_MONOTONIC, &ts_acc_end)) {
@@ -298,11 +337,15 @@ int wait_accelerator(struct fpga_param *result)
 	fprintf(stdout, "Processing time from FPGA: %u ns\n", get_time_ns_FPGA());
 #endif /* TIME_MEASURE */
 
+	cp_result_from_fpga(result);
+
 	return 0;
 }
 
 uint32_t get_reg_dur()
 {
+	DEBUG_PRINT("%s - Read FPGA processing time = %u cycles\n", __func__, 
+	            *ptr_reg_dur_latched);
 	return *ptr_reg_dur_latched;
 }
 
@@ -336,3 +379,14 @@ void print_ctrl_st_reg(void)
 	fprintf(stdout, "Status end bit = %u\n", reg_ctrl_val.bits.st_end);
 }
 
+void dump_memory(void *ptr, size_t len)
+{
+	int i;
+	for (i=0; i<len; i++) {
+		if (i%16 == 0) {
+			fprintf(stdout, "\n");
+		}
+		fprintf(stdout, "%.2X ", ((unsigned char *)ptr)[i]);
+	}
+	fprintf(stdout, "\n");
+}
