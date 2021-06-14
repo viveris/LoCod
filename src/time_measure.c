@@ -42,8 +42,8 @@ struct timespec add_ts(struct timespec *t1, struct timespec *t2)
 }
 
 #define s_to_ns 1000000000
-uint32_t get_time_ns_FPGA()
+uint32_t get_time_ns_FPGA(int accel)
 {
-	uint32_t fpga_cnt = get_reg_dur();
+	uint32_t fpga_cnt = get_reg_dur(accel);
 	return fpga_cnt * (s_to_ns / FPGA_FREQ_Hz);
 }
