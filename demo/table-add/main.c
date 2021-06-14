@@ -7,13 +7,13 @@ struct param_test {
 	int b[2];
 };
 
-void addition(struct param_test *param, int *result)
+void acc_1(struct param_test *param, int *result)
 {
 	result[0] = param->a[0] + param->b[0];
 	result[1] = param->a[1] + param->b[1];
 }
 
-void multiplication(struct param_test *param, int *result)
+void acc_2(struct param_test *param, int *result)
 {
 	result[0] = param->a[0] * param->b[0];
 	result[1] = param->a[1] * param->b[1];
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 {
 	int result[2] = { 0 };
 	struct param_test param = { 0 };
-
+	init_dma();
 	if (argc < 5) {
 		param.a[0] = 2;
 		param.a[1] = 8;
@@ -48,12 +48,12 @@ int main(int argc, char **argv)
 	param_result.p = result;
 	param_result.len = 2*sizeof(int);
 
-	FPGA(addition, param_a, param_result);
-	wait_accelerator(&param_result);
+	FPGA(acc_1, param_a, param_result, 0);
+	wait_accelerator(&param_result, 0);
 	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 + B2 = %d\n", result[1]);
 
-	CPU(multiplication, &param, result);
+	CPU(acc_2, &param, result);
 	fprintf(stdout, "A1 x B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 x B2 = %d\n", result[1]);
 }
