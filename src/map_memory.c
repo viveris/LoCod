@@ -446,7 +446,7 @@ int cp_param_to_fpga(struct fpga_param *param, int accel)
 	}
 	struct timespec t_memcpy = diff_ts(&t1, &t2);
 	fprintf(stdout,
-	        "Accellerator %d: Copy parameters from CPU to FPGA: %zu "
+	        "Accelerator %d: Copy parameters from CPU to FPGA: %zu "
 	        "bytes in %zu s and %zu ns\n", accel+1, 
 	        param->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
 #endif /* TIME_MEASURE */
@@ -515,7 +515,7 @@ int cp_result_from_fpga(struct fpga_param *result, int accel)
 	}
 	struct timespec t_memcpy = diff_ts(&t1, &t2);
 	fprintf(stdout,
-	        "Accellerator %d: Copy result from FPGA to CPU: %zu "
+	        "Accelerator %d: Copy result from FPGA to CPU: %zu "
 	        "bytes in %zu s and %zu ns\n", accel+1, 
 	        result->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
 #endif /* TIME_MEASURE */

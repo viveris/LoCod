@@ -192,6 +192,24 @@ int main(int argc, char **argv)
 		goto free_and_failure;
 	}
 
+	fprintf(stdout, "\nInput Data :\n");
+
+	for (int j = 0; j <= 255; j++){
+		if (j % 16 == 0){
+			fprintf(stdout," \n");	
+		}
+		fprintf(stdout, "%3i \t", ctx.buff->data[j]);
+		
+	}
+	fprintf(stdout, "\n\nResult Data :\n");
+	for (int j = 0; j <= 255; j++){
+		if (j % 16 == 0){
+			fprintf(stdout," \n");	
+		}
+		fprintf(stdout, "%3i \t", *(result + j));
+		
+	}
+	fprintf(stdout, "\n");
 	CPU(pic_multiplication, ctx.buff, result);
 
 	exit(EXIT_SUCCESS);

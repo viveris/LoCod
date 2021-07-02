@@ -44,7 +44,7 @@ Build-multi-simple:
     - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
     - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
     - cd demo/multi-simple/
-    - make
+    - make USER_DEF=-DTIME_MEASURE
   artifacts:
     paths:
       - demo/multi-simple/locod-cpu
