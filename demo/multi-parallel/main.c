@@ -64,9 +64,9 @@ int main()
 	fprintf(stdout, "Accelerator 1 data : %d\n", param_rep[0].a);
 	for(i = 0; i<8; i++){
 		param[i].a = rand() % 5;
-		fprintf(stdout, "param a [%d] data : %d\n", i, param[i].a);
+		fprintf(stdout, "param a [%d] :%d\t", i, param[i].a);
 		param[i].b = rand() % 15;
-		fprintf(stdout, "param b [%d] data : %d\n", i, param[i].b);
+		fprintf(stdout, "param b [%d] :%d\n", i, param[i].b);
 		}
 	struct fpga_param param_a[8] = { 0 };
 	for(i = 0; i<8; i++){
@@ -86,53 +86,37 @@ int main()
 
 	FPGA(acc_1, param_b[0], param_result[0] , 0);
 	cp_result_from_fpga(&param_result[0], 0);
-	fprintf(stdout, "Accelerator 1 \"busy\" Result : %d\n", result[0]);
+	fprintf(stdout, "Accelerator 1 \"busy\" Result : %i\n", result[0]);
 	FPGA(acc_5, param_a[4], param_result[4], 4);
 	
 	wait_accelerator(&param_result[4], 4);
-	fprintf(stdout, "Accelerator 5 Result : %d\n", result[4]);
+	fprintf(stdout, "Accelerator 5 Result : %i + %i = %i\n", param[4].a, param[4].b, result[4]);
 	cp_result_from_fpga(&param_result[0], 0);
-	fprintf(stdout, "Accelerator 1 \"busy\" Result : %d\n", result[0]);
+	fprintf(stdout, "Accelerator 1 \"busy\" Result : %i\n", result[0]);
 	FPGA(acc_8, param_a[7], param_result[7], 7);
 	wait_accelerator(&param_result[7], 7);							
-	fprintf(stdout, "Accelerator 8 Result : %d\n", result[7]);
+	fprintf(stdout, "Accelerator 8 Result : %i + %i = %i\n", param[7].a, param[7].b, result[7]);
 
 	wait_accelerator(&param_result[0], 0);
-	fprintf(stdout, "Accelerator 1 Result : %d\n", result[0]);
+	fprintf(stdout, "Accelerator 1 Result : %i\n", result[0]);
 	param_rep[1].a = result[0];
 	FPGA(acc_2, param_b[1], param_result[1], 1);
 	wait_accelerator(&param_result[1], 1);
-	fprintf(stdout, "Accelerator 2 Result : %d\n", result[1]);
+	fprintf(stdout, "Accelerator 2 Result :  %i * 10 = %i\n", param_rep[1].a, result[1]);
 	
 	FPGA(acc_3, param_a[2], param_result[2], 2);
 	FPGA(acc_7, param_a[6], param_result[6], 6);
 	FPGA(acc_4, param_a[3], param_result[3], 3);
 	FPGA(acc_6, param_a[5], param_result[5], 5);
 	
-	
-	
-	
-	
-	
-	
-
-	
-
 	wait_accelerator(&param_result[2], 2);
-	fprintf(stdout, "Accelerator 3 Result : %d\n", result[2]);
-	
-
+	fprintf(stdout, "Accelerator 3 Result :  %i + %i = %i\n",  param[2].a, param[2].b, result[2]);
 	wait_accelerator(&param_result[6], 6);
-	fprintf(stdout, "Accelerator 7 Result : %d\n", result[6]);
-	
-
+	fprintf(stdout, "Accelerator 7 Result :  %i + %i = %i\n",  param[6].a, param[6].b, result[6]);
 	wait_accelerator(&param_result[3], 3);
-	fprintf(stdout, "Accelerator 4 Result : %d\n", result[3]);
-	
+	fprintf(stdout, "Accelerator 4 Result :  %i + %i = %i\n",  param[3].a, param[3].b, result[3]);
 	wait_accelerator(&param_result[5], 5);
-	fprintf(stdout, "Accelerator 6 Result : %d\n", result[5]);
-
-		
+	fprintf(stdout, "Accelerator 6 Result :  %i + %i = %i\n",  param[5].a, param[5].b, result[5]);
 	
 /*	CPU(addition, &param, result);
 	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
