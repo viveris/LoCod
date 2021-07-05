@@ -31,20 +31,18 @@ struct fpga_param {
 	size_t len;
 };
 
-void set_in_1(uint32_t value);
-void set_in_2(uint32_t value);
-void set_out_1(uint32_t value);
-uint32_t get_reg_dur();
+uint32_t get_reg_dur(int accel);
 
-void init_accelerator_memory(off_t phy_addr,
-                             off_t param_offset,
-                             off_t result_offset);
+void init_accelerator_memory(off_t param_offset,
+                             off_t result_offset,
+							 off_t result_len,
+							 int accel);
 void set_mapped_param_offset(off_t off);
 void set_mapped_result_offset(off_t off);
-int cp_param_to_fpga(struct fpga_param *param);
-int cp_result_from_fpga(struct fpga_param *result);
-int wait_accelerator(struct fpga_param *result);
-int start_accelerator();
+int cp_param_to_fpga(struct fpga_param *param, int accel);
+int cp_result_from_fpga(struct fpga_param *result, int accel);
+int wait_accelerator(struct fpga_param *result, int acccel);
+int start_accelerator(int accel);
 int init_dma();
 int map_phys_addr(off_t phy_addr, size_t len, void **virt_ptr);
 int unmap_phys_addr(void *virt_ptr, size_t len);

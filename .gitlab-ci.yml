@@ -1,6 +1,25 @@
 image:
   name: locod:0.3
 
+Build-multi-parallel:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/multi-parallel/
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/multi-parallel/locod-cpu
+      - demo/multi-parallel/acc_1.v
+      - demo/multi-parallel/acc_2.v
+      - demo/multi-parallel/acc_3.v
+      - demo/multi-parallel/acc_4.v
+      - demo/multi-parallel/acc_5.v
+      - demo/multi-parallel/acc_6.v
+      - demo/multi-parallel/acc_7.v
+      - demo/multi-parallel/acc_8.v
+    expire_in: 1 day
+    
 Build-picture-demo:
   script:
     - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
@@ -10,7 +29,33 @@ Build-picture-demo:
   artifacts:
     paths:
       - demo/picture-demo/locod-cpu
-      - demo/picture-demo/addition.v
+      - demo/picture-demo/acc_1.v
+      - demo/picture-demo/acc_2.v
+      - demo/picture-demo/acc_3.v
+      - demo/picture-demo/acc_4.v
+      - demo/picture-demo/acc_5.v
+      - demo/picture-demo/acc_6.v
+      - demo/picture-demo/acc_7.v
+      - demo/picture-demo/acc_8.v
+    expire_in: 1 day
+    
+Build-multi-simple:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/multi-simple/
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/multi-simple/locod-cpu
+      - demo/multi-simple/acc_1.v
+      - demo/multi-simple/acc_2.v
+      - demo/multi-simple/acc_3.v
+      - demo/multi-simple/acc_4.v
+      - demo/multi-simple/acc_5.v
+      - demo/multi-simple/acc_6.v
+      - demo/multi-simple/acc_7.v
+      - demo/multi-simple/acc_8.v
     expire_in: 1 day
 
 Build-table-add:
@@ -22,7 +67,14 @@ Build-table-add:
   artifacts:
     paths:
       - demo/table-add/locod-cpu
-      - demo/table-add/addition.v
+      - demo/table-add/acc_1.v
+      - demo/table-add/acc_2.v
+      - demo/table-add/acc_3.v
+      - demo/table-add/acc_4.v
+      - demo/table-add/acc_5.v
+      - demo/table-add/acc_6.v
+      - demo/table-add/acc_7.v
+      - demo/table-add/acc_8.v
     expire_in: 1 day
 
 Build-table-mul:
@@ -34,7 +86,14 @@ Build-table-mul:
   artifacts:
     paths:
       - demo/table-mul/locod-cpu
-      - demo/table-mul/multiplication.v
+      - demo/table-mul/acc_1.v
+      - demo/table-mul/acc_2.v
+      - demo/table-mul/acc_3.v
+      - demo/table-mul/acc_4.v
+      - demo/table-mul/acc_5.v
+      - demo/table-mul/acc_6.v
+      - demo/table-mul/acc_7.v
+      - demo/table-mul/acc_8.v      
     expire_in: 1 day
 
 Build-int-add:
@@ -46,7 +105,14 @@ Build-int-add:
   artifacts:
     paths:
       - demo/simple-int-add/locod-cpu
-      - demo/simple-int-add/addition.v
+      - demo/simple-int-add/acc_1.v
+      - demo/simple-int-add/acc_2.v
+      - demo/simple-int-add/acc_3.v
+      - demo/simple-int-add/acc_4.v
+      - demo/simple-int-add/acc_5.v
+      - demo/simple-int-add/acc_6.v
+      - demo/simple-int-add/acc_7.v
+      - demo/simple-int-add/acc_8.v
     expire_in: 1 day
 
 Build-int-mul:
@@ -58,7 +124,14 @@ Build-int-mul:
   artifacts:
     paths:
       - demo/simple-int-mul/locod-cpu
-      - demo/simple-int-mul/multiplication.v
+      - demo/simple-int-mul/acc_1.v
+      - demo/simple-int-mul/acc_2.v
+      - demo/simple-int-mul/acc_3.v
+      - demo/simple-int-mul/acc_4.v
+      - demo/simple-int-mul/acc_5.v
+      - demo/simple-int-mul/acc_6.v
+      - demo/simple-int-mul/acc_7.v
+      - demo/simple-int-mul/acc_8.v
     expire_in: 1 day
 
 Build-float-add:
@@ -70,7 +143,14 @@ Build-float-add:
   artifacts:
     paths:
       - demo/simple-float-add/locod-cpu
-      - demo/simple-float-add/addition.v
+      - demo/simple-float-add/acc_1.v
+      - demo/simple-float-add/acc_2.v
+      - demo/simple-float-add/acc_3.v
+      - demo/simple-float-add/acc_4.v
+      - demo/simple-float-add/acc_5.v
+      - demo/simple-float-add/acc_6.v
+      - demo/simple-float-add/acc_7.v
+      - demo/simple-float-add/acc_8.v
     expire_in: 1 day
 
 Build-float-mul:
@@ -82,5 +162,50 @@ Build-float-mul:
   artifacts:
     paths:
       - demo/simple-float-mul/locod-cpu
-      - demo/simple-float-mul/multiplication.v
+      - demo/simple-float-mul/acc_1.v
+      - demo/simple-float-mul/acc_2.v
+      - demo/simple-float-mul/acc_3.v
+      - demo/simple-float-mul/acc_4.v
+      - demo/simple-float-mul/acc_5.v
+      - demo/simple-float-mul/acc_6.v
+      - demo/simple-float-mul/acc_7.v
+      - demo/simple-float-mul/acc_8.v
     expire_in: 1 day
+
+Build-test-byte:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/test_byte
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/test_byte/locod-cpu
+      - demo/test_byte/acc_1.v
+      - demo/test_byte/acc_2.v
+      - demo/test_byte/acc_3.v
+      - demo/test_byte/acc_4.v
+      - demo/test_byte/acc_5.v
+      - demo/test_byte/acc_6.v
+      - demo/test_byte/acc_7.v
+      - demo/test_byte/acc_8.v
+    expire_in: 1 day
+
+Build-test-byte-4bytes:
+  script:
+    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
+    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
+    - cd demo/test_byte_4bytes
+    - make USER_DEF=-DTIME_MEASURE
+  artifacts:
+    paths:
+      - demo/test_byte_4bytes/locod-cpu
+      - demo/test_byte_4bytes/acc_1.v
+      - demo/test_byte_4bytes/acc_2.v
+      - demo/test_byte_4bytes/acc_3.v
+      - demo/test_byte_4bytes/acc_4.v
+      - demo/test_byte_4bytes/acc_5.v
+      - demo/test_byte_4bytes/acc_6.v
+      - demo/test_byte_4bytes/acc_7.v
+      - demo/test_byte_4bytes/acc_8.v
+    expire_in: 1 day    

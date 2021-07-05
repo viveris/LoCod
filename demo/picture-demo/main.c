@@ -95,7 +95,7 @@ out:
 }
 #endif /* LOCOD_FPGA */
 
-void addition(struct data* param, unsigned int *result)
+void acc_1(struct data* param, unsigned int *result)
 {
 	int i;
 
@@ -103,8 +103,43 @@ void addition(struct data* param, unsigned int *result)
 		result[i] = param->data[i] + 1;
 	}
 }
+//accelerator vide juste pour avoir le bonne quantité d'accelerators
+void acc_2(struct data* param, unsigned int *result)
+{
+	int i;
+}
 
-void multiplication(struct data* param, unsigned int *result)
+void acc_3(struct data* param, unsigned int *result)
+{
+	int i;
+}
+
+void acc_4(struct data* param, unsigned int *result)
+{
+	int i;
+}
+
+void acc_5(struct data* param, unsigned int *result)
+{
+	int i;
+}
+
+void acc_6(struct data* param, unsigned int *result)
+{
+	int i;
+}
+
+void acc_7(struct data* param, unsigned int *result)
+{
+	int i;
+}
+
+void acc_8(struct data* param, unsigned int *result)
+{
+	int i;
+}
+
+void pic_multiplication(struct data* param, unsigned int *result)
 {
 	int i;
 
@@ -116,6 +151,7 @@ void multiplication(struct data* param, unsigned int *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
+	init_dma();
 	int b; /* TODO to be removed when only two param for interface */
 	unsigned int *result = NULL;
 	FILE *result_file;
@@ -141,8 +177,8 @@ int main(int argc, char **argv)
 	param_result.p = result;
 	param_result.len = ctx.buff->len * sizeof(int);
 
-	FPGA(addition, param, param_result);
-	wait_accelerator(&param_result);
+	FPGA(acc_1, param, param_result, 0);
+	wait_accelerator(&param_result, 0);
 
 	/* Write FPGA result into a file */
 	result_file = fopen("result.bin", "wb");
@@ -156,7 +192,25 @@ int main(int argc, char **argv)
 		goto free_and_failure;
 	}
 
-	CPU(multiplication, ctx.buff, result);
+	fprintf(stdout, "\nInput Data :\n");
+
+	for (int j = 0; j <= 255; j++){
+		if (j % 16 == 0){
+			fprintf(stdout," \n");	
+		}
+		fprintf(stdout, "%3i \t", ctx.buff->data[j]);
+		
+	}
+	fprintf(stdout, "\n\nResult Data :\n");
+	for (int j = 0; j <= 255; j++){
+		if (j % 16 == 0){
+			fprintf(stdout," \n");	
+		}
+		fprintf(stdout, "%3i \t", *(result + j));
+		
+	}
+	fprintf(stdout, "\n");
+	CPU(pic_multiplication, ctx.buff, result);
 
 	exit(EXIT_SUCCESS);
 

@@ -1,7 +1,8 @@
 CC ?= gcc
 CFLAGS += -I../../src
 OBJ = map_memory.o time_measure.o main.o
-BAMBU_OPT = --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 -DLOCOD_FPGA
+BAMBU_OPT = --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 -DLOCOD_FPGA 
+
 
 all: locod-cpu fpga
 

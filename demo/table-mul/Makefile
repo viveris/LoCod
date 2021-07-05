@@ -20,7 +20,7 @@ locod-cpu: $(OBJ)
 fpga:
 	$(eval FPGA_FUNC = $(shell ../../scripts/get_fpga_fun.sh main.c))
 	mkdir -p bambu
-	cd bambu; bambu $(BAMBU_OPT) --top-fname=$(FPGA_FUNC) ../main.c; cp $(FPGA_FUNC).v ../
+	$(foreach acc,$(FPGA_FUNC),cd bambu;bambu $(BAMBU_OPT) --top-fname=$(acc) ../main.c; cp $(acc).v ../;)
 	cd ..
 
 clean:
