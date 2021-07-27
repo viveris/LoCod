@@ -447,8 +447,8 @@ int cp_param_to_fpga(struct fpga_param *param, int accel)
 	struct timespec t_memcpy = diff_ts(&t1, &t2);
 	fprintf(stdout,
 	        "Accelerator %d: Copy parameters from CPU to FPGA: %zu "
-	        "bytes in %zu s and %zu ns\n", accel+1, 
-	        param->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
+	        "bytes in %zu s, %zu ns and %d clock cycles\n", accel+1, 
+	        param->len, t_memcpy.tv_sec, t_memcpy.tv_nsec, (int)(t_memcpy.tv_nsec/(0.833)));
 #endif /* TIME_MEASURE */
 	DEBUG_PRINT("%s gpio_0 values on exit 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
 	return 0;
@@ -516,8 +516,8 @@ int cp_result_from_fpga(struct fpga_param *result, int accel)
 	struct timespec t_memcpy = diff_ts(&t1, &t2);
 	fprintf(stdout,
 	        "Accelerator %d: Copy result from FPGA to CPU: %zu "
-	        "bytes in %zu s and %zu ns\n", accel+1, 
-	        result->len, t_memcpy.tv_sec, t_memcpy.tv_nsec);
+	        "bytes in %zu s, %zu ns and %d clock cycles\n", accel+1, 
+	        result->len, t_memcpy.tv_sec, t_memcpy.tv_nsec, (int)(t_memcpy.tv_nsec / (0.833)));
 #endif /* TIME_MEASURE */
 DEBUG_PRINT("%s gpio_0 values on exit 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
 	return 0;
@@ -540,7 +540,7 @@ int start_accelerator(int accel)
 			*ptr_reg_out_0 = DMA_ADDR(mmapped[accel].phy_addr + mmapped[accel].result_offset); // replaces set_out_x
 			bitset(ptr_reg_ctrl_st->reg, start_0);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n"); // a necessary "delay" otherwise the IP doesn't register the change 
+			usleep(0.01);// a necessary "delay" otherwise the IP doesn't register the change 
 			bitclear(ptr_reg_ctrl_st->reg, start_0);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
 		break;
@@ -550,7 +550,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_1 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_1);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_1 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_1);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -561,7 +561,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_2 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_2);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_2 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_2);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -572,7 +572,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_3 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_3);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_3 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_3);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -583,7 +583,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_4 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_4);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_4 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_4);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -594,7 +594,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_5 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_5);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_5 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_5);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -605,7 +605,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_6 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_6);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_6 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_6);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -616,7 +616,7 @@ int start_accelerator(int accel)
 			//ptr_reg_ctrl_st->bits.ctrl_start_7 = 1;
 			bitset(ptr_reg_ctrl_st->reg, start_7);
 			DEBUG_PRINT("%s gpio_0 values after start high 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
-			fprintf(stdout, "\n");
+			usleep(0.01);
 			//ptr_reg_ctrl_st->bits.ctrl_start_7 = 0;
 			bitclear(ptr_reg_ctrl_st->reg, start_7);
 			DEBUG_PRINT("%s gpio_0 values after start low 0x%x\n",__func__, (ptr_reg_ctrl_st->reg));
@@ -708,9 +708,9 @@ int wait_accelerator(struct fpga_param *result, int accel)
 	}
 
 	struct timespec t_processing = diff_ts(&ts_acc_start[accel], &ts_acc_end[accel]);
-fprintf(stdout, "Accelerator %d: Processing time: %zu s and %zu ns\n", accel+1, 
-	        t_processing.tv_sec, t_processing.tv_nsec);
-	fprintf(stdout, "Accelerator %d:  Processing time from FPGA: %u ns\n", accel+1, get_time_ns_FPGA(accel));
+fprintf(stdout, "Accelerator %d: Processing time: %zu s, %zu ns and %d clock cycles\n", accel+1, 
+	        t_processing.tv_sec, t_processing.tv_nsec, (int)(t_processing.tv_nsec / (0.833)));
+	fprintf(stdout, "Accelerator %d:  Processing time from FPGA: %u ns and %d clock cycles\n", accel+1, get_time_ns_FPGA(accel), get_reg_dur(accel));
 #endif /* TIME_MEASURE */
 	
 	cp_result_from_fpga(result, accel);

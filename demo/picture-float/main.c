@@ -11,10 +11,10 @@
 #endif /* LOCOD_FPGA */
 
 /* Struct to store image and size of the image */
-#define DATA_SIZE_MAX 262144 /* 256 KB */
+#define DATA_SIZE_MAX 262144 /* 256 kB */
 struct data {
 	unsigned int len;
-	unsigned int data[DATA_SIZE_MAX];
+	float data[DATA_SIZE_MAX];
 };
 
 
@@ -71,7 +71,7 @@ int load_file(const char *file_path)
 	file_size = ftell(file);
 	fseek(file, 0, SEEK_SET);
 
-	if (file_size > DATA_SIZE_MAX) {
+	if (file_size > (DATA_SIZE_MAX*4)) {
 		fprintf(stderr, "File %s too big : file size %ld, max size %d\n",
 		        file_path, file_size, DATA_SIZE_MAX);
 		goto close_file;
@@ -84,7 +84,7 @@ int load_file(const char *file_path)
 		goto close_file;
 	}
 
-	ctx.buff->len = file_size / sizeof(int);
+	ctx.buff->len = file_size / sizeof(float);
 
 	fclose(file);
 	return 0;
@@ -96,13 +96,14 @@ out:
 }
 #endif /* LOCOD_FPGA */
 
-void acc_1(struct data* param, unsigned int *result)
+void acc_1(struct data* param, float *result)
 {
 	int i;
 
 	for (i = 0; i<param->len; i++) {
-		result[i] = param->data[i] + 1;
+		result[i] = param->data[i] + 1.0;
 	}
+
 }
 //accelerator vide juste pour avoir le bonne quantité d'accelerators
 void acc_2(struct data* param, unsigned int *result)
@@ -140,7 +141,7 @@ void acc_8(struct data* param, unsigned int *result)
 	int i;
 }
 
-void pic_multiplication(struct data* param, unsigned int *result)
+void pic_multiplication(struct data* param, float *result)
 {
 	int i;
 
@@ -154,12 +155,13 @@ int main(int argc, char **argv)
 {
 	init_dma();
 	int b; /* TODO to be removed when only two param for interface */
-	unsigned int *result = NULL;
+	float *result = NULL;
 	FILE *result_file;
 	struct data data = { 0 };
 	ctx.buff = &data;
 	int width = 0;
 	int comp = 0;
+	//static int filed = -1;
 
 	fprintf(stdout, "data addr = %p\n", ctx.buff);
 
@@ -174,11 +176,11 @@ int main(int argc, char **argv)
 
 	struct fpga_param param = { 0 };
 	param.p = ctx.buff;
-	param.len = ctx.buff->len * sizeof(int) + sizeof(ctx.buff->len);
+	param.len = ctx.buff->len * sizeof(float) + sizeof(ctx.buff->len) + sizeof(ctx.buff);
 
 	struct fpga_param param_result = { 0 };
 	param_result.p = result;
-	param_result.len = ctx.buff->len * sizeof(int);
+	param_result.len = ctx.buff->len * sizeof(float);
 
 	FPGA(acc_1, param, param_result, 0);
 	wait_accelerator(&param_result, 0);
@@ -198,57 +200,81 @@ int main(int argc, char **argv)
 
 		case 256 :
 			width = 16;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 324 :	
 			width = 18;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 400 :
 			width = 20;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 484 :	
 			width = 22;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 529 :	
 			width = 23;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;	
 		case 576 :
 			width = 24;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 676 :	
 			width = 26;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 784 :
 			width = 28;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 900 :	
 			width = 30;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 1024 :
 			width = 32;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 4096 :	
 			width = 64;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
 		case 16384 :
 			width = 128;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
 			break;
+		case 65536 :
+			width = 256;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
+			break;
+		case 262144 :	
+			width = 512;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
+			break;
+		case 1048576 :
+			width = 1024;
+			fprintf(stdout,"ctx.buff->len = %d, Width = %d \n", ctx.buff->len, width);
+			break;	
 	}
-	fprintf(stdout, "\nInput Data :\n");
+	/*fprintf(stdout, "\nInput Data :\n");
 	for (int j = 0; j < ctx.buff->len; j++){
 		
 		if (j % width == 0){
 			fprintf(stdout," \n");	
 		}
-		fprintf(stdout, "%3i \t", ctx.buff->data[j]);
+		fprintf(stdout, "%0.1f \t", ctx.buff->data[j]);
 	}
 	fprintf(stdout, "\n\nResult Data :\n");
 	for (int j = 0; j < ctx.buff->len; j++){
 		if (j % width == 0){
 			fprintf(stdout," \n");	
 		}
-		fprintf(stdout, "%3i \t", *(result + j));
+		fprintf(stdout, "%0.1f \t", *(result + j));
 		
-	}
+	}*/
 	fprintf(stdout, "\n");
 	for(int h = 0; h < ctx.buff->len; h++){
 		if((*(result + h) - ctx.buff->data[h])==1){
@@ -256,7 +282,18 @@ int main(int argc, char **argv)
 		}
 	}
 	fprintf(stdout, "Good cells : %d out of %d\n", comp, ctx.buff->len);
-	CPU(pic_multiplication, ctx.buff, result);
+	//fprintf(stdout, "First cell : %d, First cell +1 : %d, First cell +2 : %d \n", *result, *(result+1), *(result+2));
+	//CPU(pic_multiplication, ctx.buff, result);
+	/*fprintf(stdout, "memory dump of Input data on CPU RAM\n");
+	dump_memory(ctx.buff->data, ctx.buff->len);
+	fprintf(stdout, "\n");
+	fprintf(stdout, "memory dump of Output data on CPU RAM\n");
+	dump_memory(result, ctx.buff->len);
+	fprintf(stdout, "\n");
+	filed = open("/dev/mem", O_RDWR | O_SYNC);
+	fprintf(stdout, "memory dump of Input data on FPGA RAM\n");
+	dump_memory((void*) MEM_DMA_BASE, ctx.buff->len);
+	fprintf(stdout, "\n");*/
 
 	exit(EXIT_SUCCESS);
 

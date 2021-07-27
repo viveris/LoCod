@@ -11,8 +11,8 @@ load('mandi_input_image');
 
 % Motif bayer   |B G|
 %               |G R|
-
-Imagette   =   I(1+500:1024+500,1+1500:1024+1500); %crop image
+Size = 48
+Imagette   =   I(1+500:Size+500,1+1500:Size+1500); %crop image
 
 
 fileID = fopen('imagette.bin', 'w');
@@ -56,7 +56,7 @@ for j=1:3
     Im_Fil(:,:,j) = Fct_DWT_CCSDS_single_level (Im_LCh(:,:,j));
 end
 
-HalfSize = size(Im_Fil,1)/2;
+HalfSize = size(Im_Ans,1)/2;
 
 %plot
 figure
@@ -64,5 +64,5 @@ Y_Hhf_Vhf = Im_Fil(HalfSize+1:end,HalfSize+1:end,1);
 imagesc(Y_Hhf_Vhf)
 
 figure
-Y_BF = Im_Fil(1:1+512,1:1+512,1);
+Y_BF = Im_Fil(1:((Size-4)/2),1:((Size-4)/2),1);
 imagesc (Y_BF)

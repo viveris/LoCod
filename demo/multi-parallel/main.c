@@ -116,7 +116,9 @@ int main()
 	wait_accelerator(&param_result[3], 3);
 	fprintf(stdout, "Accelerator 4 Result :  %i + %i = %i\n",  param[3].a, param[3].b, result[3]);
 	wait_accelerator(&param_result[5], 5);
-	fprintf(stdout, "Accelerator 6 Result :  %i + %i = %i\n",  param[5].a, param[5].b, result[5]);
+	fprintf(stdout, "Accelerator 6 Result : %d\n", result[5]);
+	fprintf(stdout, "acc one time : %dns\n", get_time_ns_FPGA(0));
+		
 	
 /*	CPU(addition, &param, result);
 	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
