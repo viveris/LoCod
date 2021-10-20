@@ -130,7 +130,16 @@ void DWT_CCSDS_single_level(double *chan_YUV, unsigned int height, unsigned int 
 			as_2dim_table_double(X_sym_col, height)[col+4][line] = as_2dim_table_double(chan_YUV, height)[col][line];
 		}
 	}
-
+	FILE *fp1;
+	fp1 = fopen("X_Sym_Col.csv", "wb");
+	for(int row = 0; row < (height); row++){
+		for(int col = 0; col < width; col++){
+			fprintf(fp1, "%lf, ", as_2dim_table_double(X_sym_col,((height)/2))[col][row]);
+		}
+		fprintf(fp1,"\n");
+	}
+	fclose(fp1);
+	
 	double *tmp_LP1 = calloc(height*width/2, sizeof(double));
 	double *tmp_HP1 = calloc(height*width/2, sizeof(double));
 
@@ -158,6 +167,39 @@ void DWT_CCSDS_single_level(double *chan_YUV, unsigned int height, unsigned int 
 			        as_2dim_table_double(X_sym_col, height)[col+1+3][line]*HP_Filter[6];
 		}
 	}
+
+
+//	fprintf(stdout, "%s LP1 :\n", __func__);
+//	print_matrix_TL(tmp_LP1, height);
+
+//	fprintf(stdout, "%s HP1 :\n", __func__);
+//	print_matrix_TL(tmp_HP1, height);
+
+
+double *X_1 = calloc((height)*width, sizeof(double));
+	for (int col = 0; col < width; col++){
+		for (int line=0; line < height; line++) {
+			if (col < width/2 ){
+				as_2dim_table_double(X_1, height)[col][line]
+			        = as_2dim_table_double(tmp_LP1, height)[col][line];
+			}
+			else{
+				as_2dim_table_double(X_1, height)[col][line]
+			        = as_2dim_table_double(tmp_HP1, height)[col-width/2][line];
+			}
+		}
+	}
+
+//	fprintf(stdout, "\n%s X_1 :\n", __func__);
+//	print_matrix_TL(X_1, height);
+//	fprintf(stdout, "\n");
+//	print_matrix_TR(X_1, height);
+//	fprintf(stdout, "\n");
+//	print_matrix_BL(X_1, height);
+//	fprintf(stdout, "\n");
+//	print_matrix_BR(X_1, height);
+//	fprintf(stdout, "\n");
+
 
 	double *X_sym_line = calloc((height+8)*width, sizeof(double));
 	/* Compute symetric on 4 first and end lines */

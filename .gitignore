@@ -4,3 +4,6 @@
 *locod-cpu
 *bambu
 cscope.out
+*.bin
+*.xlsx
+*.csv
