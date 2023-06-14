@@ -11,7 +11,7 @@
 #endif /* LOCOD_FPGA */
 
 /* Struct to store image and size of the image */
-#define DATA_SIZE_MAX 262144 /* 256 KB */
+#define DATA_SIZE_MAX 1048576
 struct data {
 	unsigned int len;
 	unsigned int data[DATA_SIZE_MAX];
