@@ -104,41 +104,6 @@ void acc_1(struct data* param, unsigned int *result)
 		result[i] = param->data[i] + 1;
 	}
 }
-//accelerator vide juste pour avoir le bonne quantité d'accelerators
-void acc_2(struct data* param, unsigned int *result)
-{
-	int i;
-}
-
-void acc_3(struct data* param, unsigned int *result)
-{
-	int i;
-}
-
-void acc_4(struct data* param, unsigned int *result)
-{
-	int i;
-}
-
-void acc_5(struct data* param, unsigned int *result)
-{
-	int i;
-}
-
-void acc_6(struct data* param, unsigned int *result)
-{
-	int i;
-}
-
-void acc_7(struct data* param, unsigned int *result)
-{
-	int i;
-}
-
-void acc_8(struct data* param, unsigned int *result)
-{
-	int i;
-}
 
 void pic_multiplication(struct data* param, unsigned int *result)
 {
@@ -152,7 +117,7 @@ void pic_multiplication(struct data* param, unsigned int *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	init_dma();
+	init_accel_system(1);
 	int b; /* TODO to be removed when only two param for interface */
 	unsigned int *result = NULL;
 	FILE *result_file;
@@ -181,7 +146,7 @@ int main(int argc, char **argv)
 	param_result.len = ctx.buff->len * sizeof(int);
 
 	FPGA(acc_1, param, param_result, 0);
-	wait_accelerator(&param_result, 0);
+	wait_accelerator(param_result, 0);
 
 	/* Write FPGA result into a file */
 	result_file = fopen("result.bin", "wb");
@@ -257,6 +222,8 @@ int main(int argc, char **argv)
 	}
 	fprintf(stdout, "Good cells : %d out of %d\n", comp, ctx.buff->len);
 	CPU(pic_multiplication, ctx.buff, result);
+
+	deinit_accel_system();
 
 	exit(EXIT_SUCCESS);
 

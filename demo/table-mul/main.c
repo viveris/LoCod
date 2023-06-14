@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 {
 	int result[2] = { 0 };
 	struct param_test param = { 0 };
-	init_dma();
+	init_accel_system(1);
 	if (argc < 5) {
 		param.a[0] = 2;
 		param.a[1] = 8;
@@ -49,12 +49,16 @@ int main(int argc, char **argv)
 	param_result.len = 2*sizeof(int);
 
 	FPGA(acc_2, param_a, param_result, 0);
-	wait_accelerator(&param_result, 0);
+	wait_accelerator(param_result, 0);
 	fprintf(stdout, "A1 x B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 x B2 = %d\n", result[1]);
 
 	CPU(acc_1, &param, result);
 	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 + B2 = %d\n", result[1]);
+
+	deinit_accel_system();
+
+	return 0;
 }
 #endif

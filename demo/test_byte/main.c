@@ -21,7 +21,7 @@ int main(char **argv)
 	int i = 1;
 	char result[8] = {0};
 	struct param_test param = {{0}};
-	init_dma();
+	init_accel_system(1);
 	param.arr[0] = 'a';
 	
 	
@@ -55,7 +55,7 @@ int main(char **argv)
 	param_result.len = (8*sizeof(char));
 
 	FPGA(acc_1, param_a, param_result, 0);
-	wait_accelerator(&param_result, 0);
+	wait_accelerator(param_result, 0);
 	
 	fprintf(stdout, "Char values in result\n");
 	for(i = 0; i < 8; i++){
@@ -74,5 +74,9 @@ int main(char **argv)
 	fprintf(stdout, "\n");
 //	CPU(multiplication, &param, &result);
 //	fprintf(stdout, "A x B = %f\n", result);
+
+	deinit_accel_system();
+
+	return 0;
 }
 #endif

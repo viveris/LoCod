@@ -18,7 +18,8 @@ void acc_1(struct param_test *param, char *result)
 
 #ifndef LOCOD_FPGA
 int main(char **argv)
-{	init_dma();
+{	
+	init_accel_system(1);
 	int i = 1;
 //	int j, k, l;
 	char result[4] = {0};
@@ -59,7 +60,7 @@ int main(char **argv)
 	param_result.len = (4*sizeof(char));
 
 	FPGA(acc_1, param_a, param_result, 0);
-	wait_accelerator(&param_result, 0);
+	wait_accelerator(param_result, 0);
 //	fprintf(stdout, "A + B = %f\n", result);
 	
 	
@@ -80,5 +81,9 @@ int main(char **argv)
 	fprintf(stdout, "\n");
 //	CPU(multiplication, &param, &result);
 //	fprintf(stdout, "A x B = %f\n", result);
+
+	deinit_accel_system();
+
+	return 0;
 }
 #endif

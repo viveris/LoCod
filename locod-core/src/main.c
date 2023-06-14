@@ -56,9 +56,5 @@ int main(int argc, char **argv)
 	CPU(acc_2, &param, result);
 	fprintf(stdout, "A1 x B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 x B2 = %d\n", result[1]);
-
-	deinit_accel_system();
-
-	return 0;
 }
 #endif
