@@ -15,29 +15,11 @@
 /****************************************************/
 /***************** Accel functions ******************/
 /****************************************************/
-struct param_test_s {
-	float external_array[10];
-};
-
-struct result_test_s {
-	float res_1;
-	float res_2;
-};
-
-void test_func(struct param_test_s *param, struct result_test_s *result)
+void test_func(float *param, float *result)
 {
-	float local_array[10] = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
+	float local_variable = 1234.56;
 
-	result->res_1 = 0;
-	result->res_2 = 0;
-
-	for (int i = 0; i < 3; i++) {
-		result->res_1 += param->external_array[i] * local_array[i];
-	}
-
-	for (int i = 0; i < 10; i++) {
-		result->res_2 += param->external_array[i] * local_array[i];
-	}
+	*result = *param * local_variable;
 }
 
 
@@ -48,35 +30,31 @@ void test_func(struct param_test_s *param, struct result_test_s *result)
 int main(int argc, char *argv[])
 {
 	//Data for accelerator
-	struct param_test_s param_test = {0};
-	struct result_test_s res_test_fpga = {0};
-	struct result_test_s res_test_cpu = {0};
+	float param = 10.0;
+	float res_fpga = 0.0;
+	float res_cpu = 0.0;
 
-	for (int i = 0; i < 10; i++) {
-		param_test.external_array[i] = i;
-	}
-
-	printf("Debut test\n");
+	printf("Debut test local allocation\n");
 
 	//----------------- Debut algo ---------------------
 	init_accel_system(1);
 
 
 	struct fpga_param acc_0_in = {0};
-	acc_0_in.p = &param_test;
-	acc_0_in.len = sizeof(param_test);
+	acc_0_in.p = &param;
+	acc_0_in.len = sizeof(param);
 
 	struct fpga_param acc_0_out = {0};
-	acc_0_out.p = &res_test_fpga;
-	acc_0_out.len = sizeof(res_test_fpga);
+	acc_0_out.p = &res_fpga;
+	acc_0_out.len = sizeof(res_fpga);
 
 	FPGA(test_func, acc_0_in, acc_0_out, 0);
 	wait_accelerator(acc_0_out, 0);
 
-	CPU(test_func, &param_test, &res_test_cpu);
+	CPU(test_func, &param, &res_cpu);
 
-	printf("Result FPGA : res_1=%f, res_2=%f\n", res_test_fpga.res_1, res_test_fpga.res_2);
-	printf("Result CPU : res_1=%f, res_2=%f\n", res_test_cpu.res_1, res_test_cpu.res_2);
+	printf("Result FPGA = %f\n", res_fpga);
+	printf("Result CPU = %f\n", res_cpu);
 
 
 	deinit_accel_system();

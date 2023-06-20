@@ -17,14 +17,13 @@ ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
 NG_ULTRA_SDK_DOCKER_IMG=
 NX_DOCKER_IMG=nx-tools:1.0
-VIVADO_DOCKER_IMG=
 
 #Impulse license
 NX_HOSTNAME=localhost.localdomain
 NX_MAC_ADDR=86:8a:dd:8d:51:a8
 
 # Panda-Bambu compilation parameters
-BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --data-bus-bitsize=32 --addr-bus-bitsize=32 -DLOCOD_FPGA"
+BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --distram-threshold=1024 --data-bus-bitsize=32 --addr-bus-bitsize=32 -DLOCOD_FPGA"
 
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1
@@ -127,7 +126,7 @@ fi
 #**********************************************************/
 echo "Checking dependecies ..."
 #Docker Panda Bambu
-if docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) ${PANDA_DOCKER_IMG} bambu --version; then
+if docker run --rm -t -u $(id -u):$(id -g) ${PANDA_DOCKER_IMG} bambu --version; then
 	echo "- Panda docker found"
 else
 	echo "- Panda docker not found"
@@ -135,7 +134,7 @@ else
 fi
 
 #Docker Petalinux SDK Ultra96
-if [ $(docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) ${ULTRA96_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
+if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ULTRA96_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
 	echo "- Ultra96 SDK docker found"
 else
 	echo "- Ultra96 SDK docker not found"
@@ -143,7 +142,7 @@ else
 fi
 
 #Docker Petalinux SDK Enclustra
-if [ $(docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
+if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
 	echo "- Enclustra SDK docker found"
 else
 	echo "- Enclustra SDK docker not found"
@@ -162,7 +161,7 @@ else
 fi
 
 #Docker Impulse
-if docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} ${NX_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
+if docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} ${NX_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
 	echo "- NX docker found"
 else
 	echo "- NX docker not found"
@@ -190,17 +189,15 @@ echo -n "Compiling C code ... "
 case $TARGET in
 	ultra96)
 		cp $FILE $LOCOD_CPU_DIR/src/main.c
-		docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) -v $BASE_DIR/$LOCOD_CPU_DIR:/tmp/locod-cpu ${ULTRA96_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ULTRA96_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
-			cd locod-cpu;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	enclustra)
 		cp $FILE $LOCOD_CPU_DIR/src/main.c
-		docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) -v $BASE_DIR/$LOCOD_CPU_DIR:/tmp/locod-cpu ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
-			cd locod-cpu;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
@@ -240,13 +237,13 @@ echo -n "Generating RTL code of accelerators functions ... "
 cp $FILE temp/main.c
 
 for ACC in $FPGA_FUNC; do
-	docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) -v $PWD/temp:/tmp ${PANDA_DOCKER_IMG} bash -c \
+	docker run --rm -t -u $(id -u):$(id -g) -v $PWD/temp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"mkdir bambu;\
 		cd bambu;\
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ../main.c;\
 		cp ${ACC}.v ../;\
 		cd ..;\
-		rm -rf bambu" &> /dev/null
+		rm -rf bambu"
 	cp temp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 done
 
@@ -299,7 +296,7 @@ fi
 #*********************************************************************************/
 #***************** Step 5 : Synthesis of the FPGA design *************************/
 #*********************************************************************************/
-if [[ $FPGA == 1 ]]; then
+if [[ $FPGA == 2 ]]; then
 
 echo -n "Synthesis of the FPGA design ... "
 
@@ -313,7 +310,7 @@ case $TARGET in
 		cd $BASE_DIR
 		;;
 	ng-ultra)
-		docker run --rm -t --workdir /tmp -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} -v $BASE_DIR/$LOCOD_FPGA_DIR:/tmp ${NX_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} -v $BASE_DIR/$LOCOD_FPGA_DIR:/workdir ${NX_DOCKER_IMG} bash -c \
 			"lmgrd;\
 			sleep 1;\
 			cd nanoxplore;\

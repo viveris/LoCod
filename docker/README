@@ -1,7 +1,0 @@
-# LoCoD docker image
-
-* vivado: this directory contains resources need to build vivado docker image.
-* locod: this directory contains resources need to build LoCoD docker image.
-
-Vivado docker image shall be built first.
-
