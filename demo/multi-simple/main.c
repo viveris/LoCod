@@ -68,12 +68,7 @@ int main()
 	param_result[i].p = &result[i];
 	param_result[i].len = sizeof(int);
 	}
-	//init_dma(8);
 	
-/*for(i=0; i<8; i++){
-	FPGA(acc_1, param_a[0], param_result[0], 0);
-	wait_accelerator(&param_result[0], 0);
-}*/
 	FPGA(acc_5, param_a[4], param_result[4], 4);
 	wait_accelerator(param_result[4], 4);
 	fprintf(stdout, "Accelerator 5 Result : %i + %i = %i\n", param[4].a, param[4].b, result[4]);
@@ -98,16 +93,6 @@ int main()
 	FPGA(acc_6, param_a[5], param_result[5], 5);
 	wait_accelerator(param_result[5], 5);
 	fprintf(stdout, "Accelerator 6 Result : %i + %i = %i\n", param[5].a, param[5].b, result[5]);
-
-		
-	
-/*	for(i = 0; i<8; i++){
-		fprintf(stdout, "Accelerator %d Result : %d\n", i, result[i]);
-	}*/
-
-/*	CPU(addition, &param, result);
-	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
-	fprintf(stdout, "A2 + B2 = %d\n", result[1]);*/
 
 	deinit_accel_system();
 
