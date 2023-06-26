@@ -58,9 +58,11 @@ function get_fct_acc_number()
 #******************************************************/
 help()
 {
-	echo "Usage: locod	[ -t | --target ]
-		[ -f | --file ]
-		[ -c | --component ]
+	echo "Usage: locod	
+		[ -t | --target ] < target board : enclustra, ultra96, ng-ultra >
+		[ -f | --file ] < main C file >
+		[ --no-hard ] < don't generate bitstream >
+		[ --no-soft ] < don't generate executable >
 		[ -h | --help  ]"
 	exit 2
 }

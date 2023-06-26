@@ -48,6 +48,8 @@ int main(int argc, char **argv)
 	CPU(acc_2, &param, &result);
 	fprintf(stdout, "A x B = %f\n", result);
 
+	printf("FPGA process time : %dns\n", get_time_ns_FPGA(0));
+
 	deinit_accel_system();
 
 	return 0;

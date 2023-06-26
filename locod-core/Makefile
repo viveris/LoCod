@@ -7,7 +7,7 @@ OBJDIR = obj
 SRCDIR = src
 BINDIR = bin
 
-OBJS = $(addprefix $(OBJDIR)/, main.o map_memory.o)
+OBJS = $(addprefix $(OBJDIR)/, main.o map_memory.o demosaicing_float.o)
 
 all: locod-cpu
 
