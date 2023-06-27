@@ -11,7 +11,7 @@ BASE_DIR=$(pwd)
 LOCOD_CPU_DIR=locod-core
 LOCOD_FPGA_DIR=submodules/locod-fpga
 
-# Docker files
+# Docker images
 PANDA_DOCKER_IMG=panda-bambu:9.8.0
 ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
@@ -23,7 +23,7 @@ NX_HOSTNAME=localhost.localdomain
 NX_MAC_ADDR=86:8a:dd:8d:51:a8
 
 # Panda-Bambu compilation parameters
-BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --distram-threshold=1024 --data-bus-bitsize=32 --addr-bus-bitsize=32 -DLOCOD_FPGA"
+BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 -DLOCOD_FPGA"
 
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1
@@ -260,9 +260,6 @@ fi
 if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
-
-# cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_ip_template.vhd $LOCOD_FPGA_DIR/src/generated_files/top_ip.vhd
-# sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/top_ip.vhd
 
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/top.vhd

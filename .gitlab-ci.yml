@@ -12,7 +12,7 @@ Build-multi-parallel:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-multi-simple:
@@ -23,7 +23,7 @@ Build-multi-simple:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-picture-demo:
@@ -34,7 +34,7 @@ Build-picture-demo:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-picture-float:
@@ -45,7 +45,7 @@ Build-picture-float:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-simple-float-add:
@@ -56,7 +56,7 @@ Build-simple-float-add:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-simple-float-mul:
@@ -67,7 +67,7 @@ Build-simple-float-mul:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-simple-int-add:
@@ -78,7 +78,7 @@ Build-simple-int-add:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-simple-int-mul:
@@ -89,7 +89,7 @@ Build-simple-int-mul:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-table-add:
@@ -100,7 +100,7 @@ Build-table-add:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-table-mul:
@@ -111,7 +111,7 @@ Build-table-mul:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
 
 
 Build-use-case-malvar:
@@ -122,4 +122,15 @@ Build-use-case-malvar:
     paths:
       - locod-output/locod-cpu
       - locod-output/fpga.bit
-    expire_in: 1 day
+    expire_in: 7 day
+
+
+Build-use-case-filtering:
+  script:
+    - source ${VIVADO_PATH}
+    - bash -x locod.sh -t enclustra -f demo/use-case-filtering/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day

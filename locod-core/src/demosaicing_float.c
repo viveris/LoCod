@@ -663,36 +663,6 @@ void rearrange_3(float *X_1, unsigned int width, unsigned int height, float *X_S
 		}
 	}
 }
-/****************************************************/
-/**************** Utility functions *****************/
-/****************************************************/
-
-unsigned char *load_img(const char *path)
-{
-	FILE *ptr;
-
-	/* Open file */
-	ptr = fopen(path,"rb");
-	if (ptr == NULL) {
-		perror("Cannot open file");
-	}
-
-	/* Get filesize */
-	fseek(ptr, 0L, SEEK_END);
-	unsigned int fsize = ftell(ptr);
-	/* Get back to the start of file */
-	fseek(ptr, 0L, SEEK_SET);
-
-	/* Allocate memory to load file data */
-	unsigned char *file_data = malloc(fsize);
-
-	/* Load into memory and close file */
-	fread(file_data, fsize, 1, ptr);
-	fclose(ptr);
-
-	fprintf(stdout, "File %s opened, size=%u bytes\n", path, fsize);
-	return file_data;
-}
 
 
 /****************************************************/
