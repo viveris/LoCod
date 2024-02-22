@@ -70,10 +70,10 @@ int init_accel_system(int nb_acc)
 
 	DEBUG_PRINT("%s - Reseting accelerators...\n", __func__);
 	REG_VALUE(0) = 0xAAAAAAAA;
-	DEBUG_PRINT("%s - Reg 0 value during reset = 0x%x\n", __func__, REG_VALUE(0));
+	DEBUG_PRINT("%s - Control reg out value during reset = 0x%x\n", __func__, REG_VALUE(0));
 	usleep(0.1);
 	REG_VALUE(0) = 0x0;
-	DEBUG_PRINT("%s - Reg 0 value after reset = 0x%x\n", __func__, REG_VALUE(0));
+	DEBUG_PRINT("%s - Control reg out value after reset = 0x%x\n", __func__, REG_VALUE(0));
 
 	DEBUG_PRINT("%s - Initializing accel_memory structure... ", __func__);
 	nb_accel = nb_acc;
@@ -158,18 +158,18 @@ int start_accelerator(int accel)
 	DEBUG_PRINT("%s - Starting accelerator %d...\n", __func__, accel);
 
 	DEBUG_PRINT("%s - Copying addresses of param and result to accelerator registers\n", __func__);
-	REG_VALUE((3*accel) + 2) = (int)accel_memory[accel].phy_addr;
-	REG_VALUE((3*accel) + 3) = (int)accel_memory[accel].phy_addr + accel_memory[accel].param_len;
-	DEBUG_PRINT("%s - param register at 0x%x\n", __func__, REG_VALUE((3*accel) + 2));
-	DEBUG_PRINT("%s - result register at 0x%x\n", __func__, REG_VALUE((3*accel) + 3));
+	REG_VALUE((2*accel) + 1) = (int)accel_memory[accel].phy_addr;
+	REG_VALUE((2*accel) + 2) = (int)accel_memory[accel].phy_addr + accel_memory[accel].param_len;
+	DEBUG_PRINT("%s - param register at 0x%x\n", __func__, REG_VALUE((2*accel) + 1));
+	DEBUG_PRINT("%s - result register at 0x%x\n", __func__, REG_VALUE((2*accel) + 2));
 
 	DEBUG_PRINT("%s - Setting start bit\n", __func__);
 	REG_VALUE(0) |= 1 << 2*accel;
-	DEBUG_PRINT("%s - Reg 0 value after high = 0x%x\n", __func__, REG_VALUE(0));
+	DEBUG_PRINT("%s - Control reg out value after high = 0x%x\n", __func__, REG_VALUE(0));
 	usleep(0.1);
 	REG_VALUE(0) &= ~(1 << 2*accel);
-	DEBUG_PRINT("%s - Reg 0 value after low = 0x%x\n", __func__, REG_VALUE(0));
-	DEBUG_PRINT("%s - Reg 1 value after low = 0x%x\n\n", __func__, REG_VALUE(1));
+	DEBUG_PRINT("%s - Control reg out value after low = 0x%x\n", __func__, REG_VALUE(0));
+	DEBUG_PRINT("%s - Control reg in value after low = 0x%x\n\n", __func__, REG_VALUE(2*nb_accel+1));
 
 	return 0;
 }
@@ -178,9 +178,9 @@ int start_accelerator(int accel)
 int wait_accelerator(struct fpga_param result, int accel)
 {
 	DEBUG_PRINT("%s - Waiting accelerator %d to finish...\n", __func__ , accel);
-	DEBUG_PRINT("%s - Reg 1 value on entrance = 0x%x\n", __func__, REG_VALUE(1));	
+	DEBUG_PRINT("%s - Control reg in value on entrance = 0x%x\n", __func__, REG_VALUE(2*nb_accel+1));	
 
-	while ((REG_VALUE(1) & (1<<accel)) == 0) {
+	while ((REG_VALUE(2*nb_accel+1) & (1<<accel)) == 0) {
 		usleep(POLL_PERIOD_US);
 	}
 
@@ -191,7 +191,7 @@ int wait_accelerator(struct fpga_param result, int accel)
 int get_time_ns_FPGA(int accel)
 {
 	DEBUG_PRINT("%s - Getting dration value from accelerator %d...\n\n", __func__ , accel);
-	int fpga_cnt_latched = REG_VALUE((3*accel) + 4);
+	int fpga_cnt_latched = REG_VALUE(2*nb_accel+1+accel+1);
 	return fpga_cnt_latched * (1000000000 / FPGA_FREQ_HZ);
 }
 

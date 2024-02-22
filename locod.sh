@@ -16,7 +16,7 @@ PANDA_DOCKER_IMG=panda-bambu:9.8.0
 ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
 NG_ULTRA_SDK_DOCKER_IMG=
-NX_DOCKER_IMG=nx-tools:1.0
+NX_DOCKER_IMG=nx-tools:2.0
 
 #Impulse license
 NX_HOSTNAME=localhost.localdomain
@@ -271,16 +271,16 @@ for ACC in $FPGA_FUNC; do
 	sed -i "s/generated_ip_inst : entity work.XXXX/generated_ip_inst : entity work.${ACC}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
 	echo 	"accelerator_${ACC_NUM}_inst : entity work.accelerator_${ACC_NUM}
 			port map(
-				clk					    => clk,
-				rst 				    => rst,
-				start 				    => registers(0)(2*${ACC_NUM}),
-				reset 				    => registers(0)(2*${ACC_NUM}+1),
-				param 				    => registers(3*${ACC_NUM}+2),
-				result  			    => registers(3*${ACC_NUM}+2+1),
-				status_end_process 	    => registers(1)(${ACC_NUM}),
-				duration_count_latched  => registers(3*${ACC_NUM}+2+2),
-				M_AXI_out               => M_AXI_out_array(${ACC_NUM}),
-				M_AXI_in                => M_AXI_in_array(${ACC_NUM})
+				clk					    => clk_i,
+				rst 				    => rstn_i,
+				start 				    => registers_out(0)(2*${ACC_NUM}),
+				reset 				    => registers_out(0)(2*${ACC_NUM}+1),
+				param 				    => registers_out(2*${ACC_NUM}+1),
+				result  			    => registers_out(2*${ACC_NUM}+1+1),
+				status_end_process 	    => registers_in(0)(${ACC_NUM}),
+				duration_count_latched  => registers_in(${ACC_NUM}+1),
+				M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
+				M_AXI_in                => M_AXIL_in_array(${ACC_NUM})
 			);
 			" >> $LOCOD_FPGA_DIR/src/generated_files/top.vhd
 done
