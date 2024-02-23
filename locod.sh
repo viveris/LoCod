@@ -261,8 +261,8 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
 
-cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/top.vhd
-sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/top.vhd
+cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
+sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
 for ACC in $FPGA_FUNC; do
 	ACC_NUM=$(get_fct_acc_number $FILE $ACC)
@@ -282,10 +282,10 @@ for ACC in $FPGA_FUNC; do
 				M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
 				M_AXI_in                => M_AXIL_in_array(${ACC_NUM})
 			);
-			" >> $LOCOD_FPGA_DIR/src/generated_files/top.vhd
+			" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 done
 
-echo "end Behavioral;" >> $LOCOD_FPGA_DIR/src/generated_files/top.vhd
+echo "end Behavioral;" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
 echo "Done !"
 
@@ -314,6 +314,7 @@ case $TARGET in
 			sleep 1;\
 			cd nanoxplore;\
 			nxpython create_proj.py"
+		cp $BASE_DIR/$LOCOD_FPGA_DIR/nanoxplore/locod-nx/fpga.nxb $BASE_DIR/locod-output/
 		;;
 esac
 
