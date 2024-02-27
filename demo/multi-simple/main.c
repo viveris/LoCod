@@ -48,7 +48,7 @@ int main()
 	int i;
 	srand(time(0));
 	
-	init_accel_system(8);
+	init_locod(8);
 
 	for(i = 0; i<8; i++){
 		param[i].a = rand() % 10;
@@ -94,7 +94,7 @@ int main()
 	wait_accelerator(param_result[5], 5);
 	fprintf(stdout, "Accelerator 6 Result : %i + %i = %i\n", param[5].a, param[5].b, result[5]);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	return 0;
 }

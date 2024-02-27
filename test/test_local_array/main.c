@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 	printf("Debut test local array\n");
 
 	//----------------- Debut algo ---------------------
-	init_accel_system(1);
+	init_locod(1);
 
 
 	struct fpga_param acc_0_in = {0};
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 	printf("Result CPU : res_1=%f, res_2=%f\n", res_test_cpu.res_1, res_test_cpu.res_2);
 
 
-	deinit_accel_system();
+	deinit_locod();
 	//------------------ Fin algo ----------------------
 
 	return 0;

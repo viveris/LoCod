@@ -118,7 +118,7 @@ void pic_multiplication(struct data* param, float *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	init_accel_system(1);
+	init_locod(1);
 	int b; /* TODO to be removed when only two param for interface */
 	float *result = NULL;
 	FILE *result_file;
@@ -260,7 +260,7 @@ int main(int argc, char **argv)
 	dump_memory((void*) MEM_DMA_BASE, ctx.buff->len);
 	fprintf(stdout, "\n");*/
 
-	deinit_accel_system();
+	deinit_locod();
 
 	exit(EXIT_SUCCESS);
 

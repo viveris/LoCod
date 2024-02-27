@@ -15,7 +15,7 @@ LOCOD_FPGA_DIR=submodules/locod-fpga
 PANDA_DOCKER_IMG=panda-bambu:9.8.0
 ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
-NG_ULTRA_SDK_DOCKER_IMG=
+NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
 NX_DOCKER_IMG=nx-tools:2.0
 
 #Impulse license
@@ -34,7 +34,7 @@ FPGA=1
 #**********************************************/
 function get_max_acc_number()
 {
-	grep -oP '(?<=init_accel_system\().*?(?=\))' $1
+	grep -oP '(?<=init_locod\().*?(?=\))' $1
 }
 
 function get_fpga_func()
@@ -152,7 +152,12 @@ else
 fi
 
 #Docker NG-Ultra SDK
-#TODO
+if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
+	echo "- NG-Ultra SDK docker found"
+else
+	echo "- NG-Ultra SDK docker not found"
+	exit 1
+fi
 
 #Vivado
 if vivado -version &> /dev/null; then
@@ -191,20 +196,23 @@ echo -n "Compiling C code ... "
 case $TARGET in
 	ultra96)
 		cp $FILE $LOCOD_CPU_DIR/src/main.c
-		docker run --rm -t -u $(id -u):$(id -g) -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ULTRA96_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ULTRA96_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	enclustra)
 		cp $FILE $LOCOD_CPU_DIR/src/main.c
-		docker run --rm -t -u $(id -u):$(id -g) -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	ng-ultra)
-		#TODO
+		cp $FILE $LOCOD_CPU_DIR/src/main.c
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/opt/ngultra_bsp/apps/locod ${NG_ULTRA_SDK_DOCKER_IMG} bash -c \
+			'make'
+		cp $LOCOD_CPU_DIR/out/locod-cpu.elf locod-output/locod-cpu.elf
 		;;
 esac
 
@@ -222,7 +230,6 @@ echo -n "Extracting accel parameters from C code ... "
 MAX_ACC_NB=$(get_max_acc_number $FILE)
 FPGA_FUNC=$(get_fpga_func $FILE)
 USED_ACC_NB=$(get_used_acc_number $FILE)
-
 
 echo "Done !"
 
@@ -315,6 +322,7 @@ case $TARGET in
 			cd nanoxplore;\
 			nxpython create_proj.py"
 		cp $BASE_DIR/$LOCOD_FPGA_DIR/nanoxplore/locod-nx/fpga.nxb $BASE_DIR/locod-output/
+		rm -rf $BASE_DIR/$LOCOD_FPGA_DIR/nanoxplore/locod-nx
 		;;
 esac
 

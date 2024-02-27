@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 {
 	int result[2] = { 0 };
 	struct param_test param = { 0 };
-	init_accel_system(1);
+	init_locod(1);
 	if (argc < 5) {
 		param.a[0] = 2;
 		param.a[1] = 8;
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 	fprintf(stdout, "A1 x B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 x B2 = %d\n", result[1]);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	return 0;
 }

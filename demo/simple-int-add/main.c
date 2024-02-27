@@ -18,20 +18,17 @@ void acc_2(struct param_test *param, int *result)
 }
 
 #ifndef LOCOD_FPGA
-int main(int argc, char **argv)
+int main(void)
 {
 	int result = 0;
 	struct param_test param = { 0 };
-	init_accel_system(1);
-	if (argc < 3) {
-		param.a = 5;
-		param.b = 7;
-	} else {
-		param.a = atoi(argv[1]);
-		param.b = atoi(argv[2]);
-	}
 
-	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
+	init_locod(1);
+
+	param.a = 5;
+	param.b = 7;
+
+	printf("A = %d  B = %d\n", param.a, param.b);
 
 	struct fpga_param param_a = { 0 };
 	param_a.p = &param;
@@ -43,12 +40,12 @@ int main(int argc, char **argv)
 
 	FPGA(acc_1, param_a, param_result, 0);
 	wait_accelerator(param_result, 0);
-	fprintf(stdout, "A + B = %d\n", result);
+	printf("A + B = %d\n", result);
 
 	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %d\n", result);
+	printf("A x B = %d\n", result);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	return 0;
 }

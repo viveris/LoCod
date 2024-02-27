@@ -1,25 +1,20 @@
-#include "map_memory.h"
-
+#include "locod.h"
 
 //======================================= Constant definitions ==========================================
-//Registers ADDR
-#define REG_AXI_ADDR				0xA0000000
-#define REG_VALUE(reg_index)		*((int*)reg_virt_ptr + reg_index)
-
-//Physical memory ADDR
-#define DMA_BASE_ADDR 				0x40000000
-
-#define FPGA_FREQ_HZ 				100000000
-
-#define POLL_PERIOD_US         		1
-
-#define DEBUG
+//Registers
+#define REG_VALUE(reg_index)		*((int*)reg_ptr + reg_index)
 
 #ifdef DEBUG
 #define DEBUG_PRINT(...) do{ printf(__VA_ARGS__ ); } while( 0 )
 #else
 #define DEBUG_PRINT(...) do{ } while ( 0 )
-#endif
+#endif //DEBUG
+
+#if defined(LINUX)
+	#define USLEEP(...) do{ usleep(__VA_ARGS__ ); } while( 0 )
+#elif defined(BAREMETAL)
+	#define USLEEP(...) do{ } while ( 0 )
+#endif //LINUX or BAREMETAL 
 
 
 //======================================= Types definition =======================================
@@ -27,7 +22,7 @@ typedef struct {
 	int phy_addr;
 	int param_len;
 	int result_len;
-	void *virt_ptr;
+	void *mem_ptr;
 } accel_memory_t;
 
 
@@ -36,7 +31,7 @@ typedef struct {
 int fd = -1;
 
 //Registers virtual pointer
-void *reg_virt_ptr = NULL;
+void *reg_ptr = NULL;
 
 //Shared memory for each accelerator
 accel_memory_t *accel_memory;
@@ -46,10 +41,11 @@ int next_addr = DMA_BASE_ADDR;  //keeps track of what the next base address shou
  
 
 //=========================================== Function definitions ==============================================
-int init_accel_system(int nb_acc)
+int init_locod(int nb_acc)
 {
 	DEBUG_PRINT("%s - Initializing accelerator system...\n", __func__);
 
+#if defined(LINUX)
 	DEBUG_PRINT("%s - Open mem file descriptor... ", __func__);
 	fd = open("/dev/mem", O_RDWR | O_SYNC);
 	if (fd == -1)
@@ -60,18 +56,28 @@ int init_accel_system(int nb_acc)
 	DEBUG_PRINT("open fd succeed\n");
 
 	DEBUG_PRINT("%s - Mmap control registers at address 0x%x... ", __func__, REG_AXI_ADDR);
-	reg_virt_ptr = mmap((NULL), 32*sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, REG_AXI_ADDR);
-	if (reg_virt_ptr == MAP_FAILED)
+	reg_ptr = mmap((NULL), 32*sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, REG_AXI_ADDR);
+	if (reg_ptr == MAP_FAILED)
 	{
 		DEBUG_PRINT("mmap failed\n\n");
 		return -1;
 	}
 	DEBUG_PRINT("mmap succeed\n");
+#elif defined(BAREMETAL)
+	DEBUG_PRINT("%s - Initializing NG-Ultra board components... ", __func__);
+	if (ngultra_init() != NGULTRA_INIT_OK) {
+		DEBUG_PRINT("NG-Ultra init failed\n\n");
+        return -1;
+    }
+	DEBUG_PRINT("NG-Ultra init succeed\n");
+
+	reg_ptr = (void*)REG_AXI_ADDR;
+#endif //LINUX or BAREMETAL 
 
 	DEBUG_PRINT("%s - Reseting accelerators...\n", __func__);
 	REG_VALUE(0) = 0xAAAAAAAA;
 	DEBUG_PRINT("%s - Control reg out value during reset = 0x%x\n", __func__, REG_VALUE(0));
-	usleep(0.1);
+	USLEEP(0.1);
 	REG_VALUE(0) = 0x0;
 	DEBUG_PRINT("%s - Control reg out value after reset = 0x%x\n", __func__, REG_VALUE(0));
 
@@ -107,14 +113,19 @@ int init_accelerator_memory(struct fpga_param param, struct fpga_param result, i
 	DEBUG_PRINT("%s - Param data physical address : 0x%x\n", __func__, accel_memory[accel].phy_addr);
 	DEBUG_PRINT("%s - Result data physical address : 0x%x\n", __func__, accel_memory[accel].phy_addr + accel_memory[accel].param_len);
 
+#if defined(LINUX)
 	DEBUG_PRINT("%s - Mmap accelerator %d memory at address 0x%x... ", __func__, accel, accel_memory[accel].phy_addr);
-	accel_memory[accel].virt_ptr = mmap((NULL), param.len + result.len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, accel_memory[accel].phy_addr);
-	if (accel_memory[accel].virt_ptr == MAP_FAILED)
+	accel_memory[accel].mem_ptr = mmap((NULL), param.len + result.len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, accel_memory[accel].phy_addr);
+	if (accel_memory[accel].mem_ptr == MAP_FAILED)
 	{
 		DEBUG_PRINT("mmap failed\n\n");
 		return -1;
 	}
 	DEBUG_PRINT("mmap succeed\n\n");
+#elif defined(BAREMETAL)
+	accel_memory[accel].mem_ptr = (void*)accel_memory[accel].phy_addr;
+	DEBUG_PRINT("\n");
+#endif //LINUX or BAREMETAL
 
 	return 0;
 }
@@ -123,12 +134,12 @@ int init_accelerator_memory(struct fpga_param param, struct fpga_param result, i
 int cp_param_and_result_to_accel_memory(struct fpga_param param, struct fpga_param result, int accel)
 {
 	DEBUG_PRINT("%s - Copying param and result data to accelerator %d memory... ", __func__, accel);
-	if (memcpy(accel_memory[accel].virt_ptr, param.p, param.len) == NULL)
+	if (memcpy(accel_memory[accel].mem_ptr, param.p, param.len) == NULL)
 	{
 		DEBUG_PRINT("copy failed\n\n");
 		return -1;
 	}
-	if (memcpy(accel_memory[accel].virt_ptr + accel_memory[accel].param_len, result.p, result.len) == NULL)
+	if (memcpy(accel_memory[accel].mem_ptr + accel_memory[accel].param_len, result.p, result.len) == NULL)
 	{
 		DEBUG_PRINT("copy failed\n\n");
 		return -1;
@@ -142,7 +153,7 @@ int cp_param_and_result_to_accel_memory(struct fpga_param param, struct fpga_par
 int cp_result_from_accel_memory(struct fpga_param result, int accel)
 {
 	DEBUG_PRINT("%s - Copying result data from accelerator %d memory... ", __func__, accel);
-	if (memcpy(result.p, accel_memory[accel].virt_ptr + accel_memory[accel].param_len, result.len) == NULL)
+	if (memcpy(result.p, accel_memory[accel].mem_ptr + accel_memory[accel].param_len, result.len) == NULL)
 	{
 		DEBUG_PRINT("copy failed\n\n");
 		return -1;
@@ -166,7 +177,7 @@ int start_accelerator(int accel)
 	DEBUG_PRINT("%s - Setting start bit\n", __func__);
 	REG_VALUE(0) |= 1 << 2*accel;
 	DEBUG_PRINT("%s - Control reg out value after high = 0x%x\n", __func__, REG_VALUE(0));
-	usleep(0.1);
+	USLEEP(0.1);
 	REG_VALUE(0) &= ~(1 << 2*accel);
 	DEBUG_PRINT("%s - Control reg out value after low = 0x%x\n", __func__, REG_VALUE(0));
 	DEBUG_PRINT("%s - Control reg in value after low = 0x%x\n\n", __func__, REG_VALUE(2*nb_accel+1));
@@ -181,7 +192,7 @@ int wait_accelerator(struct fpga_param result, int accel)
 	DEBUG_PRINT("%s - Control reg in value on entrance = 0x%x\n", __func__, REG_VALUE(2*nb_accel+1));	
 
 	while ((REG_VALUE(2*nb_accel+1) & (1<<accel)) == 0) {
-		usleep(POLL_PERIOD_US);
+		USLEEP(POLL_PERIOD_US);
 	}
 
 	return cp_result_from_accel_memory(result, accel);
@@ -196,14 +207,15 @@ int get_time_ns_FPGA(int accel)
 }
 
 
-int deinit_accel_system()
+int deinit_locod(void)
 {
 	DEBUG_PRINT("%s - Deinitializing accelerator system...\n", __func__);
 
+#if defined(LINUX)
 	for (int accel = 0 ; accel < nb_accel ; accel++)
 	{
 		DEBUG_PRINT("%s - Munmap accelerator %d memory at address 0x%x... ", __func__, accel, accel_memory[accel].phy_addr);
-		if (munmap(accel_memory[accel].virt_ptr, accel_memory[accel].param_len + accel_memory[accel].result_len) == -1)
+		if (munmap(accel_memory[accel].mem_ptr, accel_memory[accel].param_len + accel_memory[accel].result_len) == -1)
 		{
 			DEBUG_PRINT("munmap failed\n\n");
 			return -1;
@@ -211,10 +223,8 @@ int deinit_accel_system()
 		DEBUG_PRINT("munmap succeed\n");
 	}
 
-	free(accel_memory);
-
 	DEBUG_PRINT("%s - Munmap control registers at address 0x%x... ", __func__, REG_AXI_ADDR);
-	if (munmap(reg_virt_ptr, 32*sizeof(int)) == -1)
+	if (munmap(reg_ptr, 32*sizeof(int)) == -1)
 	{
 		DEBUG_PRINT("munmap failed\n\n");
 		return -1;
@@ -223,6 +233,11 @@ int deinit_accel_system()
 
 	DEBUG_PRINT("%s - Closing mem file descriptor...\n\n", __func__);
 	close(fd);
+#elif defined(BAREMETAL)
+	DEBUG_PRINT("\n");
+#endif //LINUX or BAREMETAL
+
+	free(accel_memory);
 
 	return 0;
 }

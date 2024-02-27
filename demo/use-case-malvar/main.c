@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 
 
 	//----------------- Debut algo ---------------------
-	init_accel_system(1);
+	init_locod(1);
 
 	//Malvar
 	convert_array_uchar_to_float(imagette, param_malvar->bayer_img, IMG_WIDTH*IMG_HEIGHT);
@@ -288,7 +288,7 @@ int main(int argc, char *argv[])
 
 	printf("FPGA process time : %dns\n", get_time_ns_FPGA(0));
 
-	deinit_accel_system();
+	deinit_locod();
 	//------------------ Fin algo ----------------------
 
 

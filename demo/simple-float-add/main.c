@@ -22,7 +22,7 @@ int main(int argc, char **argv)
 {
 	float result = 0;
 	struct param_test param = { 0 };
-	init_accel_system(1);
+	init_locod(1);
 	if (argc < 3) {
 		param.a = 3.14;
 		param.b = 12.8984;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 
 	printf("FPGA process time : %dns\n", get_time_ns_FPGA(0));
 
-	deinit_accel_system();
+	deinit_locod();
 
 	return 0;
 }

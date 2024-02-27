@@ -61,7 +61,7 @@ int main()
 
 	printf("Locod multi_parallel example starting ...\n");
 
-	init_accel_system(8);
+	init_locod(8);
 
 	srand(time(0));
 	param_rep[0].a = (rand() % 5)+1;
@@ -129,7 +129,7 @@ int main()
 
 	fprintf(stdout, "acc 0 time : %dns\n", get_time_ns_FPGA(0));
 
-	deinit_accel_system();
+	deinit_locod();
 		
 	return 0;
 }

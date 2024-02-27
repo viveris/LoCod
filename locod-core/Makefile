@@ -1,20 +1,26 @@
-# Compiler flags used for the cpu compilation
-CFLAGS =
-LIBS = -lm
-
+ifeq ($(TARGET), $(filter $(TARGET), ultra96 enclustra))
 # Directory structure
+INCLUDEDIR = include
+LIBDIR = lib
 OBJDIR = obj
 SRCDIR = src
 BINDIR = bin
 
-OBJS = $(addprefix $(OBJDIR)/, main.o map_memory.o demosaicing_float.o)
+# Varibles overloading
+CC +=
+CFLAGS += -DTARGET_ENCLUSTRA
+CPPFLAGS +=
+LDFLAGS +=
+LDLIBS += -lm
+
+OBJS = $(addprefix $(OBJDIR)/, main.o locod.o demosaicing_float.o)
 
 all: locod-cpu
 
 locod-cpu: $(BINDIR)/locod-cpu
 
 $(BINDIR)/locod-cpu: $(OBJS) | $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+	$(CC) $(LDFLAGS) -L$(LIBDIR) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
@@ -37,3 +43,20 @@ fclean: clean
 
 
 re: fclean all
+endif
+
+
+ifeq ($(TARGET), ng-ultra)
+APP_NAME := locod-cpu
+NGULTRA_COMMON := y
+NGULTRA_INIT := y
+
+TARGET_MEM := TARGET_MEM_TCM_A
+
+include ../../build/common/Makefile.common
+
+SRCFILES += src/main.c src/locod.c
+CFLAGS += -DTARGET_NGULTRA
+
+include ../../build/common/Makefile.build
+endif

@@ -277,7 +277,7 @@ void acc_7(struct float *param, float *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	init_accel_system(2);
+	init_locod(2);
    	FILE *result_file;
 	FILE *result_file1;
 	struct data data = { 0 };
@@ -331,7 +331,7 @@ int main(int argc, char **argv)
 	FPGA(acc_1, acc_1_in, acc_1_out, 1);
 	wait_accelerator(acc_1_out, 1);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	print_matrix_TL(acc_zero_out, 1020);
 	print_matrix_TL(acc_one_out, 1020);

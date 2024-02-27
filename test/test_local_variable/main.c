@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	printf("Debut test local allocation\n");
 
 	//----------------- Debut algo ---------------------
-	init_accel_system(1);
+	init_locod(1);
 
 
 	struct fpga_param acc_0_in = {0};
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	printf("Result CPU = %f\n", res_cpu);
 
 
-	deinit_accel_system();
+	deinit_locod();
 	//------------------ Fin algo ----------------------
 
 	return 0;

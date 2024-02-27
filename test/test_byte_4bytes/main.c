@@ -19,7 +19,7 @@ void acc_1(struct param_test *param, char *result)
 #ifndef LOCOD_FPGA
 int main(char **argv)
 {	
-	init_accel_system(1);
+	init_locod(1);
 	int i = 1;
 //	int j, k, l;
 	char result[4] = {0};
@@ -82,7 +82,7 @@ int main(char **argv)
 //	CPU(multiplication, &param, &result);
 //	fprintf(stdout, "A x B = %f\n", result);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	return 0;
 }

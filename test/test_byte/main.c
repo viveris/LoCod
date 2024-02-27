@@ -21,7 +21,7 @@ int main(char **argv)
 	int i = 1;
 	char result[8] = {0};
 	struct param_test param = {{0}};
-	init_accel_system(1);
+	init_locod(1);
 	param.arr[0] = 'a';
 	
 	
@@ -75,7 +75,7 @@ int main(char **argv)
 //	CPU(multiplication, &param, &result);
 //	fprintf(stdout, "A x B = %f\n", result);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	return 0;
 }

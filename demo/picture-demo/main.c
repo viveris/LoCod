@@ -117,7 +117,7 @@ void pic_multiplication(struct data* param, unsigned int *result)
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	init_accel_system(1);
+	init_locod(1);
 	int b; /* TODO to be removed when only two param for interface */
 	unsigned int *result = NULL;
 	FILE *result_file;
@@ -223,7 +223,7 @@ int main(int argc, char **argv)
 	fprintf(stdout, "Good cells : %d out of %d\n", comp, ctx.buff->len);
 	CPU(pic_multiplication, ctx.buff, result);
 
-	deinit_accel_system();
+	deinit_locod();
 
 	exit(EXIT_SUCCESS);
 
