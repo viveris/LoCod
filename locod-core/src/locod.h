@@ -2,11 +2,11 @@
 #define LOCOD_H
 
 
-#if defined(TARGET_ULTRA96)
+#if defined(TARGET_ultra96)
 	#include "ultra96_defs.h"
-#elif defined(TARGET_ENCLUSTRA)
+#elif defined(TARGET_enclustra)
 	#include "enclustra_defs.h"
-#elif defined(TARGET_NGULTRA)
+#elif defined(TARGET_ngultra)
 	#include "ngultra_defs.h"
 #endif //TARGET
 

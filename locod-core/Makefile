@@ -8,7 +8,7 @@ BINDIR = bin
 
 # Varibles overloading
 CC +=
-CFLAGS += -DTARGET_ENCLUSTRA
+CFLAGS += -DTARGET_${TARGET}
 CPPFLAGS +=
 LDFLAGS +=
 LDLIBS += -lm
@@ -46,7 +46,7 @@ re: fclean all
 endif
 
 
-ifeq ($(TARGET), ng-ultra)
+ifeq ($(TARGET), ngultra)
 APP_NAME := locod-cpu
 NGULTRA_COMMON := y
 NGULTRA_INIT := y
@@ -56,7 +56,7 @@ TARGET_MEM := TARGET_MEM_TCM_A
 include ../../build/common/Makefile.common
 
 SRCFILES += src/main.c src/locod.c
-CFLAGS += -DTARGET_NGULTRA
+CFLAGS += -DTARGET_${TARGET}
 
 include ../../build/common/Makefile.build
 endif

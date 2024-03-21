@@ -59,7 +59,7 @@ function get_fct_acc_number()
 help()
 {
 	echo "Usage: locod	
-		[ -t | --target ] < target board : enclustra, ultra96, ng-ultra >
+		[ -t | --target ] < target board : enclustra, ultra96, ngultra >
 		[ -f | --file ] < main C file >
 		[ --no-hard ] < don't generate bitstream >
 		[ --no-soft ] < don't generate executable >
@@ -72,7 +72,7 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-t|--target)
-			if [[ $2 != ultra96 && $2 != enclustra && $2 != ng-ultra ]]; then
+			if [[ $2 != ultra96 && $2 != enclustra && $2 != ngultra ]]; then
 				echo "Unknown target $2"
 				exit 1
 			fi
@@ -151,11 +151,11 @@ else
 	exit 1
 fi
 
-#Docker NG-Ultra SDK
+#Docker ngultra SDK
 if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
-	echo "- NG-Ultra SDK docker found"
+	echo "- ngultra SDK docker found"
 else
-	echo "- NG-Ultra SDK docker not found"
+	echo "- ngultra SDK docker not found"
 	exit 1
 fi
 
@@ -208,7 +208,7 @@ case $TARGET in
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
-	ng-ultra)
+	ngultra)
 		cp $FILE $LOCOD_CPU_DIR/src/main.c
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/opt/ngultra_bsp/apps/locod ${NG_ULTRA_SDK_DOCKER_IMG} bash -c \
 			'make'
@@ -315,7 +315,7 @@ case $TARGET in
 		rm -rf locod-vivado_*
 		cd $BASE_DIR
 		;;
-	ng-ultra)
+	ngultra)
 		docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} -v $BASE_DIR/$LOCOD_FPGA_DIR:/workdir ${NX_DOCKER_IMG} bash -c \
 			"lmgrd;\
 			sleep 1;\
