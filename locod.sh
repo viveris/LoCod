@@ -308,8 +308,8 @@ echo -n "Synthesis of the FPGA design ... "
 
 case $TARGET in
 	ultra96 | enclustra)
-		cd $LOCOD_FPGA_DIR/vivado
-		vivado -mode tcl -nojournal -nolog -source generate_vivado.tcl -tclargs ${TARGET}
+		cd $LOCOD_FPGA_DIR/xilinx
+		vivado -mode tcl -nojournal -nolog -source generate_vivado_project.tcl -tclargs ${TARGET}
 		cp fpga.bit $BASE_DIR/locod-output/
 		rm -rf fpga.bit
 		rm -rf locod-vivado_*
@@ -320,9 +320,9 @@ case $TARGET in
 			"lmgrd;\
 			sleep 1;\
 			cd nanoxplore;\
-			nxpython create_proj.py"
-		cp $BASE_DIR/$LOCOD_FPGA_DIR/nanoxplore/locod-nx/fpga.nxb $BASE_DIR/locod-output/
-		rm -rf $BASE_DIR/$LOCOD_FPGA_DIR/nanoxplore/locod-nx
+			nxpython generate_nx_project.py ${TARGET}"
+		cp $LOCOD_FPGA_DIR/nanoxplore/locod-nx_$TARGET/fpga.nxb $BASE_DIR/locod-output/
+		rm -rf $LOCOD_FPGA_DIR/nanoxplore/locod-nx_*
 		;;
 esac
 
