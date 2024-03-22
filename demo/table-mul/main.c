@@ -24,7 +24,9 @@ int main(int argc, char **argv)
 {
 	int result[2] = { 0 };
 	struct param_test param = { 0 };
+
 	init_locod(1);
+
 	if (argc < 5) {
 		param.a[0] = 2;
 		param.a[1] = 8;
@@ -40,16 +42,8 @@ int main(int argc, char **argv)
 	fprintf(stdout, "A1 = %d  A2 = %d  B1 = %d  B2 = %d\n",
 	        param.a[0], param.a[1], param.b[0], param.b[1]);
 
-	struct fpga_param param_a = { 0 };
-	param_a.p = &param;
-	param_a.len = sizeof(struct param_test);
-
-	struct fpga_param param_result = { 0 };
-	param_result.p = result;
-	param_result.len = 2*sizeof(int);
-
-	FPGA(acc_2, param_a, param_result, 0);
-	wait_accelerator(param_result, 0);
+	FPGA(acc_2, &param, result, 0);
+	wait_accelerator(result, 0);
 	fprintf(stdout, "A1 x B1 = %d\n", result[0]);
 	fprintf(stdout, "A2 x B2 = %d\n", result[1]);
 

@@ -244,40 +244,11 @@ void acc_1(float *param, float *result) //filt_2 and rearrange_4
 	}
 }
 
-
-
-/*void acc_3(struct float *param, float *result)
-{
-	
-}*/
-	
-/*void acc_4(struct float *param, float *result)
-{
-
-}
-void acc_5(struct data *param, int *result)
-{
-	
-}
-void acc_6(struct data *param, int *result)
-{
-	
-}
-
-void acc_7(struct float *param, float *result)
-{
-	
-}*/
-
-/*void acc_8(float *param, float *result)
-{
-
-}*/
-
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
 	init_locod(2);
+	
    	FILE *result_file;
 	FILE *result_file1;
 	struct data data = { 0 };
@@ -307,29 +278,13 @@ int main(int argc, char **argv)
 	}
 	rearrange_1(YUV.YUV_1, width-4, height-4, X_Sym_Col);
 
-	struct fpga_param acc_0_in = {0};
-	acc_0_in.p = X_Sym_Col;
-	acc_0_in.len = sizeof(X_Sym_Col);
-
-	struct fpga_param acc_0_out = {0};
-	acc_0_out.p = acc_zero_out;
-	acc_0_out.len = sizeof(acc_zero_out);
-
-	struct fpga_param acc_1_in = {0};
-	acc_1_in.p = X_Sym_Line;
-	acc_1_in.len = sizeof(X_Sym_Line);
-	
-	struct fpga_param acc_1_out = {0};
-	acc_1_out.p = acc_one_out;
-	acc_1_out.len = sizeof(acc_one_out);
-
-	FPGA(acc_0, acc_0_in, acc_0_out, 0);
-	wait_accelerator(acc_0_out, 0);
+	FPGA(acc_0, X_Sym_Col, acc_zero_out, 0);
+	wait_accelerator(acc_zero_out, 0);
 
 	rearrange_3(acc_zero_out, width-4, height-4, X_Sym_Line);
 
-	FPGA(acc_1, acc_1_in, acc_1_out, 1);
-	wait_accelerator(acc_1_out, 1);
+	FPGA(acc_1, X_Sym_Line, acc_one_out, 1);
+	wait_accelerator(acc_one_out, 1);
 
 	deinit_locod();
 

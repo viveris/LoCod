@@ -139,16 +139,8 @@ int main(int argc, char **argv)
 	/* Allocate buffer for result */
 	result = malloc(ctx.buff->len * sizeof(int));
 
-	struct fpga_param param = { 0 };
-	param.p = ctx.buff;
-	param.len = ctx.buff->len * sizeof(float) + sizeof(ctx.buff->len) + sizeof(ctx.buff);
-
-	struct fpga_param param_result = { 0 };
-	param_result.p = result;
-	param_result.len = ctx.buff->len * sizeof(float);
-
-	FPGA(acc_1, param, param_result, 0);
-	wait_accelerator(param_result, 0);
+	FPGA(acc_1, ctx.buff, result, 0);
+	wait_accelerator(result, 0);
 
 	/* Write FPGA result into a file */
 	result_file = fopen("result.bin", "wb");
@@ -157,7 +149,7 @@ int main(int argc, char **argv)
 		goto free_and_failure;
 	}
 
-	if (fwrite(result, 1, param_result.len, result_file) != param_result.len) {
+	if (fwrite(result, 1, ctx.buff->len*sizeof(int), result_file) != ctx.buff->len*sizeof(int)) {
 		fprintf(stderr, "Cannot write file result.bin\n");
 		goto free_and_failure;
 	}

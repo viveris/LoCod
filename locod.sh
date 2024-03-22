@@ -193,23 +193,22 @@ if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
 
+cp $FILE $LOCOD_CPU_DIR/src/main.c
+
 case $TARGET in
 	ultra96)
-		cp $FILE $LOCOD_CPU_DIR/src/main.c
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ULTRA96_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	enclustra)
-		cp $FILE $LOCOD_CPU_DIR/src/main.c
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	ngultra)
-		cp $FILE $LOCOD_CPU_DIR/src/main.c
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/opt/ngultra_bsp/apps/locod ${NG_ULTRA_SDK_DOCKER_IMG} bash -c \
 			'make'
 		cp $LOCOD_CPU_DIR/out/locod-cpu.elf locod-output/locod-cpu.elf

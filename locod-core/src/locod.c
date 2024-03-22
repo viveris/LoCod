@@ -56,7 +56,7 @@ int init_locod(int nb_acc)
 	DEBUG_PRINT("open fd succeed\n");
 
 	DEBUG_PRINT("%s - Mmap control registers at address 0x%x... ", __func__, REG_AXI_ADDR);
-	reg_ptr = mmap((NULL), 32*sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, REG_AXI_ADDR);
+	reg_ptr = mmap((NULL), (3*nb_acc+2)*sizeof(int), PROT_READ | PROT_WRITE, MAP_SHARED, fd, REG_AXI_ADDR);
 	if (reg_ptr == MAP_FAILED)
 	{
 		DEBUG_PRINT("mmap failed\n\n");
@@ -201,7 +201,7 @@ int wait_accelerator(void *result_addr, int accel)
 
 int get_time_ns_FPGA(int accel)
 {
-	DEBUG_PRINT("%s - Getting dration value from accelerator %d...\n\n", __func__ , accel);
+	DEBUG_PRINT("%s - Getting duration value from accelerator %d...\n\n", __func__ , accel);
 	int fpga_cnt_latched = REG_VALUE(2*nb_accel+1+accel+1);
 	return fpga_cnt_latched * (1000000000 / FPGA_FREQ_HZ);
 }

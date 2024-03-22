@@ -266,17 +266,9 @@ int main(int argc, char *argv[])
 		result_malvar_cpu->G[i] = 0.0;
 		result_malvar_cpu->B[i] = 0.0;
 	}
-	
-	struct fpga_param acc_0_in = {0};
-	acc_0_in.p = param_malvar;
-	acc_0_in.len = sizeof(struct param_malvar_s);
 
-	struct fpga_param acc_0_out = {0};
-	acc_0_out.p = result_malvar_fpga;
-	acc_0_out.len = sizeof(struct result_malvar_s);
-
-	FPGA(acc_0, acc_0_in, acc_0_out, 0);
-	wait_accelerator(acc_0_out, 0);
+	FPGA(acc_0, param_malvar, result_malvar_fpga, 0);
+	wait_accelerator(result_malvar_fpga, 0);
 
 	CPU(acc_0, param_malvar, result_malvar_cpu);
 

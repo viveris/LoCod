@@ -30,16 +30,8 @@ int main(void)
 
 	printf("A = %d  B = %d\n", param.a, param.b);
 
-	struct fpga_param param_a = { 0 };
-	param_a.p = &param;
-	param_a.len = sizeof(struct param_test);
-
-	struct fpga_param param_result = { 0 };
-	param_result.p = &result;
-	param_result.len = sizeof(int);
-
-	FPGA(acc_1, param_a, param_result, 0);
-	wait_accelerator(param_result, 0);
+	FPGA(acc_1, &param, &result, 0);
+	wait_accelerator(&result, 0);
 	printf("A + B = %d\n", result);
 
 	CPU(acc_2, &param, &result);
