@@ -95,7 +95,7 @@ int init_locod(int nb_acc)
 }
 
 
-int init_accelerator_memory(struct fpga_param param, struct fpga_param result, int accel)
+int init_accelerator_memory(int param_len, int result_len, int accel)
 {	
 	DEBUG_PRINT("%s - Initializing accelerator %d memory...\n", __func__, accel);
 	accel_memory[accel].phy_addr = next_addr;
@@ -105,17 +105,17 @@ int init_accelerator_memory(struct fpga_param param, struct fpga_param result, i
 		accel_memory[accel].phy_addr += 4096 - (accel_memory[accel].phy_addr % 4096);
 	}
 
-	accel_memory[accel].param_len = param.len;
-	accel_memory[accel].result_len = result.len;
+	accel_memory[accel].param_len = param_len;
+	accel_memory[accel].result_len = result_len;
 
-	next_addr = accel_memory[accel].phy_addr + param.len + result.len;
+	next_addr = accel_memory[accel].phy_addr + param_len + result_len;
 
 	DEBUG_PRINT("%s - Param data physical address : 0x%x\n", __func__, accel_memory[accel].phy_addr);
 	DEBUG_PRINT("%s - Result data physical address : 0x%x\n", __func__, accel_memory[accel].phy_addr + accel_memory[accel].param_len);
 
 #if defined(LINUX)
 	DEBUG_PRINT("%s - Mmap accelerator %d memory at address 0x%x... ", __func__, accel, accel_memory[accel].phy_addr);
-	accel_memory[accel].mem_ptr = mmap((NULL), param.len + result.len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, accel_memory[accel].phy_addr);
+	accel_memory[accel].mem_ptr = mmap((NULL), param_len + result_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, accel_memory[accel].phy_addr);
 	if (accel_memory[accel].mem_ptr == MAP_FAILED)
 	{
 		DEBUG_PRINT("mmap failed\n\n");
@@ -131,15 +131,15 @@ int init_accelerator_memory(struct fpga_param param, struct fpga_param result, i
 }
 
 
-int cp_param_and_result_to_accel_memory(struct fpga_param param, struct fpga_param result, int accel)
+int cp_param_and_result_to_accel_memory(void *param_addr, void *result_addr, int accel)
 {
 	DEBUG_PRINT("%s - Copying param and result data to accelerator %d memory... ", __func__, accel);
-	if (memcpy(accel_memory[accel].mem_ptr, param.p, param.len) == NULL)
+	if (memcpy(accel_memory[accel].mem_ptr, param_addr, accel_memory[accel].param_len) == NULL)
 	{
 		DEBUG_PRINT("copy failed\n\n");
 		return -1;
 	}
-	if (memcpy(accel_memory[accel].mem_ptr + accel_memory[accel].param_len, result.p, result.len) == NULL)
+	if (memcpy(accel_memory[accel].mem_ptr + accel_memory[accel].param_len, result_addr, accel_memory[accel].result_len) == NULL)
 	{
 		DEBUG_PRINT("copy failed\n\n");
 		return -1;
@@ -150,10 +150,10 @@ int cp_param_and_result_to_accel_memory(struct fpga_param param, struct fpga_par
 }
 
 
-int cp_result_from_accel_memory(struct fpga_param result, int accel)
+int cp_result_from_accel_memory(void *result_addr, int accel)
 {
 	DEBUG_PRINT("%s - Copying result data from accelerator %d memory... ", __func__, accel);
-	if (memcpy(result.p, accel_memory[accel].mem_ptr + accel_memory[accel].param_len, result.len) == NULL)
+	if (memcpy(result_addr, accel_memory[accel].mem_ptr + accel_memory[accel].param_len, accel_memory[accel].result_len) == NULL)
 	{
 		DEBUG_PRINT("copy failed\n\n");
 		return -1;
@@ -186,7 +186,7 @@ int start_accelerator(int accel)
 }
 
 
-int wait_accelerator(struct fpga_param result, int accel)
+int wait_accelerator(void *result_addr, int accel)
 {
 	DEBUG_PRINT("%s - Waiting accelerator %d to finish...\n", __func__ , accel);
 	DEBUG_PRINT("%s - Control reg in value on entrance = 0x%x\n", __func__, REG_VALUE(2*nb_accel+1));	
@@ -195,7 +195,7 @@ int wait_accelerator(struct fpga_param result, int accel)
 		USLEEP(POLL_PERIOD_US);
 	}
 
-	return cp_result_from_accel_memory(result, accel);
+	return cp_result_from_accel_memory(result_addr, accel);
 }
 
 

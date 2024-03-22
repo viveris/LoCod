@@ -11,27 +11,21 @@
 #endif //TARGET
 
 
-#define CPU(fct, param, result) do { fct(param, result); } while(0)
+#define CPU(fct, param_ptr, result_ptr) do { fct(param_ptr, result_ptr); } while(0)
 
-#define FPGA(fct, param, result, accel) do {\
-	init_accelerator_memory(param, result, accel);\
-	cp_param_and_result_to_accel_memory(param, result, accel);\
+#define FPGA(fct, param_ptr, result_ptr, accel) do {\
+	init_accelerator_memory(sizeof(*param_ptr), sizeof(*result_ptr), accel);\
+	cp_param_and_result_to_accel_memory(param_ptr, result_ptr, accel);\
 	start_accelerator(accel);\
 } while(0)
 
 
-struct fpga_param {
-	void *p;
-	int len;
-};
-
-
 int init_locod(int nb_acc);
-int init_accelerator_memory(struct fpga_param param, struct fpga_param result, int accel);
-int cp_param_and_result_to_accel_memory(struct fpga_param param, struct fpga_param result, int accel);
-int cp_result_from_accel_memory(struct fpga_param result, int accel);
+int init_accelerator_memory(int param_len, int result_len, int accel);
+int cp_param_and_result_to_accel_memory(void *param_addr, void *result_addr, int accel);
+int cp_result_from_accel_memory(void *result_addr, int accel);
 int start_accelerator(int accel);
-int wait_accelerator(struct fpga_param result, int accel);
+int wait_accelerator(void *result_addr, int accel);
 int get_time_ns_FPGA(int accel);
 int deinit_locod(void);
 
