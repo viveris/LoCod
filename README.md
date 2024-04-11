@@ -1,17 +1,17 @@
-# Locod
+# LoCod
 
 ## Overview
-Locod is a hardware/software co-design tool designed to simplify the development of applications for system-on-chip (SoC) devices.
+LoCod is a hardware/software co-design tool designed to simplify the development of applications for system-on-chip (SoC) devices.
 
 It enables the implementation and testing of hybrid applications, i.e. with a CPU component and an FPGA component. For example, a classic CPU program where we want to execute a processing function in the FPGA.
 
-The Locod tool then provides a simple API for executing one or more functions in the FPGA, known as hardware accelerators, then monitoring its execution and retrieving its outputs and some performance metrics.
+The LoCod tool then provides a simple API for executing one or more functions in the FPGA, known as hardware accelerators, then monitoring its execution and retrieving its outputs and some performance metrics.
 
 <br>
 
 ## Support
-Three target boards are currently supported by the Locod tool:
-|      Target board      | Locod compilation | Test on board |
+Three target boards are currently supported by the LoCod tool:
+|      Target board      | LoCod compilation | Test on board |
 | ---------------------- |:-----------------:|:-------------:|
 | Avnet Ultra96          |       OK          |      OK       |
 | Enclustra Mercury+ XU1 |       OK          |      OK       |
@@ -21,26 +21,29 @@ Three target boards are currently supported by the Locod tool:
 
 ## Requierments
 
-The Locod tool requires different development environments to operate. These dependencies are checked each time the tool is launched. If one of these dependencies is missing, Locod will not work.
+The LoCod tool requires different development environments to operate.
 
 Most of these environments/dependencies have been dockerised to facilitate porting to different machines.
 
-Here are the Locod dependencies:
+These dependencies are checked each time the tool is launched. Depending on the target selected, only the dependencies required for it are checked. So if the LoCod tool is used exclusively for a Xilinx target, the NanoXplore tools and docker are not required. However, if one of these dependencies is missing, LoCod script will stop.
+
+Here are the LoCod common dependencies:
 - the Panda-Bambu docker, which includes the Panda-Bambu tool for converting functions into HDL code: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-panda-docker
 
+Here are the LoCod Xilinx dependencies:
+- Vivado 2022.1 and with working ML Entreprise license (mandatory to synthesize FPGA design for the Enclustra board)
 - the Ultra96 SDK docker for compiling on Ultra96: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-sdk-ultra96
-
 - the Enclustra SDK docker for compiling on Enclustra: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-sdk-enclustra
 
+Here are the LoCod NanoXplore dependencies:
+- the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-nx-docker
 - the NG-Ultra SDK docker for compiling on NG-Ultra: TODO: create a repository for the NG-Ultra BSP
-
-- Vivado 2022.1 and with a license for all the devices (mandatory to synthesize FPGA design for the Enclustra board)
 
 <br>
 
 ## Install
 
-The Locod tool does not require any specific installation. The only requirement is that the necessary dockers and tools are present on the system, and that their names match those in the main Locod script:
+The LoCod tool does not require any specific installation. The only requirement is that the necessary dockers and tools are present on the system, and that their names match those in the main LoCod script:
 
 ```console
 # Docker images
@@ -55,7 +58,7 @@ NX_DOCKER_IMG=nx-tools:2.0
 
 ## Usage
 
-To illustrate how the Locod tool works, let's take a simple example. Let's say, for example, that we wish to execute 2 functions in the FPGA:
+To illustrate how the LoCod tool works, let's take a simple example. Let's say, for example, that we wish to execute 2 functions in the FPGA:
 - the first takes two integers as input and multiplies them
 
 - the second takes an array of floats as input and returns 2 float results, the first being the sum of all inputs and the second the subtraction of all inputs
@@ -111,15 +114,15 @@ void acc1(struct param_acc1 *param, struct result_acc1 *result) {
 
 Now that we've defined the functions we want to run in the FPGA, let's take a look at how to run them.
 
-First of all, we need to include the **locod.h** header, which contains all the declarations required to use the Locod API.
+First of all, we need to include the **locod.h** header, which contains all the declarations required to use the LoCod API.
 
 Also note that you need to add compiler directives **#ifndef LOCOD_FPGA** to limit the C file to functions to be executed in the FPGA when this define exists. The define LOCOD_FPGA is defined when the C file is passed to the tool that converts C functions to VHDL. However, it only needs the functions and not everything else, hence the addition of #ifndef to limit the C file to functions. In our example, we will add these directives around the "locod.h" include and around the main() function.
 
-Next, calling up functions in the FPGA or CPU is done through macros in the C code to tell the Locod system where that this or that function must be executed. Apart from these macros, functions can also be called in the normal way to be executed in the CPU.
+Next, calling up functions in the FPGA or CPU is done through macros in the C code to tell the LoCod system where that this or that function must be executed. Apart from these macros, functions can also be called in the normal way to be executed in the CPU.
 
-Before calling these macros to execute functions in the FPGA, the Locod system initialization function **init_locod** must be called. This function takes as arguments the number of hardware accelerators to be instantiated in the FPGA, i.e. the number of functions to be executed in the FPGA. This number can be greater than the number of functions finally instantiated, but not less, otherwise it won't work.
+Before calling these macros to execute functions in the FPGA, the LoCod system initialization function **init_locod** must be called. This function takes as arguments the number of hardware accelerators to be instantiated in the FPGA, i.e. the number of functions to be executed in the FPGA. This number can be greater than the number of functions finally instantiated, but not less, otherwise it won't work.
 
-For our example, we'll start by defining our main function, setting the variables we'll use with our hardware accelerators. We then call the Locod initialization function with an accelerator number equal to 2:
+For our example, we'll start by defining our main function, setting the variables we'll use with our hardware accelerators. We then call the LoCod initialization function with an accelerator number equal to 2:
 ```c
 #ifndef LOCOD_FPGA
 #include "locod.h"
@@ -138,7 +141,7 @@ int main(void) {
     }
     struct result_acc1 result_acc_1 = { .a = 0, .b = 0};
 
-    //Locod initialization
+    //LoCod initialization
     init_locod(2);
 ```
 
@@ -152,12 +155,15 @@ Two macros CPU and FPGA are then available to launch the various functions eithe
     ```c
     FPGA(fct, param_ptr, result_ptr, accel)
     ```
+
 -   The **CPU macro** is used to launch a function in the CPU. It takes 3 parameters as input:
-    - the name of the function to be executed in the FPGA
+    - the name of the function to be executed in the CPU
     - a pointer of param argument type for the input data 
     - a pointer of result argument type for the output data
 
-    This macro does the same thing than launching the function the normal way in our code, but it exists to create a similarity with the FPGA macro.
+    This macro does the same thing than launching the function the normal way in our code.
+
+    However, the CPU macro allows to check the function prototype used to match that required prototype for an FPGA function. This makes it easier to change between CPU or FPGA execution afterwards.
 
     ```c
     CPU(fct, param_ptr, result_ptr)
@@ -170,7 +176,7 @@ We can then run our two example functions in the FPGA (which is what we're most 
     FPGA(acc1, &param_acc_1, &result_acc_1, 1);
 ```
 
-Results cannot be retrieved directly. In other words, the result pointer is not directly modified with the execution result. To retrieve the result, we need to call another function of the API, **wait_accelerator**. This function takes two arguments. The first is a pointer of result argument type (the same pointer that the one passed to the FPGA macro), and the second is the accelerator number from which we want to restrive the results (here also the same nomber than the one passed to the FPGA macro). This functions waits until the accelerator has finished, then copies the accelerator outputs to the result pointer.
+Results cannot be retrieved directly. In other words, the result pointer is not directly modified with the execution result. To retrieve the result, we need to call another function of the API, **wait_accelerator**. This function takes two arguments. The first is a pointer of result argument type (the same pointer that the one passed to the FPGA macro), and the second is the accelerator number from which we want to restrive the results (here also the same number than the one passed to the FPGA macro). This functions waits until the accelerator has finished, then copies the accelerator outputs to the result pointer.
 
 Here is the code to retreve results from our two hardware accelerators example:
 ```c
@@ -185,7 +191,7 @@ Here is the code to retreve results from our two hardware accelerators example:
 
 Finally, the locod can be de-initialized with the **deinit_locod** function, to free up memory resources taken by the system:
 ```c
-    //Locod de-initialization
+    //LoCod de-initialization
     deinit_locod();
 
      return 0;
@@ -194,9 +200,9 @@ Finally, the locod can be de-initialized with the **deinit_locod** function, to 
 ```
 <br>
 
-### Launching the Locod tool
+### Launching the LoCod tool
 
-Now that the C input code has been developed with the correct syntax for launching code in the FPGA, it needs to be passed to the Locod tool to generate :
+Now that the C input code has been developed with the correct syntax for launching code in the FPGA, it needs to be passed to the LoCod tool to generate :
 - CPU executable
 - FPGA bitstream
 
@@ -212,11 +218,11 @@ The **locod.sh** script must be is used as follows:
     [ -h | --help  ]
 ```
 
-The execution of the Locod tool can then be monitored with logs in the console.
+The execution of the LoCod tool can then be monitored with logs in the console.
 
 Depending on the target (--target) selected, the various Dockers and tools requiered must be available on the machine. If one is missing, the script will stop.
 
-For our example, let's say we want to test it on an Enclustra board. Assuming the dockers are present, we still need to source the Vivado environment script required for VHDL synthesis. A valid Vivado license is also required, as the nclustra embeds a Zynq Ultrascale+ XCZU6EG not available with the free version.
+For our example, let's say we want to test it on an Enclustra board. Assuming the dockers are present, we still need to source the Vivado environment script required for VHDL synthesis. A valid Vivado license is also required, as the Enclustra embeds a Zynq Ultrascale+ XCZU6EG not available with the free version.
 
 We will then run the following commands:
 ```console

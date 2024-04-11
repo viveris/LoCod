@@ -1,10 +1,10 @@
-The Locod tool is based on code developed in C. It is used via an API providing various functions for executing code in the FPGA and monitoring its operation.
+The LoCod tool is based on code developed in C. It is used via an API providing various functions for executing code in the FPGA and monitoring its operation.
 
 Here are the various functions available:
 ```c
 int init_locod(int nb_acc);
 
-//Locod framework initialization function. It must be called before all other functions. The nb_acc parameter defines the number of functions to be executed in the FPGA.
+//LoCod framework initialization function. It must be called before all other functions. The nb_acc parameter defines the number of functions to be executed in the FPGA.
 ```
 
 ```c
@@ -47,5 +47,5 @@ int get_time_ns_FPGA(int accel);
 ```c
 int deinit_locod(void);
 
-//Locod framework deinitialization function.
+//LoCod framework deinitialization function.
 ```

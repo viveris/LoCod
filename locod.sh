@@ -7,7 +7,7 @@ set -e
 # Execution dir
 BASE_DIR=$(pwd)
 
-# Locod folders
+# LoCod folders
 LOCOD_CPU_DIR=locod-core
 LOCOD_FPGA_DIR=submodules/locod-fpga
 
@@ -136,43 +136,53 @@ else
 fi
 
 #Docker Petalinux SDK Ultra96
-if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ULTRA96_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
-	echo "- Ultra96 SDK docker found"
-else
-	echo "- Ultra96 SDK docker not found"
-	exit 1
+if [[ $target == ultra96 ]]; then
+	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ULTRA96_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
+		echo "- Ultra96 SDK docker found"
+	else
+		echo "- Ultra96 SDK docker not found"
+		exit 1
+	fi
 fi
 
 #Docker Petalinux SDK Enclustra
-if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
-	echo "- Enclustra SDK docker found"
-else
-	echo "- Enclustra SDK docker not found"
-	exit 1
+if [[ $target == enclustra ]]; then
+	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
+		echo "- Enclustra SDK docker found"
+	else
+		echo "- Enclustra SDK docker not found"
+		exit 1
+	fi
 fi
 
 #Docker ngultra SDK
-if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
-	echo "- ngultra SDK docker found"
-else
-	echo "- ngultra SDK docker not found"
-	exit 1
+if [[ $target == ngultra ]]; then
+	if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
+		echo "- ngultra SDK docker found"
+	else
+		echo "- ngultra SDK docker not found"
+		exit 1
+	fi
 fi
 
 #Vivado
-if vivado -version &> /dev/null; then
-	echo "- Vivado found"
-else
-	echo "- Vivado not found"
-	exit 1
+if [[ $target == ultra96 || $target == enclustra ]]; then
+	if vivado -version &> /dev/null; then
+		echo "- Vivado found"
+	else
+		echo "- Vivado not found"
+		exit 1
+	fi
 fi
 
 #Docker Impulse
-if docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} ${NX_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
-	echo "- NX docker found"
-else
-	echo "- NX docker not found"
-	exit 1
+if [[ $target == ngultra ]]; then
+	if docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} ${NX_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
+		echo "- NX docker found"
+	else
+		echo "- NX docker not found"
+		exit 1
+	fi
 fi
 
 

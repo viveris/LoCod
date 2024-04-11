@@ -27,10 +27,12 @@ typedef struct {
 
 
 //========================================== Global variables ========================================
+#if defined(LINUX)
 //Memory file descriptor
 int fd = -1;
+#endif //LINUX
 
-//Registers virtual pointer
+//Control registers pointer
 void *reg_ptr = NULL;
 
 //Shared memory for each accelerator

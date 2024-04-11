@@ -7,7 +7,7 @@ variables:
 Build-multi-parallel:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/multi-parallel/main.c
+    - bash locod.sh -t enclustra -f demo/multi-parallel/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -18,7 +18,7 @@ Build-multi-parallel:
 Build-multi-simple:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/multi-simple/main.c
+    - bash locod.sh -t enclustra -f demo/multi-simple/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -29,7 +29,7 @@ Build-multi-simple:
 Build-picture-demo:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/picture-demo/main.c
+    - bash locod.sh -t enclustra -f demo/picture-demo/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -40,7 +40,7 @@ Build-picture-demo:
 Build-picture-float:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/picture-float/main.c
+    - bash locod.sh -t enclustra -f demo/picture-float/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -51,7 +51,7 @@ Build-picture-float:
 Build-simple-float-add:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/simple-float-add/main.c
+    - bash locod.sh -t enclustra -f demo/simple-float-add/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -62,7 +62,7 @@ Build-simple-float-add:
 Build-simple-float-mul:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/simple-float-mul/main.c
+    - bash locod.sh -t enclustra -f demo/simple-float-mul/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -73,7 +73,7 @@ Build-simple-float-mul:
 Build-simple-int-add:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/simple-int-add/main.c
+    - bash locod.sh -t enclustra -f demo/simple-int-add/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -84,7 +84,7 @@ Build-simple-int-add:
 Build-simple-int-mul:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/simple-int-mul/main.c
+    - bash locod.sh -t enclustra -f demo/simple-int-mul/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -95,7 +95,7 @@ Build-simple-int-mul:
 Build-table-add:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/table-add/main.c
+    - bash locod.sh -t enclustra -f demo/table-add/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -106,7 +106,7 @@ Build-table-add:
 Build-table-mul:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/table-mul/main.c
+    - bash locod.sh -t enclustra -f demo/table-mul/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -117,7 +117,7 @@ Build-table-mul:
 Build-use-case-malvar:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/use-case-malvar/main.c
+    - bash locod.sh -t enclustra -f demo/use-case-malvar/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -128,7 +128,7 @@ Build-use-case-malvar:
 Build-use-case-filtering:
   script:
     - source ${VIVADO_PATH}
-    - bash -x locod.sh -t enclustra -f demo/use-case-filtering/main.c
+    - bash locod.sh -t enclustra -f demo/use-case-filtering/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
