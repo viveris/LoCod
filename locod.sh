@@ -54,7 +54,7 @@ NX_HOSTNAME=localhost.localdomain
 NX_MAC_ADDR=86:8a:dd:8d:51:a8
 
 # Panda-Bambu compilation parameters
-BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 -DLOCOD_FPGA"
+BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -DLOCOD_FPGA"
 
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1

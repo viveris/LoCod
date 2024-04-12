@@ -39,24 +39,28 @@ struct param_test {
 	int b[2];
 };
 
-void acc_1(struct param_test *param, int *result)
+struct result_test {
+	int a[2];
+};
+
+void acc_1(struct param_test *param, struct result_test *result)
 {
-	result[0] = param->a[0] + param->b[0];
-	result[1] = param->a[1] + param->b[1];
+	result->a[0] = param->a[0] + param->b[0];
+	result->a[1] = param->a[1] + param->b[1];
 }
 
-void acc_2(struct param_test *param, int *result)
+void acc_2(struct param_test *param, struct result_test *result)
 {
-	result[0] = param->a[0] * param->b[0];
-	result[1] = param->a[1] * param->b[1];
+	result->a[0] = param->a[0] * param->b[0];
+	result->a[1] = param->a[1] * param->b[1];
 }
 
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	int result[2] = { 0 };
+	struct result_test result = { 0 };
 	struct param_test param = { 0 };
-
+	
 	init_locod(1);
 
 	if (argc < 5) {
@@ -74,14 +78,14 @@ int main(int argc, char **argv)
 	fprintf(stdout, "A1 = %d  A2 = %d  B1 = %d  B2 = %d\n",
 	        param.a[0], param.a[1], param.b[0], param.b[1]);
 
-	FPGA(acc_2, &param, result, 0);
-	wait_accelerator(result, 0);
-	fprintf(stdout, "A1 x B1 = %d\n", result[0]);
-	fprintf(stdout, "A2 x B2 = %d\n", result[1]);
+	FPGA(acc_2, &param, &result, 0);
+	wait_accelerator(&result, 0);
+	fprintf(stdout, "A1 x B1 = %d\n", result.a[0]);
+	fprintf(stdout, "A2 x B2 = %d\n", result.a[1]);
 
-	CPU(acc_1, &param, result);
-	fprintf(stdout, "A1 + B1 = %d\n", result[0]);
-	fprintf(stdout, "A2 + B2 = %d\n", result[1]);
+	CPU(acc_1, &param, &result);
+	fprintf(stdout, "A1 + B1 = %d\n", result.a[0]);
+	fprintf(stdout, "A2 + B2 = %d\n", result.a[1]);
 
 	deinit_locod();
 

@@ -39,20 +39,24 @@ struct param_test {
 	float b;
 };
 
-void acc_1(struct param_test *param, float *result)
+struct result_test {
+	float a;
+};
+
+void acc_1(struct param_test *param, struct result_test *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
 
-void acc_2(struct param_test *param, float *result)
+void acc_2(struct param_test *param, struct result_test *result)
 {
-	*result = param->a * param->b;
+	result->a = param->a * param->b;
 }
 
 #ifndef LOCOD_FPGA
 int main(int argc, char **argv)
 {
-	float result = 0;
+	struct result_test result = { 0 };
 	struct param_test param = { 0 };
 	
 	init_locod(1);
@@ -69,10 +73,10 @@ int main(int argc, char **argv)
 
 	FPGA(acc_1, &param, &result, 0);
 	wait_accelerator(&result, 0);
-	fprintf(stdout, "A + B = %f\n", result);
+	fprintf(stdout, "A + B = %f\n", result.a);
 
 	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %f\n", result);
+	fprintf(stdout, "A x B = %f\n", result.a);
 
 	printf("FPGA process time : %dns\n", get_time_ns_FPGA(0));
 

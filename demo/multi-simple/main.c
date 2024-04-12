@@ -39,43 +39,47 @@ struct param_test {
 	int b;
 };
 
-void acc_1(struct param_test *param, int *result)
+struct result_int {
+	int a;
+};
+
+void acc_1(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_2(struct param_test *param, int *result)
+void acc_2(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_3(struct param_test *param, int *result)
+void acc_3(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_4(struct param_test *param, int *result)
+void acc_4(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_5(struct param_test *param, int *result)
+void acc_5(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_6(struct param_test *param, int *result)
+void acc_6(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_7(struct param_test *param, int *result)
+void acc_7(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
-void acc_8(struct param_test *param, int *result)
+void acc_8(struct param_test *param, struct result_int *result)
 {
-	*result = param->a + param->b;
+	result->a = param->a + param->b;
 }
 
 #ifndef LOCOD_FPGA
 int main()
 {
-	int result[8] = { 0 };
+	struct result_int result[8] = { 0 };
 	struct param_test param[8] = { 0 };
 	int i;
 	srand(time(0));
@@ -91,28 +95,28 @@ int main()
 	
 	FPGA(acc_5, &param[4], &result[4], 4);
 	wait_accelerator(&result[4], 4);
-	fprintf(stdout, "Accelerator 5 Result : %i + %i = %i\n", param[4].a, param[4].b, result[4]);
+	fprintf(stdout, "Accelerator 5 Result : %i + %i = %i\n", param[4].a, param[4].b, result[4].a);
 	FPGA(acc_2, &param[1], &result[1], 1);
 	wait_accelerator(&result[1], 1);
-	fprintf(stdout, "Accelerator 2 Result : %i + %i = %i\n", param[1].a, param[1].b, result[1]);
+	fprintf(stdout, "Accelerator 2 Result : %i + %i = %i\n", param[1].a, param[1].b, result[1].a);
 	FPGA(acc_8, &param[7], &result[7], 7);
 	wait_accelerator(&result[7], 7);							
-	fprintf(stdout, "Accelerator 8 Result : %i + %i = %i\n", param[7].a, param[7].b, result[7]);
+	fprintf(stdout, "Accelerator 8 Result : %i + %i = %i\n", param[7].a, param[7].b, result[7].a);
 	FPGA(acc_3, &param[2], &result[2], 2);
 	wait_accelerator(&result[2], 2);
-	fprintf(stdout, "Accelerator 3 Result : %i + %i = %i\n", param[2].a, param[2].b, result[2]);
+	fprintf(stdout, "Accelerator 3 Result : %i + %i = %i\n", param[2].a, param[2].b, result[2].a);
 	FPGA(acc_7, &param[6], &result[6], 6);
 	wait_accelerator(&result[6], 6);
-	fprintf(stdout, "Accelerator 7 Result : %i + %i = %i\n", param[6].a, param[6].b, result[6]);
+	fprintf(stdout, "Accelerator 7 Result : %i + %i = %i\n", param[6].a, param[6].b, result[6].a);
 	FPGA(acc_1, &param[0], &result[0], 0);
 	wait_accelerator(&result[0], 0);
-	fprintf(stdout, "Accelerator 1 Result : %i + %i = %i\n", param[0].a, param[0].b, result[0]);
+	fprintf(stdout, "Accelerator 1 Result : %i + %i = %i\n", param[0].a, param[0].b, result[0].a);
 	FPGA(acc_4, &param[3], &result[3], 3);
 	wait_accelerator(&result[3], 3);
-	fprintf(stdout, "Accelerator 4 Result : %i + %i = %i\n", param[3].a, param[3].b, result[3]);
+	fprintf(stdout, "Accelerator 4 Result : %i + %i = %i\n", param[3].a, param[3].b, result[3].a);
 	FPGA(acc_6, &param[5], &result[5], 5);
 	wait_accelerator(&result[5], 5);
-	fprintf(stdout, "Accelerator 6 Result : %i + %i = %i\n", param[5].a, param[5].b, result[5]);
+	fprintf(stdout, "Accelerator 6 Result : %i + %i = %i\n", param[5].a, param[5].b, result[5].a);
 
 	deinit_locod();
 

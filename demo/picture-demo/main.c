@@ -31,228 +31,186 @@
  */
 
 #ifndef LOCOD_FPGA
-#include "locod.h"
-#include <math.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <errno.h>
-
+#include <math.h>
+#include "locod.h"
 #endif /* LOCOD_FPGA */
 
-/* Struct to store image and size of the image */
-#define DATA_SIZE_MAX 1048576
-struct data {
-	unsigned int len;
-	unsigned int data[DATA_SIZE_MAX];
+
+/* ========== Defines ========== */
+#define IMAGE_WIDTH		1024
+#define IMAGE_HEIGHT	1024
+#define IMAGE_SIZE		IMAGE_WIDTH*IMAGE_HEIGHT
+
+
+/* ========== Accelerator structures to store input and output data ========== */
+struct input_image {
+	unsigned int data[IMAGE_HEIGHT][IMAGE_WIDTH];
+};
+
+struct output_image {
+	unsigned int data[IMAGE_HEIGHT][IMAGE_WIDTH];
 };
 
 
+/* ========== Accelerator functions ========== */
+void acc_1(struct input_image *param, struct output_image *result) {
+	for (int i=0; i<IMAGE_HEIGHT; i++) {						/* Image line */
+		for (int j=0; j<IMAGE_WIDTH; j++) {						/* Image column */
+			result->data[i][j] = param->data[i][j] + 1;
+		}
+	}
+}
+
+
+/* ========== Utility functions ========== */
 #ifndef LOCOD_FPGA
-/* Internal context used to store global variables of the program */
-struct private_context {
-	char *picture_file;
-	struct data *buff;
-};
+int load_byte_data(char *path, unsigned char *buffer, unsigned int size) {
+	FILE *file;
+	unsigned int n_read = 0;
 
-struct private_context ctx = { 0 };
+	/* Open file */
+	file = fopen(path,"rb");
+	if (file == NULL) {
+		printf("Cannot open file %s\n", path);
+		return -1;
+	}
 
-void handle_arg(int argc, char **argv)
-{
-	int c = 0;
+	/* Load into memory and close file */
+	n_read = fread(buffer, 1, size, file);
+	if (n_read != size) {
+		printf("Cannot read all data from file (number of bytes read %u)\n", n_read);
+		fclose(file);
+		return -1;
+	}
 
-	while ((c = getopt (argc, argv, "f:")) != -1)
-		switch (c)
-		{
-			case 'f':
-				ctx.picture_file = optarg;
+	fclose(file);
+	printf("File %s opened, read %u bytes\n", path, n_read);
+	return 0;
+}
+
+int save_byte_data(char *path, unsigned char *buffer, unsigned int size) {
+	FILE *file;
+	unsigned int n_write = 0;
+
+	/* Open file */
+	file = fopen(path,"wb");
+	if (file == NULL) {
+		printf("Cannot open file %s\n", path);
+		return -1;
+	}
+
+	/* Write and close file */
+	n_write = fwrite(buffer, 1, size, file);
+	if (n_write != size) {
+		printf("Cannot write all data to file (number of bytes write %u)\n", n_write);
+		fclose(file);
+		return -1;
+	}
+
+	fclose(file);
+	printf("File %s opened, write %u bytes\n", path, n_write);
+	return 0;
+}
+
+void print_image_TL(unsigned int image[IMAGE_HEIGHT][IMAGE_WIDTH]) {
+	for (int i=0; i<10; i++) {					/* Image line */
+		for (int j=0; j<10; j++) {				/* Image column */
+			printf("%u\t", image[i][j]);
+		}
+		printf("\n");
+	}
+}
+
+
+/* ========== Main function ========== */
+int main(int argc, char *argv[]) {
+	/* Variables */
+	int ret;									/* Return value */
+	int opt;									/* User option */
+	char *input_image_file;						/* Input image file */
+	char *output_image_file;					/* Output image file */
+	unsigned char *buffer;						/* In and out buffer */
+	struct input_image *input_image;			/* Accelerator input */
+	struct output_image *output_image;			/* Accelerator output */
+
+	/* Allocate in and out accelerator data structures */
+	input_image = malloc(sizeof(struct input_image));
+	output_image = malloc(sizeof(struct output_image));
+	buffer = malloc(IMAGE_SIZE*sizeof(unsigned char));
+	
+	/* Parsing arguments */
+	while ((opt = getopt(argc, argv, ":i:o:")) != -1) {
+		switch (opt) {
+			case 'i':
+				input_image_file = optarg;
+				break;
+			case 'o':
+				output_image_file = optarg;
+				break;
+			case ':':
+				printf("Option -%c requires an argument\n", optopt);
+				return -1;
 				break;
 			case '?':
-				if (optopt == 'f') {
-					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-				}
-				else if (isprint (optopt)) {
-					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-				}
-				else {
-					fprintf (stderr,
-							"Unknown option character `\\x%x'.\n",
-							optopt);
-				}
+				printf("Unknown option -%c\n", optopt);
+				return -1;
+                break;
 			default:
-				abort();
+				printf("Usage: %s [-f input_file]\n", argv[0]);
+				return -1;
 		}
-}
-
-int load_file(const char *file_path)
-{
-	FILE *file;
-	unsigned long file_size;
-	size_t nread = 0;
-
-	file = fopen(file_path, "rb");
-	if (!file) {
-		perror("Cannot open input file");
-		goto out;
 	}
 
-	/* Get file size */
-	fseek(file, 0, SEEK_END);
-	file_size = ftell(file);
-	fseek(file, 0, SEEK_SET);
-
-	if (file_size > DATA_SIZE_MAX) {
-		fprintf(stderr, "File %s too big : file size %ld, max size %d\n",
-		        file_path, file_size, DATA_SIZE_MAX);
-		goto close_file;
+	/* Open image */
+	ret = load_byte_data(input_image_file, buffer, IMAGE_SIZE);
+	if (ret != 0) {
+		printf("Problem openning input image file\n");
+		return ret;
 	}
 
-	fprintf(stdout, "Loading %ld bytes from file %s\n", file_size, file_path);
-	nread = fread(ctx.buff->data, 1, file_size, file);
-	if ( nread != file_size) {
-		fprintf(stderr, "Cannot read all data from file (number of bytes read %zu)\n", nread);
-		goto close_file;
+	/* Place raw data in accelerator input structure */
+	for (int i=0; i<IMAGE_HEIGHT; i++) {						/* Image line */
+		for (int j=0; j<IMAGE_WIDTH; j++) {						/* Image column */
+			input_image->data[i][j] = (unsigned int)buffer[i*IMAGE_WIDTH + j];
+		}
 	}
 
-	ctx.buff->len = file_size / sizeof(int);
-
-	fclose(file);
-	return 0;
-
-close_file:
-	fclose(file);
-out:
-	return -1;
-}
-#endif /* LOCOD_FPGA */
-
-void acc_1(struct data* param, unsigned int *result)
-{
-	int i;
-
-	for (i = 0; i<param->len; i++) {
-		result[i] = param->data[i] + 1;
-	}
-}
-
-void pic_multiplication(struct data* param, unsigned int *result)
-{
-	int i;
-
-	for (i = 0; i<param->len; i++) {
-		result[i] = param->data[i] * 2;
-	}
-}
-
-#ifndef LOCOD_FPGA
-int main(int argc, char **argv)
-{
+	/* LoCod initialization */
 	init_locod(1);
-	int b; /* TODO to be removed when only two param for interface */
-	unsigned int *result = NULL;
-	FILE *result_file;
-	struct data data = { 0 };
-	ctx.buff = &data;
-	int width = 0;
-	int comp = 0;
 
-	fprintf(stdout, "data addr = %p\n", ctx.buff);
+	/* Exuecute acc_1 function in FPGA */
+	FPGA(acc_1, input_image, output_image, 0);
+	wait_accelerator(output_image, 0);
 
-	handle_arg(argc, argv);
-
-	if (load_file(ctx.picture_file)) {
-		exit(EXIT_FAILURE);
-	}
-
-	/* Allocate buffer for result */
-	result = malloc(ctx.buff->len * sizeof(int));
-
-	FPGA(acc_1, ctx.buff, result, 0);
-	wait_accelerator(result, 0);
-
-	/* Write FPGA result into a file */
-	result_file = fopen("result.bin", "wb");
-	if (!result_file) {
-		perror("Cannot open file result.bin");
-		goto free_and_failure;
-	}
-
-	if (fwrite(result, 1, ctx.buff->len*sizeof(int), result_file) != ctx.buff->len*sizeof(int)) {
-		fprintf(stderr, "Cannot write file result.bin\n");
-		goto free_and_failure;
-	}
-	switch(ctx.buff->len){
-
-		case 256 :
-			width = 16;
-			break;
-		case 324 :	
-			width = 18;
-			break;
-		case 400 :
-			width = 20;
-			break;
-		case 484 :	
-			width = 22;
-			break;
-		case 529 :	
-			width = 23;
-			break;	
-		case 576 :
-			width = 24;
-			break;
-		case 676 :	
-			width = 26;
-			break;
-		case 784 :
-			width = 28;
-			break;
-		case 900 :	
-			width = 30;
-			break;
-		case 1024 :
-			width = 32;
-			break;
-		case 4096 :	
-			width = 64;
-			break;
-		case 16384 :
-			width = 128;
-			break;
-	}
-	fprintf(stdout, "\nInput Data :\n");
-	for (int j = 0; j < ctx.buff->len; j++){
-		
-		if (j % width == 0){
-			fprintf(stdout," \n");	
-		}
-		fprintf(stdout, "%3i \t", ctx.buff->data[j]);
-	}
-	fprintf(stdout, "\n\nResult Data :\n");
-	for (int j = 0; j < ctx.buff->len; j++){
-		if (j % width == 0){
-			fprintf(stdout," \n");	
-		}
-		fprintf(stdout, "%3i \t", *(result + j));
-		
-	}
-	fprintf(stdout, "\n");
-	for(int h = 0; h < ctx.buff->len; h++){
-		if((*(result + h) - ctx.buff->data[h])==1){
-			comp++;
-		}
-	}
-	fprintf(stdout, "Good cells : %d out of %d\n", comp, ctx.buff->len);
-	CPU(pic_multiplication, ctx.buff, result);
-
+	/* LoCod deinitialization */
 	deinit_locod();
 
-	exit(EXIT_SUCCESS);
+	/* Print image result */
+	print_image_TL(output_image->data);
 
-free_and_failure:
-	free(result);
-	exit(EXIT_FAILURE);
+	/* Place accelerator output into buffer */
+	for (int i=0; i<IMAGE_HEIGHT; i++) {						/* Image line */
+		for (int j=0; j<IMAGE_WIDTH; j++) {						/* Image column */
+			buffer[i*IMAGE_WIDTH + j] = (unsigned char)output_image->data[i][j];
+		}
+	}
+
+	/* Write FPGA result into a file */
+	ret = save_byte_data(output_image_file, buffer, IMAGE_SIZE);
+	if (ret != 0) {
+		printf("Problem openning output image file\n");
+		return ret;
+	}
+
+	/* Free memory */
+	free(input_image);
+	free(output_image);
+	free(buffer);
+
+	return 0;
 }
-#endif
+#endif /* LOCOD_FPGA */

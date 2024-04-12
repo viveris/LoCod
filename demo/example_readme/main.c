@@ -41,8 +41,12 @@ struct param_acc0 {
     int b;
 };
 
-void acc0(struct param_acc0 *param, int *result) {
-    *result = param->a * param->b;
+struct result_acc0 {
+    int a;
+};
+
+void acc0(struct param_acc0 *param, struct result_acc0 *result) {
+    result->a = param->a * param->b;
 }
 
 struct param_acc1 {
@@ -69,14 +73,14 @@ void acc1(struct param_acc1 *param, struct result_acc1 *result) {
 int main(void) {
     //Variables
     struct param_acc0 param_acc_0 = { .a = 3, .b = 7};
-    int result_acc_0 = 0;
+    struct result_acc0 result_acc_0 = {.a = 0};
     struct param_acc1 param_acc_1;
     for (int i = 0; i < SIZE; i++) {
         param_acc_1.a[i] = i;
     }
     struct result_acc1 result_acc_1 = { .a = 0, .b = 0};
 
-    //Locod initialization
+    //LoCod initialization
     init_locod(2);
 
     //Launching acc1 and acc2 function in the FPGA
@@ -88,7 +92,7 @@ int main(void) {
     wait_accelerator(&result_acc_1, 1);
 
     //Print results
-    printf("Acc 0 result : %d * %d = %d\n", param_acc_0.a, param_acc_0.b, result_acc_0);
+    printf("Acc 0 result : %d * %d = %d\n", param_acc_0.a, param_acc_0.b, result_acc_0.a);
     printf("Acc 1 result : sum of input values = %f, substraction of input values = %f\n", result_acc_1.a, result_acc_1.b);
 
     return 0;

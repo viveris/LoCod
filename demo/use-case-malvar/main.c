@@ -30,39 +30,43 @@
  *
  */
 
+#ifndef LOCOD_FPGA
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <math.h>
-
-#ifndef LOCOD_FPGA
 #include "locod.h"
-#include "demosaicing_float.h"
-#endif
+#endif /* LOCOD_FPGA */
 
 
-#define IMG_WIDTH 		1024
-#define IMG_HEIGHT  	1024
-
-#define as_2dim_table_uchar(ptr, height) ((unsigned char (*)[height])ptr)
-#define as_2dim_table_float(ptr, height) ((float (*)[height])ptr)
-#define as_2dim_table_double(ptr, height) ((double (*)[height])ptr)
-
-//=============================== Function declarations =================================
-void convert_array_uchar_to_float(unsigned char *input_array, float *output_array, unsigned int size);
-void convert_array_float_to_uchar(float *input_array, unsigned char *output_array, unsigned int size);
-void load_img(char *path, unsigned char *image, unsigned int size);
-void save_img(char *path, unsigned char *image, unsigned int size);
+/* ========== Defines ========== */
+#define IMAGE_WIDTH		1024
+#define IMAGE_HEIGHT	1024
+#define IMAGE_SIZE		IMAGE_WIDTH*IMAGE_HEIGHT
 
 
-/****************************************************/
-/***************** Algo functions *******************/
-/****************************************************/
-float interpol_Malvar(float matrix[IMG_WIDTH*IMG_HEIGHT],
-                           float kernel[5][5],
-                           unsigned int line_start,
-                           unsigned int col_start)
-{
+/* ========== Accelerator structures to store input and output data ========== */
+struct input_malvar {
+	float bayer_img[IMAGE_HEIGHT][IMAGE_WIDTH];
+	float G_at_RB[5][5];
+	float R1[5][5];
+	float R2[5][5];
+	float R3[5][5];
+	float B1[5][5];
+	float B2[5][5];
+	float B3[5][5];
+};
+
+struct output_malvar {
+	float R[IMAGE_HEIGHT][IMAGE_WIDTH];
+	float G[IMAGE_HEIGHT][IMAGE_WIDTH];
+	float B[IMAGE_HEIGHT][IMAGE_WIDTH];
+};
+
+
+/* ========== Accelerator functions ========== */
+float interpol_Malvar(	float matrix[IMAGE_HEIGHT][IMAGE_WIDTH], float kernel[5][5], unsigned int line_start, unsigned int col_start) {
 	float sum_col = 0;
 	float result = 0;
 
@@ -70,7 +74,7 @@ float interpol_Malvar(float matrix[IMG_WIDTH*IMG_HEIGHT],
 	for (int line=line_start; line<line_start+5; line++) {
 		/* Sum of column members */
 		for (int col=col_start; col<col_start+5; col++) {
-			sum_col += as_2dim_table_float(matrix, IMG_HEIGHT)[col][line] * kernel[col-col_start][line-line_start];
+			sum_col += matrix[line][col] * kernel[line-line_start][col-col_start];
 		}
 		result += sum_col;
 		sum_col = 0;
@@ -84,169 +88,139 @@ float interpol_Malvar(float matrix[IMG_WIDTH*IMG_HEIGHT],
 	}
 }
 
-
-/****************************************************/
-/***************** Accel functions ******************/
-/****************************************************/
-struct param_malvar_s {
-	float bayer_img[IMG_WIDTH*IMG_HEIGHT];
-	float G_at_RB[5][5];
-	float R1[5][5];
-	float R2[5][5];
-	float R3[5][5];
-	float B1[5][5];
-	float B2[5][5];
-	float B3[5][5];
-};
-
-struct result_malvar_s {
-	float R[IMG_WIDTH*IMG_HEIGHT];
-	float G[IMG_WIDTH*IMG_HEIGHT];
-	float B[IMG_WIDTH*IMG_HEIGHT];
-};
-
-void acc_0(struct param_malvar_s *param, struct result_malvar_s *result)
-{
-	for (unsigned int line=0; line<=(IMG_HEIGHT - 3); line = line + 2) {
-		for (unsigned int col=0; col<=(IMG_WIDTH - 3); col = col + 2) {
-			as_2dim_table_float(result->G, IMG_HEIGHT)[col+1][line] = as_2dim_table_float(param->bayer_img, IMG_HEIGHT)[col+1][line];
-			as_2dim_table_float(result->G, IMG_HEIGHT)[col][line+1] = as_2dim_table_float(param->bayer_img, IMG_HEIGHT)[col][line+1];
-			as_2dim_table_float(result->R, IMG_HEIGHT)[col][line] = as_2dim_table_float(param->bayer_img, IMG_HEIGHT)[col][line];
-			as_2dim_table_float(result->B, IMG_HEIGHT)[col+1][line+1] = as_2dim_table_float(param->bayer_img, IMG_HEIGHT)[col+1][line+1];
+void acc_0(struct input_malvar *param, struct output_malvar *result) {
+	for (unsigned int line=0; line<=(IMAGE_HEIGHT - 3); line = line + 2) {		/* Image line */
+		for (unsigned int col=0; col<=(IMAGE_WIDTH - 3); col = col + 2) {		/* Image column */
+			result->G[line][col+1] = param->bayer_img[line][col+1];
+			result->G[line+1][col] = param->bayer_img[line+1][col];
+			result->R[line][col] = param->bayer_img[line][col];
+			result->B[line+1][col+1] = param->bayer_img[line+1][col+1];
 			/* Allow to skip the edges of the image (2x2) */
-			if (line >= 2 && line <= IMG_HEIGHT-3 && col >= 2 && col <= IMG_WIDTH-3) {
+			if (line >= 2 && line <= IMAGE_HEIGHT-3 && col >= 2 && col <= IMAGE_WIDTH-3) {
 				/* Green channel */
-				as_2dim_table_float(result->G, IMG_HEIGHT)[col][line] = interpol_Malvar(param->bayer_img, param->G_at_RB, line-2, col-2);
-				as_2dim_table_float(result->G, IMG_HEIGHT)[col+1][line+1] = interpol_Malvar(param->bayer_img, param->G_at_RB, line-1, col-1);
+				result->G[line][col] = interpol_Malvar(param->bayer_img, param->G_at_RB, line-2, col-2);
+				result->G[line+1][col+1] = interpol_Malvar(param->bayer_img, param->G_at_RB, line-1, col-1);
 				/* Red channel */
-				as_2dim_table_float(result->R, IMG_HEIGHT)[col+1][line] = interpol_Malvar(param->bayer_img, param->R1, line-2, col-1);
-				as_2dim_table_float(result->R, IMG_HEIGHT)[col][line+1] = interpol_Malvar(param->bayer_img, param->R2, line-1, col-2);
-				as_2dim_table_float(result->R, IMG_HEIGHT)[col+1][line+1] = interpol_Malvar(param->bayer_img, param->R3, line-1, col-1);
+				result->R[line][col+1] = interpol_Malvar(param->bayer_img, param->R1, line-2, col-1);
+				result->R[line+1][col] = interpol_Malvar(param->bayer_img, param->R2, line-1, col-2);
+				result->R[line+1][col+1] = interpol_Malvar(param->bayer_img, param->R3, line-1, col-1);
 				/* Blue channel */
-				as_2dim_table_float(result->B, IMG_HEIGHT)[col][line] = interpol_Malvar(param->bayer_img, param->B3, line-2, col-2);
-				as_2dim_table_float(result->B, IMG_HEIGHT)[col+1][line] = interpol_Malvar(param->bayer_img, param->B2, line-2, col-1);
-				as_2dim_table_float(result->B, IMG_HEIGHT)[col][line+1] = interpol_Malvar(param->bayer_img, param->B1, line-1, col-2);
+				result->B[line][col] = interpol_Malvar(param->bayer_img, param->B3, line-2, col-2);
+				result->B[line][col+1] = interpol_Malvar(param->bayer_img, param->B2, line-2, col-1);
+				result->B[line+1][col] = interpol_Malvar(param->bayer_img, param->B1, line-1, col-2);
 			}
 		}
 	}
 }
 
 
-/****************************************************/
-/**************** Utility functions *****************/
-/****************************************************/
-void load_img(char *path, unsigned char *image, unsigned int size)
-{
-	FILE *ptr;
-	int n_read = 0;
+/* ========== Utility functions ========== */
+#ifndef LOCOD_FPGA
+int load_byte_data(char *path, unsigned char *buffer, unsigned int size) {
+	FILE *file;
+	unsigned int n_read = 0;
 
 	/* Open file */
-	ptr = fopen(path,"rb");
-	if (ptr == NULL) {
-		perror("Cannot open file");
+	file = fopen(path,"rb");
+	if (file == NULL) {
+		printf("Cannot open file %s\n", path);
+		return -1;
 	}
 
 	/* Load into memory and close file */
-	n_read = fread(image, 1, size, ptr);
+	n_read = fread(buffer, 1, size, file);
 	if (n_read != size) {
-		printf("Cannot read all data from file (number of bytes read %d)\n", n_read);
+		printf("Cannot read all data from file (number of bytes read %u)\n", n_read);
+		fclose(file);
+		return -1;
 	}
-	fclose(ptr);
 
-	fprintf(stdout, "File %s opened, size=%u bytes\n", path, size);
+	fclose(file);
+	printf("File %s opened, read %u bytes\n", path, n_read);
+	return 0;
 }
 
-void save_img(char *path, unsigned char *image, unsigned int size)
-{
-	FILE *ptr;
+int save_byte_data(char *path, unsigned char *buffer, unsigned int size) {
+	FILE *file;
+	unsigned int n_write = 0;
 
 	/* Open file */
-	ptr = fopen(path,"wb");
-	if (ptr == NULL) {
-		perror("Cannot open file");
+	file = fopen(path,"wb");
+	if (file == NULL) {
+		printf("Cannot open file %s\n", path);
+		return -1;
 	}
 
 	/* Write and close file */
-	fwrite(image, 1, size, ptr);
-	fclose(ptr);
+	n_write = fwrite(buffer, 1, size, file);
+	if (n_write != size) {
+		printf("Cannot write all data to file (number of bytes write %u)\n", n_write);
+		fclose(file);
+		return -1;
+	}
 
-	fprintf(stdout, "File %s opened, size=%u bytes\n", path, size);
+	fclose(file);
+	printf("File %s opened, write %u bytes\n", path, n_write);
+	return 0;
 }
 
-void convert_array_uchar_to_float(unsigned char *input_array, float *output_array, unsigned int size)
-{
-	for (int i=0; i<size; i++) {
-		output_array[i] = (float)input_array[i];
+void print_image_TL(float image[IMAGE_HEIGHT][IMAGE_WIDTH]) {
+	for (int i=0; i<10; i++) {					/* Image line */
+		for (int j=0; j<10; j++) {				/* Image column */
+			printf("%f\t", image[i][j]);
+		}
+		printf("\n");
 	}
 }
 
-void convert_array_float_to_uchar(float *input_array, unsigned char *output_array, unsigned int size)
-{
-	for (int i=0; i<size; i++) {
-		output_array[i] = (unsigned char)round(input_array[i]);
-	}
-}
 
-
-/****************************************************/
-/****************** Main function *******************/
-/****************************************************/
-#ifndef LOCOD_FPGA
-int main(int argc, char *argv[])
-{
-	unsigned char *imagette;
-
-	//Data for accelerator 0
-	struct param_malvar_s *param_malvar;
-	struct result_malvar_s *result_malvar_fpga;
-	struct result_malvar_s *result_malvar_cpu;
-
-	param_malvar = malloc(sizeof(struct param_malvar_s));
-	result_malvar_fpga = malloc(sizeof(struct result_malvar_s));
-	result_malvar_cpu = malloc(sizeof(struct result_malvar_s));
-
-	float G_at_RB[5][5] = { {0,  0, -1, 0,  0},
+/* ========== Main function ========== */
+int main(int argc, char *argv[]) {
+	/* Variables */
+	int ret;									/* Return value */
+	int opt;									/* User option */
+	char *input_image_file;						/* Input image file */
+	char *output_image_file;					/* Output image file */
+	unsigned char *buffer;						/* In and out buffer */
+	struct input_malvar *input_malvar;			/* Accelerator input */
+	struct output_malvar *output_malvar_fpga;	/* Accelerator output FPGA */
+	struct output_malvar *output_malvar_cpu;	/* Accelerator output CPU */
+	float G_at_RB[5][5] = { {0,  0, -1, 0,  0},	/* Malvar kernels */
 	                        {0,  0,  2, 0,  0,},
 	                        {-1, 2,  4, 2, -1},
 	                        {0,  0,  2, 0,  0},
 	                        {0,  0, -1, 0,  0,}
 	                      };
-
 	float R1[5][5] = { {0,   0, -1,  0, 0},
 	                   {0,  -1,  4, -1, 0},
 	                   {0.5, 0,  5,  0, 0.5},
 	                   {0,  -1,  4, -1, 0},
 	                   {0,   0, -1,  0, 0}
 	                 };
-
 	float R2[5][5] = { {0,  0, 0.5, 0, 0,},
 	                   {0, -1, 0,  -1, 0},
 	                   {-1, 4, 5,   4, -1},
 	                   {0, -1, 0,  -1, 0},
 	                   {0,  0, 0.5, 0, 0}
 	                 };
-
 	float R3[5][5] = { {0,    0, -1.5, 0, 0},
 	                   {0,    2,  0,   2, 0},
 	                   {-1.5, 0,  6,   0, -1.5},
 	                   {0,    2,  0,   2, 0},
 	                   {0,    0, -1.5, 0, 0}
 	                 };
-
 	float B1[5][5] = { {0,   0, -1,  0, 0},
 	                   {0,  -1,  4, -1, 0},
 	                   {0.5, 0,  5,  0, 0.5},
 	                   {0,  -1,  4, -1, 0},
 	                   {0,   0, -1,  0, 0}
 	                 };
-
 	float B2[5][5] = { { 0,  0, 0.5, 0,  0},
 	                   { 0, -1, 0,  -1,  0},
 	                   {-1,  4, 5,   4, -1},
 	                   { 0, -1, 0,  -1,  0},
 	                   { 0,  0, 0.5, 0,  0}
 	                 };
-
 	float B3[5][5] = { {0,    0, -1.5, 0,  0},
 	                   {0,    2,  0,   2,  0},
 	                   {-1.5, 0,  6,   0, -1.5},
@@ -254,68 +228,108 @@ int main(int argc, char *argv[])
 	                   {0,    0, -1.5, 0,  0}
 	                 };
 
-
+	/* Begin */
 	printf("CNES Image Processing Algorithm\n");
 
-	if (argc != 2)
-	{
-		printf("Mauvais arguments\n");
-		return -1;
-	}
-
-	imagette = calloc(IMG_WIDTH*IMG_HEIGHT, sizeof(unsigned char));
-	if (imagette == NULL)
-	{
-		printf("malloc error\n");
-		return -1;
-	}
-	load_img(argv[1], imagette, IMG_WIDTH*IMG_HEIGHT);
-
-
-	//----------------- Debut algo ---------------------
-	init_locod(1);
-
-	//Malvar
-	convert_array_uchar_to_float(imagette, param_malvar->bayer_img, IMG_WIDTH*IMG_HEIGHT);
-
-	for (int i=0; i<5; i++) {
-		for (int j=0; j<5; j++) {
-			param_malvar->G_at_RB[i][j] = G_at_RB[i][j];
-			param_malvar->R1[i][j] = R1[i][j];
-			param_malvar->R2[i][j] = R2[i][j];
-			param_malvar->R3[i][j] = R3[i][j];
-			param_malvar->B1[i][j] = B1[i][j];
-			param_malvar->B2[i][j] = B2[i][j];
-			param_malvar->B3[i][j] = B3[i][j];
+	/* Parsing user arguments */
+	while ((opt = getopt(argc, argv, ":i:o:")) != -1) {
+		switch (opt) {
+			case 'i':
+				input_image_file = optarg;
+				break;
+			case 'o':
+				output_image_file = optarg;
+				break;
+			case ':':
+				printf("Option -%c requires an argument\n", optopt);
+				return -1;
+				break;
+			case '?':
+				printf("Unknown option -%c\n", optopt);
+				return -1;
+                break;
+			default:
+				printf("Usage: %s [-f input_file]\n", argv[0]);
+				return -1;
 		}
 	}
 
-	for (int i = 0 ; i < IMG_WIDTH*IMG_HEIGHT ; i++) {
-		result_malvar_fpga->R[i] = 0.0;
-		result_malvar_fpga->G[i] = 0.0;
-		result_malvar_fpga->B[i] = 0.0;
-		result_malvar_cpu->R[i] = 0.0;
-		result_malvar_cpu->G[i] = 0.0;
-		result_malvar_cpu->B[i] = 0.0;
+	/* Allocate structures and arrays */
+	input_malvar = malloc(sizeof(struct input_malvar));
+	output_malvar_fpga = malloc(sizeof(struct output_malvar));
+	output_malvar_cpu = malloc(sizeof(struct output_malvar));
+	buffer = malloc(3*IMAGE_SIZE*sizeof(unsigned char));
+
+	/* Fill in kernels in accelerator input structure */
+	for (int i=0; i<5; i++) {
+		for (int j=0; j<5; j++) {
+			input_malvar->G_at_RB[i][j] = G_at_RB[i][j];
+			input_malvar->R1[i][j] = R1[i][j];
+			input_malvar->R2[i][j] = R2[i][j];
+			input_malvar->R3[i][j] = R3[i][j];
+			input_malvar->B1[i][j] = B1[i][j];
+			input_malvar->B2[i][j] = B2[i][j];
+			input_malvar->B3[i][j] = B3[i][j];
+		}
 	}
 
-	FPGA(acc_0, param_malvar, result_malvar_fpga, 0);
-	wait_accelerator(result_malvar_fpga, 0);
+	/* Open image */
+	ret = load_byte_data(input_image_file, buffer, IMAGE_SIZE);
+	if (ret != 0) {
+		printf("Problem openning input image file\n");
+		return ret;
+	}
 
-	CPU(acc_0, param_malvar, result_malvar_cpu);
+	/* Place raw data in accelerator input structure */
+	for (unsigned int line=0; line<IMAGE_HEIGHT; line++) {						/* Image line */
+		for (unsigned int col=0; col<IMAGE_WIDTH; col++) {						/* Image column */
+			input_malvar->bayer_img[line][col] = (float)buffer[line*IMAGE_WIDTH + col];
+		}
+	}
 
-	printf("R FPGA :\n");
-	print_matrix_TL(result_malvar_fpga->R, IMG_HEIGHT);
+	/* LoCod initialization */
+	init_locod(1);
 
-	printf("R CPU :\n");
-	print_matrix_TL(result_malvar_cpu->R, IMG_HEIGHT);
+	/* Exuecute acc_0 function in FPGA */
+	FPGA(acc_0, input_malvar, output_malvar_fpga, 0);
+	wait_accelerator(output_malvar_fpga, 0);
 
-	printf("FPGA process time : %dns\n", get_time_ns_FPGA(0));
-
+	/* LoCod deinitialization */
 	deinit_locod();
-	//------------------ Fin algo ----------------------
 
+	/* Exuecute acc_0 function in CPU */
+	CPU(acc_0, input_malvar, output_malvar_cpu);
+
+	/* Print image result FPGA */
+	printf("R FPGA :\n");
+	print_image_TL(output_malvar_fpga->R);
+
+	/* Print image result CPU */
+	printf("R CPU :\n");
+	print_image_TL(output_malvar_cpu->R);
+
+	/* Place accelerator output into buffer : [R0, G0, B0, R1, G1, B1, ... ] */
+	for (unsigned int line=0; line<IMAGE_HEIGHT; line++) {						/* Image line */
+		for (unsigned int col=0; col<IMAGE_WIDTH; col++) {						/* Image column */
+			buffer[3*(line*IMAGE_WIDTH + col) + 0] = (unsigned char)output_malvar_fpga->R[line][col];
+			buffer[3*(line*IMAGE_WIDTH + col) + 1] = (unsigned char)output_malvar_fpga->G[line][col];
+			buffer[3*(line*IMAGE_WIDTH + col) + 2] = (unsigned char)output_malvar_fpga->B[line][col];
+		}
+	}
+
+	/* Write FPGA result into a file */
+	ret = save_byte_data(output_image_file, buffer, 3*IMAGE_SIZE);
+	if (ret != 0) {
+		printf("Problem openning output image file\n");
+		return ret;
+	}
+
+	/* Free memory */
+	free(input_malvar);
+	free(output_malvar_fpga);
+	free(output_malvar_cpu);
+	free(buffer);
 
 	return 0;
 }
-#endif
+#endif /* LOCOD_FPGA */
