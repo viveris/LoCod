@@ -1,3 +1,21 @@
 [submodule "submodules/locod-fpga"]
 	path = submodules/locod-fpga
 	url = ../locod-fpga
+[submodule "submodules/docker/LoCod-docker-fpga-tb"]
+	path = submodules/docker/LoCod-docker-fpga-tb
+	url = ../LoCod-docker-fpga-tb.git
+[submodule "submodules/docker/LoCod-docker-nanoxplore"]
+	path = submodules/docker/LoCod-docker-nanoxplore
+	url = ../LoCod-docker-nanoxplore.git
+[submodule "submodules/docker/LoCod-docker-PandA"]
+	path = submodules/docker/LoCod-docker-PandA
+	url = ../LoCod-docker-PandA.git
+[submodule "submodules/docker/LoCod-docker-sdk-enclustra"]
+	path = submodules/docker/LoCod-docker-sdk-enclustra
+	url = ../LoCod-docker-sdk-enclustra.git
+[submodule "submodules/docker/LoCod-docker-sdk-ngultra"]
+	path = submodules/docker/LoCod-docker-sdk-ngultra
+	url = ../LoCod-docker-sdk-ngultra.git
+[submodule "submodules/docker/LoCod-docker-sdk-ultra96"]
+	path = submodules/docker/LoCod-docker-sdk-ultra96
+	url = ../LoCod-docker-sdk-ultra96.git
