@@ -32,54 +32,69 @@
 
 #ifndef LOCOD_FPGA
 #include "locod.h"
-#endif
+#endif //LOCOD_FPGA
 
-struct param_test {
-	int a;
-	int b;
+#define SIZE 20
+
+struct param_acc0 {
+    int a;
+    int b;
 };
 
-struct result_test {
-	int a;
+struct result_acc0 {
+    int a;
 };
 
-void acc_1(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a + param->b;
+void acc0(struct param_acc0 *param, struct result_acc0 *result) {
+    result->a = param->a * param->b;
 }
 
-void acc_2(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a * param->b;
+struct param_acc1 {
+    float a[SIZE];
+};
+
+struct result_acc1 {
+    float a;
+    float b;
+};
+
+void acc1(struct param_acc1 *param, struct result_acc1 *result) {
+    int i = 0;
+    result->a = 0.0;
+    result->b = 0.0;
+
+    for (i = 0; i < SIZE; i++) {
+        result->a += param->a[i];
+        result->b -= param->a[i];
+    }
 }
 
 #ifndef LOCOD_FPGA
-int main(int argc, char **argv)
-{
-	struct result_test result = { 0 };
-	struct param_test param = { 0 };
+int main(void) {
+    //Variables
+    struct param_acc0 param_acc_0 = { .a = 3, .b = 7};
+    struct result_acc0 result_acc_0 = {.a = 0};
+    struct param_acc1 param_acc_1;
+    for (int i = 0; i < SIZE; i++) {
+        param_acc_1.a[i] = i;
+    }
+    struct result_acc1 result_acc_1 = { .a = 0, .b = 0};
 
-	init_locod(1);
+    //LoCod initialization
+    init_locod(2);
 
-	if (argc < 3) {
-		param.a = 5;
-		param.b = 7;
-	} else {
-		param.a = atoi(argv[1]);
-		param.b = atoi(argv[2]);
-	}
+    //Launching acc1 and acc2 function in the FPGA
+    FPGA(acc0, &param_acc_0, &result_acc_0, 0);
+    FPGA(acc1, &param_acc_1, &result_acc_1, 1);
 
-	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
+    //Retreive outputs
+    wait_accelerator(&result_acc_0, 0);
+    wait_accelerator(&result_acc_1, 1);
 
-	FPGA(acc_1, &param, &result, 0);
-	wait_accelerator(&result, 0);
-	fprintf(stdout, "A + B = %d\n", result.a);
+    //Print results
+    printf("Acc 0 result : %d * %d = %d\n", param_acc_0.a, param_acc_0.b, result_acc_0.a);
+    printf("Acc 1 result : sum of input values = %f, substraction of input values = %f\n", result_acc_1.a, result_acc_1.b);
 
-	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %d\n", result.a);
-
-	deinit_locod();
-
-	return 0;
-}
-#endif
+    return 0;
+} //End main()
+#endif //LOCOD_FPGA

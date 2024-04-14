@@ -30,55 +30,67 @@
  *
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
 #ifndef LOCOD_FPGA
 #include "locod.h"
 #endif
 
-struct param_test {
-	int a;
-	int b;
-};
+#define as_2dim_table_uchar(ptr, height) ((unsigned char (*)[height])ptr)
+#define as_2dim_table_float(ptr, height) ((float (*)[height])ptr)
+#define as_2dim_table_double(ptr, height) ((double (*)[height])ptr)
 
-struct result_test {
-	int a;
-};
 
-void acc_1(struct param_test *param, struct result_test *result)
+/****************************************************/
+/***************** Accel functions ******************/
+/****************************************************/
+void test_func(float *param, float *result)
 {
-	result->a = param->a + param->b;
+	float local_variable = 1234.56;
+
+	*result = *param * local_variable;
 }
 
-void acc_2(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a * param->b;
-}
 
+/****************************************************/
+/****************** Main function *******************/
+/****************************************************/
 #ifndef LOCOD_FPGA
-int main(int argc, char **argv)
+int main(int argc, char *argv[])
 {
-	struct result_test result = { 0 };
-	struct param_test param = { 0 };
+	//Data for accelerator
+	float param = 10.0;
+	float res_fpga = 0.0;
+	float res_cpu = 0.0;
 
+	printf("Debut test local allocation\n");
+
+	//----------------- Debut algo ---------------------
 	init_locod(1);
 
-	if (argc < 3) {
-		param.a = 5;
-		param.b = 7;
-	} else {
-		param.a = atoi(argv[1]);
-		param.b = atoi(argv[2]);
-	}
 
-	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
+	struct fpga_param acc_0_in = {0};
+	acc_0_in.p = &param;
+	acc_0_in.len = sizeof(param);
 
-	FPGA(acc_1, &param, &result, 0);
-	wait_accelerator(&result, 0);
-	fprintf(stdout, "A + B = %d\n", result.a);
+	struct fpga_param acc_0_out = {0};
+	acc_0_out.p = &res_fpga;
+	acc_0_out.len = sizeof(res_fpga);
 
-	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %d\n", result.a);
+	FPGA(test_func, acc_0_in, acc_0_out, 0);
+	wait_accelerator(acc_0_out, 0);
+
+	CPU(test_func, &param, &res_cpu);
+
+	printf("Result FPGA = %f\n", res_fpga);
+	printf("Result CPU = %f\n", res_cpu);
+
 
 	deinit_locod();
+	//------------------ Fin algo ----------------------
 
 	return 0;
 }

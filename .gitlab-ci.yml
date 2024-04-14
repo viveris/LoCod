@@ -1,211 +1,136 @@
-image:
-  name: locod:0.3
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
+  XILINXD_LICENSE_FILE: "2100@172.20.1.108"
+  VIVADO_PATH: /data2/Xilinx/Vivado/2022.1/settings64.sh
+
 
 Build-multi-parallel:
   script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/multi-parallel/
-    - make USER_DEF=-DTIME_MEASURE
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/multi-parallel/main.c
   artifacts:
     paths:
-      - demo/multi-parallel/locod-cpu
-      - demo/multi-parallel/acc_1.v
-      - demo/multi-parallel/acc_2.v
-      - demo/multi-parallel/acc_3.v
-      - demo/multi-parallel/acc_4.v
-      - demo/multi-parallel/acc_5.v
-      - demo/multi-parallel/acc_6.v
-      - demo/multi-parallel/acc_7.v
-      - demo/multi-parallel/acc_8.v
-    expire_in: 1 day
-    
-Build-picture-demo:
-  script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/picture-demo/
-    - make USER_DEF=-DTIME_MEASURE
-  artifacts:
-    paths:
-      - demo/picture-demo/locod-cpu
-      - demo/picture-demo/acc_1.v
-      - demo/picture-demo/acc_2.v
-      - demo/picture-demo/acc_3.v
-      - demo/picture-demo/acc_4.v
-      - demo/picture-demo/acc_5.v
-      - demo/picture-demo/acc_6.v
-      - demo/picture-demo/acc_7.v
-      - demo/picture-demo/acc_8.v
-    expire_in: 1 day
-    
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
 Build-multi-simple:
   script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/multi-simple/
-    - make USER_DEF=-DTIME_MEASURE
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/multi-simple/main.c
   artifacts:
     paths:
-      - demo/multi-simple/locod-cpu
-      - demo/multi-simple/acc_1.v
-      - demo/multi-simple/acc_2.v
-      - demo/multi-simple/acc_3.v
-      - demo/multi-simple/acc_4.v
-      - demo/multi-simple/acc_5.v
-      - demo/multi-simple/acc_6.v
-      - demo/multi-simple/acc_7.v
-      - demo/multi-simple/acc_8.v
-    expire_in: 1 day
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
+Build-picture-demo:
+  script:
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/picture-demo/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
+Build-picture-float:
+  script:
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/picture-float/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
+Build-simple-float-add:
+  script:
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/simple-float-add/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
+Build-simple-float-mul:
+  script:
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/simple-float-mul/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
+Build-simple-int-add:
+  script:
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/simple-int-add/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
+
+Build-simple-int-mul:
+  script:
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/simple-int-mul/main.c
+  artifacts:
+    paths:
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
 
 Build-table-add:
   script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/table-add
-    - make USER_DEF=-DTIME_MEASURE
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/table-add/main.c
   artifacts:
     paths:
-      - demo/table-add/locod-cpu
-      - demo/table-add/acc_1.v
-      - demo/table-add/acc_2.v
-      - demo/table-add/acc_3.v
-      - demo/table-add/acc_4.v
-      - demo/table-add/acc_5.v
-      - demo/table-add/acc_6.v
-      - demo/table-add/acc_7.v
-      - demo/table-add/acc_8.v
-    expire_in: 1 day
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
+
 
 Build-table-mul:
   script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/table-mul
-    - make USER_DEF=-DTIME_MEASURE
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/table-mul/main.c
   artifacts:
     paths:
-      - demo/table-mul/locod-cpu
-      - demo/table-mul/acc_1.v
-      - demo/table-mul/acc_2.v
-      - demo/table-mul/acc_3.v
-      - demo/table-mul/acc_4.v
-      - demo/table-mul/acc_5.v
-      - demo/table-mul/acc_6.v
-      - demo/table-mul/acc_7.v
-      - demo/table-mul/acc_8.v      
-    expire_in: 1 day
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
 
-Build-int-add:
-  script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/simple-int-add
-    - make USER_DEF=-DTIME_MEASURE
-  artifacts:
-    paths:
-      - demo/simple-int-add/locod-cpu
-      - demo/simple-int-add/acc_1.v
-      - demo/simple-int-add/acc_2.v
-      - demo/simple-int-add/acc_3.v
-      - demo/simple-int-add/acc_4.v
-      - demo/simple-int-add/acc_5.v
-      - demo/simple-int-add/acc_6.v
-      - demo/simple-int-add/acc_7.v
-      - demo/simple-int-add/acc_8.v
-    expire_in: 1 day
 
-Build-int-mul:
+Build-use-case-malvar:
   script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/simple-int-mul
-    - make USER_DEF=-DTIME_MEASURE
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/use-case-malvar/main.c
   artifacts:
     paths:
-      - demo/simple-int-mul/locod-cpu
-      - demo/simple-int-mul/acc_1.v
-      - demo/simple-int-mul/acc_2.v
-      - demo/simple-int-mul/acc_3.v
-      - demo/simple-int-mul/acc_4.v
-      - demo/simple-int-mul/acc_5.v
-      - demo/simple-int-mul/acc_6.v
-      - demo/simple-int-mul/acc_7.v
-      - demo/simple-int-mul/acc_8.v
-    expire_in: 1 day
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day
 
-Build-float-add:
-  script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/simple-float-add
-    - make USER_DEF=-DTIME_MEASURE
-  artifacts:
-    paths:
-      - demo/simple-float-add/locod-cpu
-      - demo/simple-float-add/acc_1.v
-      - demo/simple-float-add/acc_2.v
-      - demo/simple-float-add/acc_3.v
-      - demo/simple-float-add/acc_4.v
-      - demo/simple-float-add/acc_5.v
-      - demo/simple-float-add/acc_6.v
-      - demo/simple-float-add/acc_7.v
-      - demo/simple-float-add/acc_8.v
-    expire_in: 1 day
 
-Build-float-mul:
+Build-use-case-filtering:
   script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/simple-float-mul
-    - make USER_DEF=-DTIME_MEASURE
+    - source ${VIVADO_PATH}
+    - bash locod.sh -t enclustra -f demo/use-case-filtering/main.c
   artifacts:
     paths:
-      - demo/simple-float-mul/locod-cpu
-      - demo/simple-float-mul/acc_1.v
-      - demo/simple-float-mul/acc_2.v
-      - demo/simple-float-mul/acc_3.v
-      - demo/simple-float-mul/acc_4.v
-      - demo/simple-float-mul/acc_5.v
-      - demo/simple-float-mul/acc_6.v
-      - demo/simple-float-mul/acc_7.v
-      - demo/simple-float-mul/acc_8.v
-    expire_in: 1 day
-
-Build-test-byte:
-  script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/test_byte
-    - make USER_DEF=-DTIME_MEASURE
-  artifacts:
-    paths:
-      - demo/test_byte/locod-cpu
-      - demo/test_byte/acc_1.v
-      - demo/test_byte/acc_2.v
-      - demo/test_byte/acc_3.v
-      - demo/test_byte/acc_4.v
-      - demo/test_byte/acc_5.v
-      - demo/test_byte/acc_6.v
-      - demo/test_byte/acc_7.v
-      - demo/test_byte/acc_8.v
-    expire_in: 1 day
-
-Build-test-byte-4bytes:
-  script:
-    - export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/panda/bin
-    - source /opt/petalinux/2020.1/environment-setup-aarch64-xilinx-linux
-    - cd demo/test_byte_4bytes
-    - make USER_DEF=-DTIME_MEASURE
-  artifacts:
-    paths:
-      - demo/test_byte_4bytes/locod-cpu
-      - demo/test_byte_4bytes/acc_1.v
-      - demo/test_byte_4bytes/acc_2.v
-      - demo/test_byte_4bytes/acc_3.v
-      - demo/test_byte_4bytes/acc_4.v
-      - demo/test_byte_4bytes/acc_5.v
-      - demo/test_byte_4bytes/acc_6.v
-      - demo/test_byte_4bytes/acc_7.v
-      - demo/test_byte_4bytes/acc_8.v
-    expire_in: 1 day    
+      - locod-output/locod-cpu
+      - locod-output/fpga.bit
+    expire_in: 7 day

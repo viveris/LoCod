@@ -30,56 +30,36 @@
  *
  */
 
-#ifndef LOCOD_FPGA
-#include "locod.h"
-#endif
+#ifndef LOCOD_H
+#define LOCOD_H
 
-struct param_test {
-	int a;
-	int b;
-};
 
-struct result_test {
-	int a;
-};
+#if defined(TARGET_ultra96)
+	#include "ultra96_defs.h"
+#elif defined(TARGET_enclustra)
+	#include "enclustra_defs.h"
+#elif defined(TARGET_ngultra)
+	#include "ngultra_defs.h"
+#endif //TARGET
 
-void acc_1(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a + param->b;
-}
 
-void acc_2(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a * param->b;
-}
+#define CPU(fct, param_ptr, result_ptr) do { fct(param_ptr, result_ptr); } while(0)
 
-#ifndef LOCOD_FPGA
-int main(int argc, char **argv)
-{
-	struct result_test result = { 0 };
-	struct param_test param = { 0 };
+#define FPGA(fct, param_ptr, result_ptr, accel) do {\
+	init_accelerator_memory(sizeof(*param_ptr), sizeof(*result_ptr), accel);\
+	cp_param_and_result_to_accel_memory(param_ptr, result_ptr, accel);\
+	start_accelerator(accel);\
+} while(0)
 
-	init_locod(1);
 
-	if (argc < 3) {
-		param.a = 5;
-		param.b = 7;
-	} else {
-		param.a = atoi(argv[1]);
-		param.b = atoi(argv[2]);
-	}
+int init_locod(int nb_acc);
+int init_accelerator_memory(int param_len, int result_len, int accel);
+int cp_param_and_result_to_accel_memory(void *param_addr, void *result_addr, int accel);
+int cp_result_from_accel_memory(void *result_addr, int accel);
+int start_accelerator(int accel);
+int wait_accelerator(void *result_addr, int accel);
+int get_time_ns_FPGA(int accel);
+int deinit_locod(void);
 
-	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
 
-	FPGA(acc_1, &param, &result, 0);
-	wait_accelerator(&result, 0);
-	fprintf(stdout, "A + B = %d\n", result.a);
-
-	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %d\n", result.a);
-
-	deinit_locod();
-
-	return 0;
-}
-#endif
+#endif /* LOCOD_H */

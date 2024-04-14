@@ -35,20 +35,21 @@
 #include <errno.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
 
 #define as_2dim_table_uchar(ptr, height) ((unsigned char (*)[height])ptr)
 #define as_2dim_table_float(ptr, height) ((float (*)[height])ptr)
 #define as_2dim_table_double(ptr, height) ((double (*)[height])ptr)
 
-void print_matrix(double *matrix, unsigned int height)
-{
-	for (int i=0; i<10; i++) {
-		for (int j=0; j<10; j++) {
-			fprintf(stdout, "%.3lf\t", as_2dim_table_double(matrix, height)[j][i]);
-		}
-		fprintf(stdout, "\n");
-	}
-}
+//=============================== Function declarations =================================
+void print_matrix_TL(double *matrix, unsigned int height);
+void print_matrix_TR(double *matrix, unsigned int height);
+void print_matrix_BL(double *matrix, unsigned int height);
+void print_matrix_BR(double *matrix, unsigned int height);
+void convert_array_double_to_uchar(double *input_array, unsigned char *output_array, unsigned int size);
+void load_img(char *path, unsigned char *image, unsigned int size);
+void save_img(char *path, unsigned char *image, unsigned int size);
+
 
 /****************************************************/
 /***************** Algo functions *******************/
@@ -162,6 +163,8 @@ void DWT_CCSDS_single_level(double *chan_YUV, unsigned int height, unsigned int 
 			as_2dim_table_double(X_sym_col, height)[col+4][line] = as_2dim_table_double(chan_YUV, height)[col][line];
 		}
 	}
+
+	/*
 	FILE *fp1;
 	fp1 = fopen("X_Sym_Col.csv", "wb");
 	for(int row = 0; row < (height); row++){
@@ -171,6 +174,7 @@ void DWT_CCSDS_single_level(double *chan_YUV, unsigned int height, unsigned int 
 		fprintf(fp1,"\n");
 	}
 	fclose(fp1);
+	*/
 	
 	double *tmp_LP1 = calloc(height*width/2, sizeof(double));
 	double *tmp_HP1 = calloc(height*width/2, sizeof(double));
@@ -183,7 +187,7 @@ void DWT_CCSDS_single_level(double *chan_YUV, unsigned int height, unsigned int 
 			        as_2dim_table_double(X_sym_col, height)[col-3][line]*LP_Filter[1] +
 			        as_2dim_table_double(X_sym_col, height)[col-2][line]*LP_Filter[2] +
 			        as_2dim_table_double(X_sym_col, height)[col-1][line]*LP_Filter[3] +
-			        as_2dim_table_double(X_sym_col, height)[col][line]*LP_Filter[4] +
+			        as_2dim_table_double(X_sym_col, height)[col][line]*  LP_Filter[4] +
 			        as_2dim_table_double(X_sym_col, height)[col+1][line]*LP_Filter[5] +
 			        as_2dim_table_double(X_sym_col, height)[col+2][line]*LP_Filter[6] +
 			        as_2dim_table_double(X_sym_col, height)[col+3][line]*LP_Filter[7] +
@@ -193,7 +197,7 @@ void DWT_CCSDS_single_level(double *chan_YUV, unsigned int height, unsigned int 
 			        as_2dim_table_double(X_sym_col, height)[col+1-3][line]*HP_Filter[0] +
 			        as_2dim_table_double(X_sym_col, height)[col+1-2][line]*HP_Filter[1] +
 			        as_2dim_table_double(X_sym_col, height)[col+1-1][line]*HP_Filter[2] +
-			        as_2dim_table_double(X_sym_col, height)[col+1][line]*HP_Filter[3] +
+			        as_2dim_table_double(X_sym_col, height)[col+1][line]  *HP_Filter[3] +
 			        as_2dim_table_double(X_sym_col, height)[col+1+1][line]*HP_Filter[4] +
 			        as_2dim_table_double(X_sym_col, height)[col+1+2][line]*HP_Filter[5] +
 			        as_2dim_table_double(X_sym_col, height)[col+1+3][line]*HP_Filter[6];
@@ -235,46 +239,132 @@ double *X_1 = calloc((height)*width, sizeof(double));
 
 	double *X_sym_line = calloc((height+8)*width, sizeof(double));
 	/* Compute symetric on 4 first and end lines */
-	for (int col=0; col<width; col++) {
+	for (int col=0; col<(width); col++) {
 		as_2dim_table_double(X_sym_line, height+8)[col][0]
-		        = as_2dim_table_double(chan_YUV, height)[col][4];
+		        = as_2dim_table_double(X_1, height)[col][4];
 		as_2dim_table_double(X_sym_line, height+8)[col][1]
-		        = as_2dim_table_double(chan_YUV, height)[col][3];
+		        = as_2dim_table_double(X_1, height)[col][3];
 		as_2dim_table_double(X_sym_line, height+8)[col][2]
-		        = as_2dim_table_double(chan_YUV, height)[col][2];
+		        = as_2dim_table_double(X_1, height)[col][2];
 		as_2dim_table_double(X_sym_line, height+8)[col][3]
-		        = as_2dim_table_double(chan_YUV, height)[col][1];
+		        = as_2dim_table_double(X_1, height)[col][1];
 
-		as_2dim_table_double(X_sym_line, height+8)[col][height+4]
-		        = as_2dim_table_double(chan_YUV, height)[col][height-2];
-		as_2dim_table_double(X_sym_line, height+8)[col][height+5]
-		        = as_2dim_table_double(chan_YUV, height)[col][height-3];
-		as_2dim_table_double(X_sym_line, height+8)[col][height+6]
-		        = as_2dim_table_double(chan_YUV, height)[col][height-4];
-		as_2dim_table_double(X_sym_line, height+8)[col][height+7]
-		        = as_2dim_table_double(chan_YUV, height)[col][height-5];
+		as_2dim_table_double(X_sym_line, height+8)[col][height+8-4]
+		        = as_2dim_table_double(X_1, height)[col][height-2];
+		as_2dim_table_double(X_sym_line, height+8)[col][height+8-3]
+		        = as_2dim_table_double(X_1, height)[col][height-3];
+		as_2dim_table_double(X_sym_line, height+8)[col][height+8-2]
+		        = as_2dim_table_double(X_1, height)[col][height-4];
+		as_2dim_table_double(X_sym_line, height+8)[col][height+8-1]
+		        = as_2dim_table_double(X_1, height)[col][height-5];
+	
 	}
-
-	/* Fil in other cases */
 	for (int col=0; col<width; col++) {
 		for (int line=0; line<height; line++) {
-			as_2dim_table_double(X_sym_line, height)[col][line+4]
-			           = as_2dim_table_double(chan_YUV, height)[col][line];
+			as_2dim_table_double(X_sym_line, height+8)[col][line+4]
+			           = as_2dim_table_double(X_1, height)[col][line];
 		}
 	}
-
-	fprintf(stdout, "%s Sym :\n", __func__);
-	print_matrix(X_sym_line, height);
-
+	/*Print data to a csv and open in excel to compare to matlab results*/	
+/*	FILE *fp;
+	fp = fopen("X_sim_line.csv", "wb");
+	for(int row = 0; row < height+8; row++){
+		for(int col = 0; col < width; col++){
+			fprintf(fp, "%lf,\t ", as_2dim_table_double(X_sym_line, height+8)[col][row]);
+		}
+	fprintf(fp,"\n");
+	}
+	fclose(fp);*/
+	
+/*	fprintf(stdout, "%s Sym_Line :\n", __func__);
+	print_matrix_TL(X_sym_line, height+8);
+	fprintf(stdout, "\n");
+	print_matrix_BL(X_sym_line, height+8);
+	fprintf(stdout, "\n");*/
 
 	double *tmp_LP2 = calloc(height/2*width, sizeof(double));
 	double *tmp_HP2 = calloc(height/2*width, sizeof(double));
+/*Second round of filtering*/
+	for (int line=4; line<height+3; line += 2) {
+		unsigned int ind = (line+1-4)/2;
+		for (int col=0; col<width; col++) {
+			as_2dim_table_double(tmp_LP2, (height)/2)[col][ind] =
+			        as_2dim_table_double(X_sym_line, height+8)[col][line-4]*LP_Filter[0] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line-3]*LP_Filter[1] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line-2]*LP_Filter[2] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line-1]*LP_Filter[3] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line]  *LP_Filter[4] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1]*LP_Filter[5] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+2]*LP_Filter[6] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+3]*LP_Filter[7] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+4]*LP_Filter[8];
+			as_2dim_table_double(tmp_HP2, (height)/2)[col][ind] =
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1-3]*HP_Filter[0] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1-2]*HP_Filter[1] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1-1]*HP_Filter[2] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1]  *HP_Filter[3] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1+1]*HP_Filter[4] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1+2]*HP_Filter[5] +
+			        as_2dim_table_double(X_sym_line, height+8)[col][line+1+3]*HP_Filter[6];
+		}
+	}
+/*	FILE *fp1;
+	fp1 = fopen("temp_LP2.csv", "wb");
+	for(int row = 0; row < (height)/2; row++){
+		for(int col = 0; col < width; col++){
+			fprintf(fp1, "%lf, ", as_2dim_table_double(tmp_LP2,((height)/2))[col][row]);
+		}
+		fprintf(fp1,"\n");
+	}
+	fclose(fp1);*/
 
-	fprintf(stdout, "%s LP1 :\n", __func__);
-	print_matrix(tmp_LP1, height);
+/*	FILE *fp2;
+	fp2 = fopen("temp_HP2.csv", "wb");
+	for(int row = 0; row < (height)/2; row++){
+		for(int col = 0; col < width; col++){
+			fprintf(fp2, "%lf, ", as_2dim_table_double(tmp_HP2,((height)/2))[col][row]);
+		}
+		fprintf(fp2,"\n");
+	}
+	fclose(fp2);*/
+
+	/*fprintf(stdout, "%s LP2 :\n", __func__);
+	print_matrix_TL(tmp_LP2, (height+4)/2);
+	fprintf(stdout, "\n");
+	print_matrix_BL(tmp_LP2, (height+4)/2);
+	fprintf(stdout, "\n");
+	fprintf(stdout, "%s HP2 :\n", __func__);
+	print_matrix_TL(tmp_HP2, (height+8)/2);
+	fprintf(stdout, "\n");
+	print_matrix_BL(tmp_HP2, (height+8)/2);
+	fprintf(stdout, "\n");*/
+
+/*place LP2 above HP2 in the same matrix*/
+	for (int col = 0; col < width; col++){
+		for (int line=0; line < height; line++) {
+			if (line < height/2 ){
+				as_2dim_table_double(chan_YUV, height)[col][line]
+			        = as_2dim_table_double(tmp_LP2, height/2)[col][line];
+			}
+			else{
+				as_2dim_table_double(chan_YUV, height)[col][line]
+			        = as_2dim_table_double(tmp_HP2, height/2)[col][line-(height/2)];
+			}
+		}
+	}
+/*	FILE *fp3;
+	fp3 = fopen("chan_YUV.csv", "wb");
+	for(int row = 0; row < height; row++){
+		for(int col = 0; col < width; col++){
+			fprintf(fp3, "%lf, ", as_2dim_table_double(chan_YUV,height)[col][row]);
+		}
+		fprintf(fp3,"\n");
+	}
+	fclose(fp3);*/
 }
 
- unsigned char *demo_malvar(unsigned char *bayer_img, unsigned int width, unsigned int height)
+
+int demo_malvar(unsigned char *bayer_img, unsigned int width, unsigned int height, unsigned char *result_r, unsigned char *result_g, unsigned char *result_b)
 {
 	float G_at_RB[5][5] = { {0,  0, -1, 0,  0},
 	                        {0,  0,  2, 0,  0,},
@@ -330,24 +420,21 @@ double *X_1 = calloc((height)*width, sizeof(double));
 	double *G = calloc(width*height, sizeof(double));
 	double *R = calloc(width*height, sizeof(double));
 	double *B = calloc(width*height, sizeof(double));
-	for (unsigned int line=0; line<(height - 2); line = line + 2) {
-		for (unsigned int col=0; col<(width - 2); col = col + 2) {
+	for (unsigned int line=0; line<=(height - 3); line = line + 2) {
+		for (unsigned int col=0; col<=(width - 3); col = col + 2) {
 			as_2dim_table_double(G, 1024)[col+1][line] = as_2dim_table_uchar(bayer_img, 1024)[col+1][line];
 			as_2dim_table_double(G, 1024)[col][line+1] = as_2dim_table_uchar(bayer_img, 1024)[col][line+1];
 			as_2dim_table_double(R, 1024)[col][line] = as_2dim_table_uchar(bayer_img, 1024)[col][line];
 			as_2dim_table_double(B, 1024)[col+1][line+1] = as_2dim_table_uchar(bayer_img, 1024)[col+1][line+1];
-
-			/* Alow to skip the edges of the image (2x2) */
+			/* Allow to skip the edges of the image (2x2) */
 			if (line >= 2 && line <= height-3 && col >= 2 && col <= width-3) {
 				/* Green channel */
 				as_2dim_table_double(G, 1024)[col][line] = interpolation_Malvar(bayer_img, G_at_RB, line-2, col-2);
 				as_2dim_table_double(G, 1024)[col+1][line+1] = interpolation_Malvar(bayer_img, G_at_RB, line-1, col-1);
-
 				/* Red channel */
 				as_2dim_table_double(R, 1024)[col+1][line] = interpolation_Malvar(bayer_img, R1, line-2, col-1);
 				as_2dim_table_double(R, 1024)[col][line+1] = interpolation_Malvar(bayer_img, R2, line-1, col-2);
 				as_2dim_table_double(R, 1024)[col+1][line+1] = interpolation_Malvar(bayer_img, R3, line-1, col-1);
-
 				/* Blue channel */
 				as_2dim_table_double(B, 1024)[col][line] = interpolation_Malvar(bayer_img, B3, line-2, col-2);
 				as_2dim_table_double(B, 1024)[col+1][line] = interpolation_Malvar(bayer_img, B2, line-2, col-1);
@@ -356,11 +443,23 @@ double *X_1 = calloc((height)*width, sizeof(double));
 		}
 	}
 
+	fprintf(stdout, "R :\n");
+	print_matrix_TL(R, height);
+	convert_array_double_to_uchar(R, result_r, width*height);
+
+	fprintf(stdout, "G :\n");
+	print_matrix_TL(G, height);
+	convert_array_double_to_uchar(G, result_g, width*height);
+
+	fprintf(stdout, "B :\n");
+	print_matrix_TL(B, height);
+	convert_array_double_to_uchar(B, result_b, width*height);
+
+
+	/* Anscombe */
 	double *R_cut = calloc((width-4)*(height-4), sizeof(double));
 	double *G_cut = calloc((width-4)*(height-4), sizeof(double));
 	double *B_cut = calloc((width-4)*(height-4), sizeof(double));
-
-	/* Anscombe */
 	/* Sum of column members sum */
 	for (int line=0; line<width-4; line++) {
 		/* Sum of column members */
@@ -373,15 +472,6 @@ double *X_1 = calloc((height)*width, sizeof(double));
 			      = anscombe_trf(as_2dim_table_double(B, height)[col+2][line+2], 0.1, 0.2);
 		}
 	}
-
-	fprintf(stdout, "R :\n");
-	print_matrix(R_cut, height-4);
-
-	fprintf(stdout, "G :\n");
-	print_matrix(G_cut, height-4);
-
-	fprintf(stdout, "B :\n");
-	print_matrix(B_cut, height-4);
 
 
 	double *YUV_1 = calloc((width-4)*(height-4), sizeof(double));
@@ -401,18 +491,27 @@ double *X_1 = calloc((height)*width, sizeof(double));
 		}
 	}
 
-	fprintf(stdout, "YUV 1 :\n");
-	print_matrix(YUV_1, height-4);
+/*	fprintf(stdout, "YUV 1 :\n");
+	print_matrix_TL(YUV_1, height-4);
 
 	fprintf(stdout, "YUV 2 :\n");
-	print_matrix(YUV_2, height-4);
+	print_matrix_TL(YUV_2, height-4);
 
 	fprintf(stdout, "YUV 3 :\n");
-	print_matrix(YUV_3, height-4);
+	print_matrix_TL(YUV_3, height-4);*/
 
 	DWT_CCSDS_single_level(YUV_1, height-4, width-4);
+//	DWT_CCSDS_single_level(YUV_2, height-4, width-4);
+//	DWT_CCSDS_single_level(YUV_3, height-4, width-4);
 
-	return NULL;
+	double *Y_BF = calloc(513*513, sizeof(double));
+	for(int row = 0; row < 513; row++){
+		for(int col = 0; col < 513; col++){
+			as_2dim_table_double(Y_BF,513)[col][row] = as_2dim_table_double(YUV_1,height-4)[col][row];
+		}
+	}
+
+	return 0;
 }
 
 
@@ -420,8 +519,7 @@ double *X_1 = calloc((height)*width, sizeof(double));
 /****************************************************/
 /**************** Utility functions *****************/
 /****************************************************/
-
-unsigned char *load_img(const char *path)
+void load_img(char *path, unsigned char *image, unsigned int size)
 {
 	FILE *ptr;
 
@@ -431,35 +529,124 @@ unsigned char *load_img(const char *path)
 		perror("Cannot open file");
 	}
 
-	/* Get filesize */
-	fseek(ptr, 0L, SEEK_END);
-	unsigned int fsize = ftell(ptr);
-	/* Get back to the start of file */
-	fseek(ptr, 0L, SEEK_SET);
-
-	/* Allocate memory to load file data */
-	unsigned char *file_data = malloc(fsize);
-
 	/* Load into memory and close file */
-	fread(file_data, fsize, 1, ptr);
+	fread(image, size, 1, ptr);
 	fclose(ptr);
 
-	fprintf(stdout, "File %s opened, size=%u bytes\n", path, fsize);
+	fprintf(stdout, "File %s opened, size=%u bytes\n", path, size);
+}
 
-	return file_data;
+void save_img(char *path, unsigned char *image, unsigned int size)
+{
+	FILE *ptr;
+
+	/* Open file */
+	ptr = fopen(path,"wb");
+	if (ptr == NULL) {
+		perror("Cannot open file");
+	}
+
+	/* Write and close file */
+	fwrite(image, size, 1, ptr);
+	fclose(ptr);
+
+	fprintf(stdout, "File %s opened, size=%u bytes\n", path, size);
+}
+
+void print_matrix_TL(double *matrix, unsigned int height)
+{
+	for (int i=0; i<10; i++) {
+		for (int j=0; j<10; j++) {
+			fprintf(stdout, "%.3lf\t", as_2dim_table_double(matrix, height)[j][i]);
+		}
+		fprintf(stdout, "\n");
+	}
+}
+
+void print_matrix_TR(double *matrix, unsigned int height)
+{
+	for (int i=0; i<10; i++) {
+		for (int j=(1048576/height)-10; j<(1048576/height); j++) {
+			fprintf(stdout, "%.3lf\t", as_2dim_table_double(matrix, height)[j][i]);
+		}
+		fprintf(stdout, "\n");
+	}
+}
+
+void print_matrix_BL(double *matrix, unsigned int height)
+{
+	for (int i=height-10; i<height; i++) {
+		for (int j=0; j<10; j++) {
+			fprintf(stdout, "%.3lf\t", as_2dim_table_double(matrix, height)[j][i]);
+		}
+		fprintf(stdout, "\n");
+	}
+}
+
+void print_matrix_BR(double *matrix, unsigned int height)
+{
+	for (int i=height-10; i<height; i++) {
+		for (int j=height-10; j<height; j++) {
+			fprintf(stdout, "%.3lf\t", as_2dim_table_double(matrix, height)[j][i]);
+		}
+		fprintf(stdout, "\n");
+	}
+}
+
+void convert_array_double_to_uchar(double *input_array, unsigned char *output_array, unsigned int size)
+{
+	for (int i=0; i<size; i++) {
+		output_array[i] = (unsigned char)round(input_array[i]);
+	}
 }
 
 
 /****************************************************/
 /****************** Main function *******************/
 /****************************************************/
-int main(void)
+int main(int argc, char *argv[])
 {
-	unsigned char *image = load_img("imagette.bin");
+	unsigned char *imagette;
+	unsigned int imagette_width;
+	unsigned int imagette_height;
 
-	demo_malvar(image, 1024, 1024);
+	unsigned char *result_r;
+	unsigned char *result_g;
+	unsigned char *result_b;
+	unsigned int result_width;
+	unsigned int result_height;
 
-	free(image);
+	printf("CNES Image Processing Algorithm\n");
 
-	return EXIT_SUCCESS;
+	if (argc != 7)
+	{
+		printf("Mauvais arguments\n");
+		return -1;
+	}
+
+	imagette_width = atoi(argv[2]);
+	imagette_height = atoi(argv[3]);
+
+	result_width = imagette_width;
+	result_height = imagette_height;
+
+	imagette = calloc(imagette_width*imagette_height, sizeof(unsigned char));
+	load_img(argv[1], imagette, imagette_width*imagette_height);
+
+	result_r = calloc(result_width*result_height, sizeof(unsigned char));
+	result_g = calloc(result_width*result_height, sizeof(unsigned char));
+	result_b = calloc(result_width*result_height, sizeof(unsigned char));
+
+	demo_malvar(imagette, imagette_width, imagette_height, result_r, result_g, result_b);
+
+	save_img(argv[4], result_r, result_width*result_height);
+	save_img(argv[5], result_g, result_width*result_height);
+	save_img(argv[6], result_b, result_width*result_height);
+
+	free(imagette);
+	free(result_r);
+	free(result_g);
+	free(result_b);
+
+	return 0;
 }

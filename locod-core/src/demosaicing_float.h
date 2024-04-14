@@ -30,56 +30,41 @@
  *
  */
 
-#ifndef LOCOD_FPGA
-#include "locod.h"
-#endif
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+#include <math.h>
+#include <string.h>
+#include <time.h>
 
-struct param_test {
-	int a;
-	int b;
-};
 
-struct result_test {
-	int a;
-};
+void print_matrix_TL(float *matrix, unsigned int height);
+void print_matrix_TR(float *matrix, unsigned int height);
+void print_matrix_BL(float *matrix, unsigned int height);
+void print_matrix_BR(float *matrix, unsigned int height);
 
-void acc_1(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a + param->b;
-}
+float interpolation_Malvar(unsigned char *matrix,
+                           float kernel[5][5],
+                           unsigned int line_start,
+                           unsigned int col_start, 
+                           unsigned int height);
 
-void acc_2(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a * param->b;
-}
+float anscombe_trf(float pixel, float ca, float cb);
 
-#ifndef LOCOD_FPGA
-int main(int argc, char **argv)
-{
-	struct result_test result = { 0 };
-	struct param_test param = { 0 };
+unsigned char *malvar_anscombe( unsigned char *bayer_img, unsigned int width, 
+                                unsigned int height, float *R_cut, float *G_cut, 
+                                float *B_cut);
 
-	init_locod(1);
+void rearrange_1(float *YUV_1, unsigned int width, unsigned int height, float *X_Sym_Col);
+void rearrange_3(float *X_1, unsigned int width, unsigned int height, float *X_Sym_Line);
 
-	if (argc < 3) {
-		param.a = 5;
-		param.b = 7;
-	} else {
-		param.a = atoi(argv[1]);
-		param.b = atoi(argv[2]);
-	}
+float *RGB_to_YUV(float R,
+                   float G,
+                   float B,
+                   float *YUV_1,
+                   float *YUV_2,
+                   float *YUV_3);
 
-	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
+void DWT_CCSDS_single_level(float *chan_YUV, unsigned int height, unsigned int width);
 
-	FPGA(acc_1, &param, &result, 0);
-	wait_accelerator(&result, 0);
-	fprintf(stdout, "A + B = %d\n", result.a);
-
-	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %d\n", result.a);
-
-	deinit_locod();
-
-	return 0;
-}
-#endif
+//unsigned char *demo_malvar(unsigned char *bayer_img, unsigned int width, unsigned int height);

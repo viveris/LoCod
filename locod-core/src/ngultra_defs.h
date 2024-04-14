@@ -30,56 +30,21 @@
  *
  */
 
-#ifndef LOCOD_FPGA
-#include "locod.h"
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include "ngultra_init.h"
 
-struct param_test {
-	int a;
-	int b;
-};
 
-struct result_test {
-	int a;
-};
+//Registers ADDR
+#define REG_AXI_ADDR				0x10000000
 
-void acc_1(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a + param->b;
-}
+//Physical memory ADDR
+#define DMA_BASE_ADDR 				0x80000000
 
-void acc_2(struct param_test *param, struct result_test *result)
-{
-	result->a = param->a * param->b;
-}
+#define FPGA_FREQ_HZ 				25000000
 
-#ifndef LOCOD_FPGA
-int main(int argc, char **argv)
-{
-	struct result_test result = { 0 };
-	struct param_test param = { 0 };
+#define POLL_PERIOD_US         		1
 
-	init_locod(1);
+#define DEBUG
 
-	if (argc < 3) {
-		param.a = 5;
-		param.b = 7;
-	} else {
-		param.a = atoi(argv[1]);
-		param.b = atoi(argv[2]);
-	}
-
-	fprintf(stdout, "A = %d  B = %d\n", param.a, param.b);
-
-	FPGA(acc_1, &param, &result, 0);
-	wait_accelerator(&result, 0);
-	fprintf(stdout, "A + B = %d\n", result.a);
-
-	CPU(acc_2, &param, &result);
-	fprintf(stdout, "A x B = %d\n", result.a);
-
-	deinit_locod();
-
-	return 0;
-}
-#endif
+#define BAREMETAL

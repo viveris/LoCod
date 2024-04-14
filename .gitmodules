@@ -1,0 +1,3 @@
+[submodule "submodules/locod-fpga"]
+	path = submodules/locod-fpga
+	url = ../locod-fpga

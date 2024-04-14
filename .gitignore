@@ -1,9 +1,3 @@
-*.swp
-*.o
-*.v
-*locod-cpu
-*bambu
-cscope.out
-*.bin
-*.xlsx
-*.csv
+locod-output
+temp
+.vscode
