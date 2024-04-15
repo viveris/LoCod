@@ -52,6 +52,10 @@ ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
 NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
 NX_DOCKER_IMG=nx-tools:2.0
+
+#Impulse license
+NX_HOSTNAME=localhost.localdomain
+NX_MAC_ADDR=86:8a:dd:8d:51:a8
 ```
 
 <br>
@@ -67,15 +71,14 @@ To illustrate how the LoCod tool works, let's take a simple example. Let's say, 
 
 ### Input code syntax
 
-**Functions to be executed in the FPGA must be void and have two pointers as arguments**. The first must be named **\*param** and point to the input data, and the second must be named **\*result** and point to the output data.
+**Functions to be executed in the FPGA must be void and have two structure pointers as arguments**. The first must be named **\*param** and point to the input data, and the second must be named **\*result** and point to the output data.
 
 ```c
-void fpga_function(type_param *param, type_result *result) {
+void fpga_function(struct type_param *param, struct type_result *result) {
     ...
 }
 ```
-
-The param and result pointers can then be simple types such as int, float, etc., if the function process is simple. If the function is more complex, with more inputs and outputs, then simply define data structures and pass these structures as pointer types for the function.
+Data passed through these pointers must be stored statically in data structures. The param and result pointers must therefore point to structures only, and not to common types as int or float. In addition, there must be no pointers in the structures used. When processing arrays, these must be of fixed size and statically declared.
 
 For our first example function, here are the param and result structures:
 ```c
@@ -84,8 +87,12 @@ struct param_acc0 {
     int b;
 };
 
-void acc0(struct param_acc0 *param, int *result) {
-    *result = param->a * param->b;
+struct result_acc0 {
+    int a;
+};
+
+void acc0(struct param_acc0 *param, struct result_acc0 *result) {
+    result->a = param->a * param->b;
 }
 ```
 
@@ -133,13 +140,13 @@ For our example, we'll start by defining our main function, setting the variable
 #ifndef LOCOD_FPGA
 int main(void) {
     //Variables
-    struct param_acc0 param_acc_0 = { .a = 3, .b = 7};
-    int result_acc_0 = 0;
+    struct param_acc0 param_acc_0 = {.a = 3, .b = 7};
+    struct result_acc0 result_acc_0 = {.a = 0};
     struct param_acc1 param_acc_1;
     for (int i = 0; i < SIZE; i++) {
         param_acc_1.a[i] = i;
     }
-    struct result_acc1 result_acc_1 = { .a = 0, .b = 0};
+    struct result_acc1 result_acc_1 = {.a = 0, .b = 0};
 
     //LoCod initialization
     init_locod(2);
@@ -185,8 +192,16 @@ Here is the code to retreve results from our two hardware accelerators example:
     wait_accelerator(&result_acc_1, 1);
 
     //Print results
-    printf("Acc 0 result : %d * %d = %d\n", param_acc_0.a, param_acc_0.b, result_acc_0);
+    printf("Acc 0 result : %d * %d = %d\n", param_acc_0.a, param_acc_0.b, result_acc_0.a);
     printf("Acc 1 result : sum of input values = %f, substraction of input values = %f\n", result_acc_1.a, result_acc_1.b);
+```
+
+It is also possible to retrieve the execution time of the function in the FPGA with the **get_time_ns_FPGA** function. This returns the execution time of the selected gas pedal in nanoseconds. Be careful, however, if the execution time is too long to fit into an entie, then the time displayed may be wrong.
+
+```c
+    //Print execution time of the 2 accelerators
+    printf("Acc 0 execution time = %d ns\n", get_time_ns_FPGA(0));
+    printf("Acc 1 execution time = %d ns\n", get_time_ns_FPGA(0));
 ```
 
 Finally, the locod can be de-initialized with the **deinit_locod** function, to free up memory resources taken by the system:

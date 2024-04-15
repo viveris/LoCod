@@ -74,7 +74,7 @@ float interpol_Malvar(	float matrix[IMAGE_HEIGHT][IMAGE_WIDTH], float kernel[5][
 	for (int line=line_start; line<line_start+5; line++) {
 		/* Sum of column members */
 		for (int col=col_start; col<col_start+5; col++) {
-			sum_col += matrix[line][col] * kernel[line-line_start][col-col_start];
+			sum_col += matrix[line][col] * kernel[col-col_start][line-line_start];
 		}
 		result += sum_col;
 		sum_col = 0;
@@ -117,110 +117,116 @@ void acc_0(struct input_malvar *param, struct output_malvar *result) {
 /* ========== Utility functions ========== */
 #ifndef LOCOD_FPGA
 int load_byte_data(char *path, unsigned char *buffer, unsigned int size) {
-	FILE *file;
-	unsigned int n_read = 0;
+    FILE *file;
+    unsigned int n_read = 0;
 
-	/* Open file */
-	file = fopen(path,"rb");
-	if (file == NULL) {
-		printf("Cannot open file %s\n", path);
-		return -1;
-	}
+    /* Open file */
+    file = fopen(path,"rb");
+    if (file == NULL) {
+        printf("Cannot open file %s\n", path);
+        return -1;
+    }
 
-	/* Load into memory and close file */
-	n_read = fread(buffer, 1, size, file);
-	if (n_read != size) {
-		printf("Cannot read all data from file (number of bytes read %u)\n", n_read);
-		fclose(file);
-		return -1;
-	}
+    /* Load into memory and close file */
+    n_read = fread(buffer, 1, size, file);
+    if (n_read != size) {
+        printf("Cannot read all data from file (number of bytes read %u)\n", n_read);
+        fclose(file);
+        return -1;
+    }
 
-	fclose(file);
-	printf("File %s opened, read %u bytes\n", path, n_read);
-	return 0;
+    fclose(file);
+    printf("File %s opened, read %u bytes\n", path, n_read);
+    return 0;
 }
 
 int save_byte_data(char *path, unsigned char *buffer, unsigned int size) {
-	FILE *file;
-	unsigned int n_write = 0;
+    FILE *file;
+    unsigned int n_write = 0;
 
-	/* Open file */
-	file = fopen(path,"wb");
-	if (file == NULL) {
-		printf("Cannot open file %s\n", path);
-		return -1;
-	}
+    /* Open file */
+    file = fopen(path,"wb");
+    if (file == NULL) {
+        printf("Cannot open file %s\n", path);
+        return -1;
+    }
 
-	/* Write and close file */
-	n_write = fwrite(buffer, 1, size, file);
-	if (n_write != size) {
-		printf("Cannot write all data to file (number of bytes write %u)\n", n_write);
-		fclose(file);
-		return -1;
-	}
+    /* Write and close file */
+    n_write = fwrite(buffer, 1, size, file);
+    if (n_write != size) {
+        printf("Cannot write all data to file (number of bytes write %u)\n", n_write);
+        fclose(file);
+        return -1;
+    }
 
-	fclose(file);
-	printf("File %s opened, write %u bytes\n", path, n_write);
-	return 0;
+    fclose(file);
+    printf("File %s opened, write %u bytes\n", path, n_write);
+    return 0;
 }
 
-void print_image_TL(float image[IMAGE_HEIGHT][IMAGE_WIDTH]) {
-	for (int i=0; i<10; i++) {					/* Image line */
-		for (int j=0; j<10; j++) {				/* Image column */
-			printf("%f\t", image[i][j]);
-		}
-		printf("\n");
-	}
+void print_image_TL(float *image, unsigned int width) {
+    for (int i=0; i<10; i++) {					/* Image line */
+        for (int j=0; j<10; j++) {				/* Image column */
+            printf("%f\t", ((float (*)[width])image)[i][j]);
+        }
+        printf("\n");
+    }
 }
 
 
 /* ========== Main function ========== */
 int main(int argc, char *argv[]) {
 	/* Variables */
-	int ret;									/* Return value */
-	int opt;									/* User option */
-	char *input_image_file;						/* Input image file */
-	char *output_image_file;					/* Output image file */
-	unsigned char *buffer;						/* In and out buffer */
-	struct input_malvar *input_malvar;			/* Accelerator input */
-	struct output_malvar *output_malvar_fpga;	/* Accelerator output FPGA */
-	struct output_malvar *output_malvar_cpu;	/* Accelerator output CPU */
-	float G_at_RB[5][5] = { {0,  0, -1, 0,  0},	/* Malvar kernels */
+	int ret;													/* Return value */
+	int opt;													/* User option */
+	char *input_image_file;										/* Input image file */
+	char *output_malvar_file = "output_malvar_locod.bin";		/* Output Malvar file */
+	unsigned char *buffer;										/* In and out buffer */
+	struct input_malvar *input_malvar;							/* Accelerator input */
+	struct output_malvar *output_malvar_fpga;					/* Accelerator output FPGA */
+	struct output_malvar *output_malvar_cpu;					/* Accelerator output CPU */
+	float G_at_RB[5][5] = { {0,  0, -1, 0,  0},         		/* Malvar kernels */
 	                        {0,  0,  2, 0,  0,},
 	                        {-1, 2,  4, 2, -1},
 	                        {0,  0,  2, 0,  0},
 	                        {0,  0, -1, 0,  0,}
 	                      };
+
 	float R1[5][5] = { {0,   0, -1,  0, 0},
 	                   {0,  -1,  4, -1, 0},
 	                   {0.5, 0,  5,  0, 0.5},
 	                   {0,  -1,  4, -1, 0},
 	                   {0,   0, -1,  0, 0}
 	                 };
+
 	float R2[5][5] = { {0,  0, 0.5, 0, 0,},
 	                   {0, -1, 0,  -1, 0},
 	                   {-1, 4, 5,   4, -1},
 	                   {0, -1, 0,  -1, 0},
 	                   {0,  0, 0.5, 0, 0}
 	                 };
+
 	float R3[5][5] = { {0,    0, -1.5, 0, 0},
 	                   {0,    2,  0,   2, 0},
 	                   {-1.5, 0,  6,   0, -1.5},
 	                   {0,    2,  0,   2, 0},
 	                   {0,    0, -1.5, 0, 0}
 	                 };
+
 	float B1[5][5] = { {0,   0, -1,  0, 0},
 	                   {0,  -1,  4, -1, 0},
 	                   {0.5, 0,  5,  0, 0.5},
 	                   {0,  -1,  4, -1, 0},
 	                   {0,   0, -1,  0, 0}
 	                 };
+
 	float B2[5][5] = { { 0,  0, 0.5, 0,  0},
 	                   { 0, -1, 0,  -1,  0},
 	                   {-1,  4, 5,   4, -1},
 	                   { 0, -1, 0,  -1,  0},
 	                   { 0,  0, 0.5, 0,  0}
 	                 };
+
 	float B3[5][5] = { {0,    0, -1.5, 0,  0},
 	                   {0,    2,  0,   2,  0},
 	                   {-1.5, 0,  6,   0, -1.5},
@@ -232,13 +238,10 @@ int main(int argc, char *argv[]) {
 	printf("CNES Image Processing Algorithm\n");
 
 	/* Parsing user arguments */
-	while ((opt = getopt(argc, argv, ":i:o:")) != -1) {
+	while ((opt = getopt(argc, argv, ":i:")) != -1) {
 		switch (opt) {
 			case 'i':
 				input_image_file = optarg;
-				break;
-			case 'o':
-				output_image_file = optarg;
 				break;
 			case ':':
 				printf("Option -%c requires an argument\n", optopt);
@@ -249,7 +252,7 @@ int main(int argc, char *argv[]) {
 				return -1;
                 break;
 			default:
-				printf("Usage: %s [-f input_file]\n", argv[0]);
+				printf("Usage: %s [-i input_file]\n", argv[0]);
 				return -1;
 		}
 	}
@@ -302,23 +305,23 @@ int main(int argc, char *argv[]) {
 
 	/* Print image result FPGA */
 	printf("R FPGA :\n");
-	print_image_TL(output_malvar_fpga->R);
+	print_image_TL((float *)output_malvar_fpga->R, IMAGE_WIDTH);
 
 	/* Print image result CPU */
 	printf("R CPU :\n");
-	print_image_TL(output_malvar_cpu->R);
+	print_image_TL((float *)output_malvar_cpu->R, IMAGE_WIDTH);
 
 	/* Place accelerator output into buffer : [R0, G0, B0, R1, G1, B1, ... ] */
 	for (unsigned int line=0; line<IMAGE_HEIGHT; line++) {						/* Image line */
 		for (unsigned int col=0; col<IMAGE_WIDTH; col++) {						/* Image column */
-			buffer[3*(line*IMAGE_WIDTH + col) + 0] = (unsigned char)output_malvar_fpga->R[line][col];
-			buffer[3*(line*IMAGE_WIDTH + col) + 1] = (unsigned char)output_malvar_fpga->G[line][col];
-			buffer[3*(line*IMAGE_WIDTH + col) + 2] = (unsigned char)output_malvar_fpga->B[line][col];
+			buffer[3*(line*IMAGE_WIDTH + col) + 0] = (unsigned char)output_malvar_cpu->R[line][col];
+			buffer[3*(line*IMAGE_WIDTH + col) + 1] = (unsigned char)output_malvar_cpu->G[line][col];
+			buffer[3*(line*IMAGE_WIDTH + col) + 2] = (unsigned char)output_malvar_cpu->B[line][col];
 		}
 	}
 
 	/* Write FPGA result into a file */
-	ret = save_byte_data(output_image_file, buffer, 3*IMAGE_SIZE);
+	ret = save_byte_data(output_malvar_file, buffer, 3*IMAGE_SIZE);
 	if (ret != 0) {
 		printf("Problem openning output image file\n");
 		return ret;

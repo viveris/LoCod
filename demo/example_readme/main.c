@@ -72,13 +72,13 @@ void acc1(struct param_acc1 *param, struct result_acc1 *result) {
 #ifndef LOCOD_FPGA
 int main(void) {
     //Variables
-    struct param_acc0 param_acc_0 = { .a = 3, .b = 7};
+    struct param_acc0 param_acc_0 = {.a = 3, .b = 7};
     struct result_acc0 result_acc_0 = {.a = 0};
     struct param_acc1 param_acc_1;
     for (int i = 0; i < SIZE; i++) {
         param_acc_1.a[i] = i;
     }
-    struct result_acc1 result_acc_1 = { .a = 0, .b = 0};
+    struct result_acc1 result_acc_1 = {.a = 0, .b = 0};
 
     //LoCod initialization
     init_locod(2);
@@ -94,6 +94,13 @@ int main(void) {
     //Print results
     printf("Acc 0 result : %d * %d = %d\n", param_acc_0.a, param_acc_0.b, result_acc_0.a);
     printf("Acc 1 result : sum of input values = %f, substraction of input values = %f\n", result_acc_1.a, result_acc_1.b);
+
+    //Print execution time of the 2 accelerators
+    printf("Acc 0 execution time = %d ns\n", get_time_ns_FPGA(0));
+    printf("Acc 1 execution time = %d ns\n", get_time_ns_FPGA(0));
+
+    //LoCod de-initialization
+    deinit_locod();
 
     return 0;
 } //End main()

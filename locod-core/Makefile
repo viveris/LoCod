@@ -13,7 +13,7 @@ CPPFLAGS +=
 LDFLAGS +=
 LDLIBS += -lm
 
-OBJS = $(addprefix $(OBJDIR)/, main.o locod.o demosaicing_float.o)
+OBJS = $(addprefix $(OBJDIR)/, main.o locod.o)
 
 all: locod-cpu
 
