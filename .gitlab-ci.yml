@@ -5,7 +5,7 @@ variables:
 
 
 Build-multi-parallel:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/multi-parallel/main.c
@@ -17,7 +17,7 @@ Build-multi-parallel:
 
 
 Build-multi-simple:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/multi-simple/main.c
@@ -29,7 +29,7 @@ Build-multi-simple:
 
 
 Build-picture-demo:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/picture-demo/main.c
@@ -41,7 +41,7 @@ Build-picture-demo:
 
 
 Build-picture-float:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/picture-float/main.c
@@ -53,7 +53,7 @@ Build-picture-float:
 
 
 Build-simple-float-add:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/simple-float-add/main.c
@@ -65,7 +65,7 @@ Build-simple-float-add:
 
 
 Build-simple-float-mul:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/simple-float-mul/main.c
@@ -77,7 +77,7 @@ Build-simple-float-mul:
 
 
 Build-simple-int-add:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/simple-int-add/main.c
@@ -89,7 +89,7 @@ Build-simple-int-add:
 
 
 Build-simple-int-mul:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/simple-int-mul/main.c
@@ -101,7 +101,7 @@ Build-simple-int-mul:
 
 
 Build-table-add:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/table-add/main.c
@@ -113,7 +113,7 @@ Build-table-add:
 
 
 Build-table-mul:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/table-mul/main.c
@@ -125,7 +125,7 @@ Build-table-mul:
 
 
 Build-use-case-malvar:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/use-case-malvar/main.c
@@ -137,7 +137,7 @@ Build-use-case-malvar:
 
 
 Build-use-case-filtering:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/use-case-filtering/main.c
