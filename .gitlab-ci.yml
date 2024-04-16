@@ -5,7 +5,7 @@ variables:
 
 
 Build-multi-parallel:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/multi-parallel/main.c
@@ -17,7 +17,7 @@ Build-multi-parallel:
 
 
 Build-multi-simple:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/multi-simple/main.c
@@ -29,7 +29,7 @@ Build-multi-simple:
 
 
 Build-picture-demo:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/picture-demo/main.c
@@ -41,7 +41,7 @@ Build-picture-demo:
 
 
 Build-picture-float:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/picture-float/main.c
@@ -51,96 +51,11 @@ Build-picture-float:
       - locod-output/fpga.bit
     expire_in: 7 day
 
-
-Build-simple-float-add:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/simple-float-add/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
-Build-simple-float-mul:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/simple-float-mul/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
-Build-simple-int-add:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/simple-int-add/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
-Build-simple-int-mul:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/simple-int-mul/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
-Build-table-add:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/table-add/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
-Build-table-mul:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/table-mul/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
 Build-use-case-malvar:
-  tags: [docker, EmbeddedML]
+  tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
     - bash locod.sh -t enclustra -f demo/use-case-malvar/main.c
-  artifacts:
-    paths:
-      - locod-output/locod-cpu
-      - locod-output/fpga.bit
-    expire_in: 7 day
-
-
-Build-use-case-filtering:
-  tags: [docker, EmbeddedML]
-  script:
-    - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/use-case-filtering/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
