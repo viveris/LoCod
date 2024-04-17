@@ -23,21 +23,21 @@ Three target boards are currently supported by the LoCod tool:
 
 The LoCod tool requires different development environments to operate.
 
-Most of these environments/dependencies have been dockerised to facilitate porting to different machines.
+Most of these environments/dependencies have been dockerised to facilitate porting to different machines. The various Dockers are available as submodules in the [submodules/docker/](submodules/docker/) folder.
 
 These dependencies are checked each time the tool is launched. Depending on the target selected, only the dependencies required for it are checked. So if the LoCod tool is used exclusively for a Xilinx target, the NanoXplore tools and docker are not required. However, if one of these dependencies is missing, LoCod script will stop.
 
 Here are the LoCod common dependencies:
-- the Panda-Bambu docker, which includes the Panda-Bambu tool for converting functions into HDL code: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-panda-docker
+- the Panda-Bambu docker, which includes the Panda-Bambu tool for converting functions into HDL code: https://github.com/viveris/LoCod-docker-PandA
 
 Here are the LoCod Xilinx dependencies:
 - Vivado 2022.1 and with working ML Entreprise license (mandatory to synthesize FPGA design for the Enclustra board)
-- the Ultra96 SDK docker for compiling on Ultra96: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-sdk-ultra96
-- the Enclustra SDK docker for compiling on Enclustra: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-sdk-enclustra
+- the Ultra96 SDK docker for compiling on Ultra96: https://github.com/viveris/LoCod-docker-sdk-ultra96
+- the Enclustra SDK docker for compiling on Enclustra: https://github.com/viveris/LoCod-docker-sdk-enclustra
 
 Here are the LoCod NanoXplore dependencies:
-- the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: http://gitlab-ci.b2i-toulouse.prive/CNES-Embedded/locod-study/locod-nx-docker
-- the NG-Ultra SDK docker for compiling on NG-Ultra: TODO: create a repository for the NG-Ultra BSP
+- the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: https://github.com/viveris/LoCod-docker-nanoxplore
+- the NG-Ultra SDK docker for compiling on NG-Ultra: https://github.com/viveris/LoCod-docker-sdk-ngultra
 
 <br>
 
