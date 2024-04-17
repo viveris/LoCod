@@ -3,19 +3,24 @@
 ## Overview
 LoCod is a hardware/software co-design tool designed to simplify the development of applications for system-on-chip (SoC) devices.
 
-It enables the implementation and testing of hybrid applications, i.e. with a CPU component and an FPGA component. For example, a classic CPU program where we want to execute a processing function in the FPGA.
+It facilitates the implementation and testing of hybrid applications, i.e. with a CPU component and an FPGA component. For example, a classic CPU program where we want to execute a processing function in the FPGA.
 
-The LoCod tool then provides a simple API for executing one or more functions in the FPGA, known as hardware accelerators, then monitoring its execution and retrieving its outputs and some performance metrics.
+The LoCod tool then provides a simple C code API for executing one or more functions in the SoC FPGA, known as hardware accelerators, then monitoring its execution and retrieving its outputs and some performance metrics.
+
+LoCod uses the [Panda-Bambu](https://github.com/ferrandi/PandA-bambu) tool to convert the C code of accelerated functions into HDL language for bitstream generation. An entire HDL architecture is then automatically generated to easily interface these accelerators with the CPU, so that the use of accelerated functions is as similar as possible to conventional CPU execution. More details on how the LoCod tool works can be found in [locod_operation.md](doc/locod_operation.md) file.
 
 <br>
 
 ## Support
-Three target boards are currently supported by the LoCod tool:
+Three target boards are currently supported by the LoCod tool, 2 from Xilinx and 1 from NanoXplore:
+
 |      Target board      | LoCod compilation | Test on board |
 | ---------------------- |:-----------------:|:-------------:|
 | Avnet Ultra96          |       OK          |      OK       |
 | Enclustra Mercury+ XU1 |       OK          |      OK       |
 | NanoXplore NG-Ultra    |       OK          |      KO       |
+
+The [add_new_target.md](doc/add_new_target.md) file describes the main steps to add a new target to the LoCod project.
 
  <br>
 
@@ -196,7 +201,7 @@ Here is the code to retreve results from our two hardware accelerators example:
     printf("Acc 1 result : sum of input values = %f, substraction of input values = %f\n", result_acc_1.a, result_acc_1.b);
 ```
 
-It is also possible to retrieve the execution time of the function in the FPGA with the **get_time_ns_FPGA** function. This returns the execution time of the selected gas pedal in nanoseconds. Be careful, however, if the execution time is too long to fit into an entie, then the time displayed may be wrong.
+It is also possible to retrieve the execution time of the function in the FPGA with the **get_time_ns_FPGA** function. This returns the execution time of the selected accelerator in nanoseconds. Be careful, however, if the execution time is too long to fit into an entie, then the time displayed may be wrong.
 
 ```c
     //Print execution time of the 2 accelerators
