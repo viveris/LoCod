@@ -8,7 +8,7 @@ Build-multi-parallel:
   tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/multi-parallel/main.c
+    - bash locod.sh -t ultra96 -f demo/multi-parallel/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -20,7 +20,7 @@ Build-multi-simple:
   tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/multi-simple/main.c
+    - bash locod.sh -t ultra96 -f demo/multi-simple/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -32,7 +32,7 @@ Build-picture-demo:
   tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/picture-demo/main.c
+    - bash locod.sh -t ultra96 -f demo/picture-demo/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -44,7 +44,7 @@ Build-picture-float:
   tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/picture-float/main.c
+    - bash locod.sh -t ultra96 -f demo/picture-float/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu
@@ -55,7 +55,7 @@ Build-use-case-malvar:
   tags: [bash, EmbeddedML]
   script:
     - source ${VIVADO_PATH}
-    - bash locod.sh -t enclustra -f demo/use-case-malvar/main.c
+    - bash locod.sh -t ultra96 -f demo/use-case-malvar/main.c
   artifacts:
     paths:
       - locod-output/locod-cpu

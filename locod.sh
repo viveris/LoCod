@@ -260,28 +260,15 @@ echo "Done !"
 
 fi
 
-#*************************************************************************************/
-#***************** Step 2 : Extracting accel parameters from C code ******************/
-#*************************************************************************************/
-if [[ $FPGA == 1 ]]; then
-
-echo -n "Extracting accel parameters from C code ... "
-
-MAX_ACC_NB=$(get_max_acc_number $FILE)
-FPGA_FUNC=$(get_fpga_func $FILE)
-USED_ACC_NB=$(get_used_acc_number $FILE)
-
-echo "Done !"
-
-fi
-
 
 #*******************************************************************************************/
-#***************** Step 3 : Generating RTL code of accelerators functions ******************/
+#***************** Step 2 : Generating RTL code of accelerators functions ******************/
 #*******************************************************************************************/
 if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
+
+FPGA_FUNC=$(get_fpga_func $FILE)
 
 cp $FILE temp/main.c
 
@@ -302,11 +289,14 @@ fi
 
 
 #*******************************************************************************************/
-#***************** Step 4 : Generating VHDL components from generated IPs ******************/
+#***************** Step 3 : Generating VHDL components from generated IPs ******************/
 #*******************************************************************************************/
 if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
+
+MAX_ACC_NB=$(get_max_acc_number $FILE)
+USED_ACC_NB=$(get_used_acc_number $FILE)
 
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
@@ -340,7 +330,7 @@ fi
 
 
 #*********************************************************************************/
-#***************** Step 5 : Synthesis of the FPGA design *************************/
+#***************** Step 4 : Synthesis of the FPGA design *************************/
 #*********************************************************************************/
 if [[ $FPGA == 1 ]]; then
 

@@ -1,3 +1,4 @@
+% *** Code provided by CNES in the frame of the LoCod study ***
 
 function AT_output = Fct_Anscombe_Transform(Image,coeff_a,coeff_b)
 

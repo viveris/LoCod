@@ -1,3 +1,5 @@
+% *** Code provided by CNES in the frame of the LoCod study ***
+
 function Image_Demosaic =Fct_Malvar(I)
 
 % for bayer parten RGGB

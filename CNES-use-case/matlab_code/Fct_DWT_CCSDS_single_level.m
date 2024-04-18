@@ -1,3 +1,5 @@
+% *** Code provided by CNES in the frame of the LoCod study ***
+
 function [ X2 ] = Fct_DWT_CCSDS_single_level( X )
 %FCT_DWT_CCSDS_SINGLE_LEVEL Summary of this function goes here
 %   Detailed explanation goes here

@@ -1,3 +1,5 @@
+% *** Code provided by CNES in the frame of the LoCod study ***
+
 clc; clear all; close all;
 
 % Image parameters
