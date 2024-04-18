@@ -24,7 +24,7 @@ It is also in this step that, depending on the target, we will define the base a
 
 ### 2. Add new synthesis environment
 
-If the newly added target is neither a Xilinx target nor a NanoXplore target, a new envirobinding must be created to execute the FPGA design synthesis.
+If the newly added target is neither a Xilinx target nor a NanoXplore target, a new environment must be created to execute the FPGA design synthesis.
 
 Wherever possible, the tools needed for synthesis should be included in a docker to make it easier to port LoCod to new machines. If this is not possible or too complex, then the tools required for synthesis should be added as a dependency of the LoCod, as is the case with Vivado, for example.
 
