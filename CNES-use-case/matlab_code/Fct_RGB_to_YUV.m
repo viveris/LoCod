@@ -1,3 +1,5 @@
+% *** Code provided by CNES in the frame of the LoCod study ***
+
 function YUV=Fct_RGB_to_YUV(RGB,plot_flag)
 R = RGB(:,:,1);
 G = RGB(:,:,2);
