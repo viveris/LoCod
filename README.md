@@ -17,7 +17,7 @@ Three target boards are currently supported by the LoCod tool, 2 from Xilinx and
 |      Target board      | LoCod compilation | Test on board |
 | ---------------------- |:-----------------:|:-------------:|
 | Avnet Ultra96          |       OK          |      OK       |
-| Enclustra Mercury+ XU1 |       OK          |      OK       |
+| Enclustra Mercury+ XU7 |       OK          |      OK       |
 | NanoXplore NG-Ultra    |       OK          |      KO       |
 
 The [add_new_target.md](doc/add_new_target.md) file describes the main steps to add a new target to the LoCod project.
