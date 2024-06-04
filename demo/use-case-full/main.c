@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 #include "locod.h"
 #endif /* LOCOD_FPGA */
 
@@ -394,6 +395,7 @@ int main(int argc, char *argv[]) {
     /* Variables */
     int ret;									                /* Return value */
     int opt;									                /* User option */
+    struct timespec t_begin, t_end;	                            /* Clock timespecs */
     char *input_image_file;						                /* Input image file */
     char *output_malvar_file = "output_malvar_locod.bin";		/* Output Malvar file */
     char *output_filter_file = "output_filter_locod.bin";		/* Output Filter file */
@@ -517,7 +519,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* LoCod initialization */
-    init_locod(4);
+    init_locod(6);
 
     /* Exuecute Malvar function in FPGA */
     FPGA(malvar, input_malvar, output_malvar, 0);
@@ -530,20 +532,24 @@ int main(int argc, char *argv[]) {
     FPGA(RGB_to_YUV, output_anscombe, output_rgb_to_yuv, 1);
     wait_accelerator(output_rgb_to_yuv, 1);
 
-    /* Execute Rearange 1 in CPU */
+    /* Execute Rearange 1 in FPGA */
     /* From this step, the filtering is only applied on the YUV_1 layer */
-    CPU(rearange1, output_rgb_to_yuv, output_rearange1);
+    clock_gettime(CLOCK_MONOTONIC, &t_begin);
+    FPGA(rearange1, output_rgb_to_yuv, output_rearange1, 2);
+    wait_accelerator(output_rearange1, 2);
 
     /* Execute Filt 1 Rearange 2 in FPGA */
-    FPGA(filt1_rearange2, output_rearange1, output_filt1_rearange2, 2);
-    wait_accelerator(output_filt1_rearange2, 2);
+    FPGA(filt1_rearange2, output_rearange1, output_filt1_rearange2, 3);
+    wait_accelerator(output_filt1_rearange2, 3);
 
-    /* Execute Rearange 3 in CPU */
-    CPU(rearange3, output_filt1_rearange2, output_rearange3);
+    /* Execute Rearange 3 in FPGA */
+    FPGA(rearange3, output_filt1_rearange2, output_rearange3, 4);
+    wait_accelerator(output_rearange3, 4);
 
     /* Execute Filt 2 Rearange 4 in FPGA */
-    FPGA(filt2_rearange4, output_rearange3, output_filt2_rearange4, 3);
-    wait_accelerator(output_filt2_rearange4, 3);
+    FPGA(filt2_rearange4, output_rearange3, output_filt2_rearange4, 5);
+    wait_accelerator(output_filt2_rearange4, 5);
+    clock_gettime(CLOCK_MONOTONIC, &t_end);
 
     /* LoCod deinitialization */
     deinit_locod();
@@ -551,6 +557,9 @@ int main(int argc, char *argv[]) {
     /* Print YUV_1 filtered result */
     printf("YUV_1 filtered result :\n");
     print_image_TL((float *)output_filt2_rearange4->data, FILT2_REARANGE4_WIDTH);
+
+    /* Print execution time */
+    printf("FPGA CCSDS YUV1 execution time : %f sec\n", (double)(t_end.tv_nsec-t_begin.tv_nsec)/1000000000 + (double)(t_end.tv_sec-t_begin.tv_sec));
 
     /* Save Malvar output */
     /* Format [R0, G0, B0, R1, G1, B1, ... ] */
