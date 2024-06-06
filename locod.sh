@@ -47,7 +47,7 @@ PANDA_DOCKER_IMG=panda-bambu:9.8.0
 ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
 NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
-NX_DOCKER_IMG=nx-tools:2.0
+NX_DOCKER_IMG=nx-tools:2.1
 
 #Impulse license
 NX_HOSTNAME=localhost.localdomain
@@ -167,7 +167,7 @@ else
 fi
 
 #Docker Petalinux SDK Ultra96
-if [[ $target == ultra96 ]]; then
+if [[ $TARGET == ultra96 ]]; then
 	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ULTRA96_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
 		echo "- Ultra96 SDK docker found"
 	else
@@ -177,7 +177,7 @@ if [[ $target == ultra96 ]]; then
 fi
 
 #Docker Petalinux SDK Enclustra
-if [[ $target == enclustra ]]; then
+if [[ $TARGET == enclustra ]]; then
 	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
 		echo "- Enclustra SDK docker found"
 	else
@@ -187,7 +187,7 @@ if [[ $target == enclustra ]]; then
 fi
 
 #Docker ngultra SDK
-if [[ $target == ngultra ]]; then
+if [[ $TARGET == ngultra ]]; then
 	if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
 		echo "- ngultra SDK docker found"
 	else
@@ -197,7 +197,7 @@ if [[ $target == ngultra ]]; then
 fi
 
 #Vivado
-if [[ $target == ultra96 || $target == enclustra ]]; then
+if [[ $TARGET == ultra96 || $TARGET == enclustra ]]; then
 	if vivado -version &> /dev/null; then
 		echo "- Vivado found"
 	else
@@ -207,7 +207,7 @@ if [[ $target == ultra96 || $target == enclustra ]]; then
 fi
 
 #Docker Impulse
-if [[ $target == ngultra ]]; then
+if [[ $TARGET == ngultra ]]; then
 	if docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} ${NX_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
 		echo "- NX docker found"
 	else
