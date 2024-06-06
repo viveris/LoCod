@@ -46,7 +46,7 @@ LOCOD_FPGA_DIR=submodules/locod-fpga
 PANDA_DOCKER_IMG=panda-bambu:9.8.0
 ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
-NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
+NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.1
 NX_DOCKER_IMG=nx-tools:2.1
 
 #Impulse license
