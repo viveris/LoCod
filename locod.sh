@@ -32,27 +32,19 @@
 #!/bin/bash
 set -e
 
+
 #**********************************************/
 #***************** Variables ******************/
 #**********************************************/
 # Execution dir
 BASE_DIR=$(pwd)
 
+# Script dir
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 # LoCod folders
-LOCOD_CPU_DIR=locod-core
-LOCOD_FPGA_DIR=submodules/locod-fpga
-
-# Docker images
-PANDA_DOCKER_IMG=panda-bambu:9.8.0
-ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
-ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
-PYNQZ2_SDK_DOCKER_IMG=sdk-pynqz2:1.0
-NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.1
-NX_DOCKER_IMG=nx-tools:2.1
-
-#Impulse license
-NX_HOSTNAME=localhost.localdomain
-NX_MAC_ADDR=86:8a:dd:8d:51:a8
+LOCOD_CPU_DIR=${SCRIPT_DIR}/locod-core
+LOCOD_FPGA_DIR=${SCRIPT_DIR}/submodules/locod-fpga
 
 # Panda-Bambu compilation parameters
 BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO_BRAM --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -DLOCOD_FPGA"
@@ -61,6 +53,7 @@ BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO
 CPU=1
 FPGA=1
 CHECK=0
+
 
 #**********************************************/
 #***************** Functions ******************/
@@ -87,10 +80,15 @@ function get_fct_acc_number()
 
 
 #******************************************************/
+#***************** LoCod environment ******************/
+#******************************************************/
+source ${SCRIPT_DIR}/locod_env.sh
+
+
+#******************************************************/
 #***************** Arguments parsing ******************/
 #******************************************************/
-help()
-{
+help() {
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
 		[ -f | --file ] < main C file >
@@ -100,8 +98,6 @@ help()
 		[ -h | --help  ]"
 	exit 2
 }
-
-POSITIONAL_ARGS=()
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
@@ -140,10 +136,6 @@ while [[ $# -gt 0 ]]; do
 			echo "Unknown option $1"
 			exit 1
 			;;
-		*)
-			POSITIONAL_ARGS+=("$1") # save positional arg
-			shift # past argument
-			;;
 	esac
 done
 
@@ -178,7 +170,7 @@ fi
 
 #Docker Petalinux SDK Ultra96
 if [[ $TARGET == ultra96 ]]; then
-	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ULTRA96_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
+	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${SDK_ULTRA96_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
 		echo "- Ultra96 SDK docker found"
 	else
 		echo "- Ultra96 SDK docker not found"
@@ -188,7 +180,7 @@ fi
 
 #Docker Petalinux SDK Enclustra
 if [[ $TARGET == enclustra ]]; then
-	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
+	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;echo $CC' | tr -d '[:space:]') != "" ]; then
 		echo "- Enclustra SDK docker found"
 	else
 		echo "- Enclustra SDK docker not found"
@@ -208,7 +200,7 @@ fi
 
 #Docker ngultra SDK
 if [[ $TARGET == ngultra ]]; then
-	if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
+	if docker run --rm -t -u $(id -u):$(id -g) ${SDK_NGULTRA_DOCKER_IMG} arm-none-eabi-gcc --version; then
 		echo "- ngultra SDK docker found"
 	else
 		echo "- ngultra SDK docker not found"
@@ -228,7 +220,7 @@ fi
 
 #Docker Impulse
 if [[ $TARGET == ngultra ]]; then
-	if docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} ${NX_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
+	if docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_LICENSE_HOSTNAME} --mac-address ${NX_LICENSE_MAC_ADDR} ${NX_DESIGN_SUITE_DOCKER_IMG} bash -c 'lmgrd;sleep 1;nxpython --version'; then
 		echo "- NX docker found"
 	else
 		echo "- NX docker not found"
@@ -244,10 +236,10 @@ fi
 #***************** Initializing files and folders ******************/
 #*******************************************************************/
 rm -rf $LOCOD_FPGA_DIR/src/generated_files/*
-mkdir -p temp
-rm -rf temp/*
-mkdir -p locod-output
-rm -rf locod-output/*
+mkdir -p ${SCRIPT_DIR}/tmp
+rm -rf ${SCRIPT_DIR}/tmp/*
+mkdir -p ${SCRIPT_DIR}/locod-output
+rm -rf ${SCRIPT_DIR}/locod-output/*
 
 
 #**************************************************************/
@@ -261,13 +253,13 @@ cp $FILE $LOCOD_CPU_DIR/src/main.c
 
 case $TARGET in
 	ultra96)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ULTRA96_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $LOCOD_CPU_DIR:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	enclustra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $LOCOD_CPU_DIR:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
@@ -279,7 +271,7 @@ case $TARGET in
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	ngultra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/opt/ngultra_bsp/apps/locod ${NG_ULTRA_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $LOCOD_CPU_DIR:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
 			'make'
 		cp $LOCOD_CPU_DIR/out/locod-cpu.elf locod-output/locod-cpu.elf
 		;;
@@ -299,17 +291,17 @@ echo -n "Generating RTL code of accelerators functions ... "
 
 FPGA_FUNC=$(get_fpga_func $FILE)
 
-cp $FILE temp/main.c
+cp $FILE ${SCRIPT_DIR}/tmp/main.c
 
 for ACC in $FPGA_FUNC; do
-	docker run --rm -t -u $(id -u):$(id -g) -v $PWD/temp:/workdir ${PANDA_DOCKER_IMG} bash -c \
+	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"mkdir bambu;\
 		cd bambu;\
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ../main.c;\
 		cp ${ACC}.v ../;\
 		cd ..;\
 		rm -rf bambu"
-	cp temp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
+	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 done
 
 echo "Done !"
@@ -369,22 +361,22 @@ case $TARGET in
 	ultra96 | enclustra | pynqz2)
 		cd $LOCOD_FPGA_DIR/xilinx
 		vivado -mode tcl -nojournal -nolog -source generate_vivado_project.tcl -tclargs ${TARGET}
-		cp fpga.bit $BASE_DIR/locod-output/
-		cp fpga.bin $BASE_DIR/locod-output/
+		cp fpga.bit $SCRIPT_DIR/locod-output/
+		cp fpga.bin $SCRIPT_DIR/locod-output/
 		rm -rf fpga.bit
 		rm -rf fpga.bin
 		rm -rf fpga.prm
 		rm -rf locod-vivado_*
 		rm -rf vivado_pid*
-		cd $BASE_DIR
+		cd $SCRIPT_DIR
 		;;
 	ngultra)
-		docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_HOSTNAME} --mac-address ${NX_MAC_ADDR} -v $BASE_DIR/$LOCOD_FPGA_DIR:/workdir ${NX_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) --hostname ${NX_LICENSE_HOSTNAME} --mac-address ${NX_LICENSE_MAC_ADDR} -v $LOCOD_FPGA_DIR:/workdir ${NX_DESIGN_SUITE_DOCKER_IMG} bash -c \
 			"lmgrd;\
 			sleep 1;\
 			cd nanoxplore;\
 			nxpython generate_nx_project.py ${TARGET}"
-		cp $LOCOD_FPGA_DIR/nanoxplore/locod-nx_$TARGET/fpga.nxb $BASE_DIR/locod-output/
+		cp $LOCOD_FPGA_DIR/nanoxplore/locod-nx_$TARGET/fpga.nxb $SCRIPT_DIR/locod-output/
 		rm -rf $LOCOD_FPGA_DIR/nanoxplore/locod-nx_*
 		;;
 esac
@@ -397,4 +389,4 @@ fi
 #*************************************************************************/
 #***************** Removing temporary files and folders ******************/
 #*************************************************************************/
-rm -rf temp
+rm -rf ${SCRIPT_DIR}/tmp
