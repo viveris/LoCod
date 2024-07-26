@@ -202,69 +202,69 @@ done
 
 # ========== Build Docker images ==========
 # Create temporary directory to store installation files
-rm -rf ${BASE_DIR}/tmp
-mkdir ${BASE_DIR}/tmp
+rm -rf ${SCRIPT_DIR}/tmp
+mkdir ${SCRIPT_DIR}/tmp
 
 if [[ $INSTALL_ULTRA96 == 1 ]]; then
-    cp ${SDK_ULTRA96_INSTALL_SCRIPT} ${BASE_DIR}/tmp
+    cp ${SDK_ULTRA96_INSTALL_SCRIPT} ${SCRIPT_DIR}/tmp
 fi
 if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
-    cp ${SDK_ENCLUSTRA_INSTALL_SCRIPT} ${BASE_DIR}/tmp
+    cp ${SDK_ENCLUSTRA_INSTALL_SCRIPT} ${SCRIPT_DIR}/tmp
 fi
 if [[ $INSTALL_NGULTRA == 1 ]]; then
-    cp ${NX_LICENSE_FILE} ${BASE_DIR}/tmp
-    cp ${NXDESIGNSUITE_23_5_1_2_TAR_ARCHIVE} ${BASE_DIR}/tmp
-    cp ${NXBASE2_2_5_3_TAR_ARCHIVE} ${BASE_DIR}/tmp
-    cp ${NXLMD_2_2_TAR_ARCHIVE} ${BASE_DIR}/tmp
+    cp ${NX_LICENSE_FILE} ${SCRIPT_DIR}/tmp
+    cp ${NXDESIGNSUITE_23_5_1_2_TAR_ARCHIVE} ${SCRIPT_DIR}/tmp
+    cp ${NXBASE2_2_5_3_TAR_ARCHIVE} ${SCRIPT_DIR}/tmp
+    cp ${NXLMD_2_2_TAR_ARCHIVE} ${SCRIPT_DIR}/tmp
 fi
 
 # Build PandA-Bambu image
-docker build -t ${PANDA_DOCKER_IMG} -f ${SCRIPT_DIR}/../submodules/docker/LoCod-docker-PandA/panda/Dockerfile ${BASE_DIR}/tmp
+docker build -t ${PANDA_DOCKER_IMG} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-PandA/panda/Dockerfile ${SCRIPT_DIR}/tmp
 
 # Build Ultra96 SDK image
 if [[ $INSTALL_ULTRA96 == 1 ]]; then
-    docker build -t ${SDK_ULTRA96_DOCKER_IMG} -f ${SCRIPT_DIR}/../submodules/docker/LoCod-docker-sdk-ultra96/Dockerfile ${BASE_DIR}/tmp
+    docker build -t ${SDK_ULTRA96_DOCKER_IMG} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-sdk-ultra96/Dockerfile ${SCRIPT_DIR}/tmp
 fi
 
 # Build Enclustra SDK image
 if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
-    docker build -t ${SDK_ENCLUSTRA_DOCKER_IMG} -f ${SCRIPT_DIR}/../submodules/docker/LoCod-docker-sdk-enclustra/Dockerfile ${BASE_DIR}/tmp
+    docker build -t ${SDK_ENCLUSTRA_DOCKER_IMG} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-sdk-enclustra/Dockerfile ${SCRIPT_DIR}/tmp
 fi
 
 # Build NX Design Suite and NG-Ultra SDK image
 if [[ $INSTALL_NGULTRA == 1 ]]; then
-    docker build -t ${NX_DESIGN_SUITE_DOCKER_IMG} --build-arg NX_USERNAME=${NX_USERNAME} --build-arg NX_PERSONAL_ACCESS_TOKEN=${NX_PERSONAL_ACCESS_TOKEN} -f ${SCRIPT_DIR}/../submodules/docker/LoCod-docker-nanoxplore/Dockerfile ${BASE_DIR}/tmp
-    docker build -t ${SDK_NGULTRA_DOCKER_IMG} --build-arg NX_USERNAME=${NX_USERNAME} --build-arg NX_PERSONAL_ACCESS_TOKEN=${NX_PERSONAL_ACCESS_TOKEN} -f ${SCRIPT_DIR}/../submodules/docker/LoCod-docker-sdk-ngultra/Dockerfile ${BASE_DIR}/tmp
+    docker build -t ${NX_DESIGN_SUITE_DOCKER_IMG} --build-arg NX_USERNAME=${NX_USERNAME} --build-arg NX_PERSONAL_ACCESS_TOKEN=${NX_PERSONAL_ACCESS_TOKEN} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-nanoxplore/Dockerfile ${SCRIPT_DIR}/tmp
+    docker build -t ${SDK_NGULTRA_DOCKER_IMG} --build-arg NX_USERNAME=${NX_USERNAME} --build-arg NX_PERSONAL_ACCESS_TOKEN=${NX_PERSONAL_ACCESS_TOKEN} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-sdk-ngultra/Dockerfile ${SCRIPT_DIR}/tmp
 fi
 
 # Remove temporary directory
-rm -rf ${BASE_DIR}/tmp
+rm -rf ${SCRIPT_DIR}/tmp
 
 
 # ========== Creates LoCod environment file ==========
-rm -rf ${SCRIPT_DIR}/../locod_env.sh
-touch ${SCRIPT_DIR}/../locod_env.sh
+rm -rf ${SCRIPT_DIR}/locod_env.sh
+touch ${SCRIPT_DIR}/locod_env.sh
 
 echo "#!/bin/bash
-export PANDA_DOCKER_IMG=${PANDA_DOCKER_IMG}" >> ${SCRIPT_DIR}/../locod_env.sh
+export PANDA_DOCKER_IMG=${PANDA_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
 
 if [[ $INSTALL_ULTRA96 == 1 || $INSTALL_ENCLUSTRA == 1 ]]; then
-    echo "source ${VIVADO_ENVIRONMENT_SCRIPT}" >> ${SCRIPT_DIR}/../locod_env.sh
+    echo "source ${VIVADO_ENVIRONMENT_SCRIPT}" >> ${SCRIPT_DIR}/locod_env.sh
 fi
 
 if [[ $INSTALL_ULTRA96 == 1 ]]; then
-    echo "export SDK_ULTRA96_DOCKER_IMG=${SDK_ULTRA96_DOCKER_IMG}" >> ${SCRIPT_DIR}/../locod_env.sh
+    echo "export SDK_ULTRA96_DOCKER_IMG=${SDK_ULTRA96_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
 fi
 
 if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
-    echo "export SDK_ENCLUSTRA_DOCKER_IMG=${SDK_ENCLUSTRA_DOCKER_IMG}" >> ${SCRIPT_DIR}/../locod_env.sh
+    echo "export SDK_ENCLUSTRA_DOCKER_IMG=${SDK_ENCLUSTRA_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
 fi
 
 if [[ $INSTALL_NGULTRA == 1 ]]; then
-    echo "export SDK_NGULTRA_DOCKER_IMG=${SDK_NGULTRA_DOCKER_IMG}" >> ${SCRIPT_DIR}/../locod_env.sh
-    echo "export NX_DESIGN_SUITE_DOCKER_IMG=${NX_DESIGN_SUITE_DOCKER_IMG}" >> ${SCRIPT_DIR}/../locod_env.sh
-    echo "export NX_LICENSE_HOSTNAME=${NX_LICENSE_HOSTNAME}" >> ${SCRIPT_DIR}/../locod_env.sh
-    echo "export NX_LICENSE_MAC_ADDR=${NX_LICENSE_MAC_ADDR}" >> ${SCRIPT_DIR}/../locod_env.sh
+    echo "export SDK_NGULTRA_DOCKER_IMG=${SDK_NGULTRA_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
+    echo "export NX_DESIGN_SUITE_DOCKER_IMG=${NX_DESIGN_SUITE_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
+    echo "export NX_LICENSE_HOSTNAME=${NX_LICENSE_HOSTNAME}" >> ${SCRIPT_DIR}/locod_env.sh
+    echo "export NX_LICENSE_MAC_ADDR=${NX_LICENSE_MAC_ADDR}" >> ${SCRIPT_DIR}/locod_env.sh
 fi
 
 

@@ -235,7 +235,7 @@ fi
 #*******************************************************************/
 #***************** Initializing files and folders ******************/
 #*******************************************************************/
-rm -rf $LOCOD_FPGA_DIR/src/generated_files/*
+rm -rf ${LOCOD_FPGA_DIR}/src/generated_files/*
 mkdir -p ${SCRIPT_DIR}/tmp
 rm -rf ${SCRIPT_DIR}/tmp/*
 mkdir -p ${SCRIPT_DIR}/locod-output
@@ -249,20 +249,20 @@ if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
 
-cp $FILE $LOCOD_CPU_DIR/src/main.c
+cp ${FILE} ${LOCOD_CPU_DIR}/src/main.c
 
 case $TARGET in
 	ultra96)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $LOCOD_CPU_DIR:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
-		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
+		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	enclustra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $LOCOD_CPU_DIR:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
-		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
+		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	pynqz2)
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${PYNQZ2_SDK_DOCKER_IMG} bash -c \
@@ -271,9 +271,9 @@ case $TARGET in
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
 	ngultra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $LOCOD_CPU_DIR:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
 			'make'
-		cp $LOCOD_CPU_DIR/out/locod-cpu.elf locod-output/locod-cpu.elf
+		cp ${LOCOD_CPU_DIR}/out/locod-cpu.elf ${SCRIPT_DIR}/locod-output/locod-cpu.elf
 		;;
 esac
 
