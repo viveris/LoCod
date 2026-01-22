@@ -89,19 +89,26 @@ docker tag panda-bambu:9.8.0 panda-bambu:latest
 ```
 
 ### Vivado requirements
-libtinfo.so.5
+Vivado need this library `libtinfo.so.5`, to install it, use the following command:
+```console
 sudo apt install libncurses5
+```
 
-
+IF you have this error message (generally with WSL):
+```console
 /tools/Xilinx/Vivado/2022.2/bin/rdiArgs.sh: line 31: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
 /bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
 terminate called after throwing an instance of 'std::runtime_error'
   what():  locale::facet::_S_create_c_locale name not valid
-/tools/Xilinx/Vivado/2022.2/bin/rdiArgs.sh: line 312:  6582 Aborted                 (core dumped) "$RDI_PROG" "$@"
+/tools/Xilinx/Vivado/2022.2/bin/rdiArgs.sh: line 312:  6582 Aborted
+                (core dumped) "$RDI_PROG" "$@"
+```
 
+You need to install and configure locales
+```console
 sudo apt install locales
 sudo localectl set-locale LANG=en_US.UTF-8
-
+```
 
 ## Usage
 
