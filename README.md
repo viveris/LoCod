@@ -9,8 +9,6 @@ The LoCod tool then provides a simple C code API for executing one or more funct
 
 LoCod uses the [Panda-Bambu](https://github.com/ferrandi/PandA-bambu) tool to convert the C code of accelerated functions into HDL language for bitstream generation. An entire HDL architecture is then automatically generated to easily interface these accelerators with the CPU, so that the use of accelerated functions is as similar as possible to conventional CPU execution. More details on how the LoCod tool works can be found in [locod_operation.md](doc/locod_operation.md) file.
 
-<br>
-
 ## Support
 Three target boards are currently supported by the LoCod tool, 2 from Xilinx and 1 from NanoXplore:
 
@@ -22,7 +20,13 @@ Three target boards are currently supported by the LoCod tool, 2 from Xilinx and
 
 The [add_new_target.md](doc/add_new_target.md) file describes the main steps to add a new target to the LoCod project.
 
- <br>
+## Clone LoCod repo
+To clone the LoCod repo and all its submodules:
+```console
+git clone https://github.com/viveris/LoCod.git
+cd LoCod
+git submodule update --init --recursive
+```
 
 ## Requierments
 
@@ -43,8 +47,6 @@ Here are the LoCod Xilinx dependencies:
 Here are the LoCod NanoXplore dependencies:
 - the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: https://github.com/viveris/LoCod-docker-nanoxplore
 - the NG-Ultra SDK docker for compiling on NG-Ultra: https://github.com/viveris/LoCod-docker-sdk-ngultra
-
-<br>
 
 ## Install
 
@@ -94,7 +96,7 @@ Vivado need this library `libtinfo.so.5`, to install it, use the following comma
 sudo apt install libncurses5
 ```
 
-IF you have this error message (generally with WSL):
+If you have this error message (generally with WSL):
 ```console
 /tools/Xilinx/Vivado/2022.2/bin/rdiArgs.sh: line 31: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
 /bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
