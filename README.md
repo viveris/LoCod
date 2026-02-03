@@ -69,13 +69,14 @@ At least you need the panda-bambu and sdk docker images.
 
 ### Import docker images
 
-If you already have the docker images you can load it into your docker environment:
+If you already have exported the docker images (for archiving), you can load it into your docker environment:
 ```console
 docker load < [docker image]
 
 example:
 docker load < panda-bambu_9.8.0.tar.gz
 ```
+This solution is interesting for quickly migrating the environment to another platform.
 
 ### Build docker images
 
@@ -157,7 +158,7 @@ Now that the C input code has been developed with the correct syntax for launchi
 
 The tool is launched with a **locod.sh** bash script, which calls the various tools one after the other to compile the C code, convert the functions passed in the FPGA() macros into VHDL and generate the FPGA VHDL system including the hardwares accelerators corresponding to these functions.
 
-The **locod.sh** script must be is used as follows:
+The **locod.sh** script must be used as follows:
 ```console
 ./locod.sh  
     [ -t | --target ] < target board : enclustra, ultra96, ngultra >
@@ -171,8 +172,9 @@ The **locod.sh** script must be is used as follows:
 The execution of the LoCod tool can then be monitored with logs in the console.
 
 Depending on the target (--target) selected, the various Dockers and tools requiered must be available on the machine. If one is missing, the script will stop.
+Warning: A valid Vivado license is also required, as the Enclustra embeds a Zynq Ultrascale+ XCZU6EG not available with the free version.
 
-For our example, let's say we want to test it on an Enclustra board. Assuming the dockers are present, we still need to source the Vivado environment script required for VHDL synthesis. A valid Vivado license is also required, as the Enclustra embeds a Zynq Ultrascale+ XCZU6EG not available with the free version.
+For our example, let's say we want to test it on an ultra96 board. Assuming the dockers are present, we still need to source the Vivado environment script required for VHDL synthesis. 
 
 We will then run the following commands:
 ```console
@@ -182,7 +184,7 @@ source <Vivado 2022.1 install directory>/settings64.sh
 
 Once the locod has been compiled, our two outputs **fpga.bit** and **locod-cpu** can be found in the **locod-output/** folder. The name of outputs may vary depending on the selected target.
 
-We can then take these files, send them to the enclustra board, flash the FPGA, run the locod-cpu executable, and finally observe the results in the console:
+We can then take these files, send them to the ultra96 board, flash the FPGA, run the locod-cpu executable, and finally observe the results in the console:
 ```console
 fpgautil -b fpga.bit
 ...
