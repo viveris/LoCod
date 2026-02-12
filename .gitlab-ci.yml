@@ -1,7 +1,7 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
   XILINXD_LICENSE_FILE: "2100@172.20.1.108"
-  VIVADO_PATH: /data2/Xilinx/Vivado/2022.1/settings64.sh
+  VIVADO_PATH: /data2/Xilinx/Vivado/2022.2/settings64.sh
 
 
 Build-multi-parallel:
