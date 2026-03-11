@@ -59,6 +59,7 @@ BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=NO
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1
 FPGA=1
+CHECK=0
 
 #**********************************************/
 #***************** Functions ******************/
@@ -92,8 +93,9 @@ help()
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, ngultra >
 		[ -f | --file ] < main C file >
-		[ --no-hard ] < don't generate bitstream >
-		[ --no-soft ] < don't generate executable >
+		[ --no-hard ] don't generate bitstream
+		[ --no-soft ] don't generate executable
+		[ -c | --check ] Verify all the dependancies installation
 		[ -h | --help  ]"
 	exit 2
 }
@@ -104,12 +106,17 @@ while [[ $# -gt 0 ]]; do
 	case $1 in
 		-t|--target)
 			if [[ $2 != ultra96 && $2 != enclustra && $2 != ngultra ]]; then
-				echo "Unknown target $2"
+				echo "Unknown target $2, Chosen between [enclustra, ultra96, or ngultra]"
 				exit 1
 			fi
 			TARGET="$2"
 			shift # past argument
 			shift # past value
+			;;
+		-c|--check)
+			CHECK=1
+			shift # past argument
+			echo "Check activated"
 			;;
 		-f|--file)
 			FILE="$2"
@@ -141,14 +148,16 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ $TARGET == "" ]]; then
-	echo "No target specified"
-	help
-	exit 1
+if [[ $CHECK == 0 ]]; then
+	if [[ $FILE == "" ]]; then
+		echo "No file specified"
+		help
+		exit 1
+	fi
 fi
 
-if [[ $FILE == "" ]]; then
-	echo "No file specified"
+if [[ $TARGET == "" ]]; then
+	echo "No target specified"
 	help
 	exit 1
 fi
@@ -216,7 +225,10 @@ if [[ $TARGET == ngultra ]]; then
 	fi
 fi
 
-
+if [[ $CHECK == 1 ]]; then
+	echo "End of checking"
+	exit 1
+fi
 #*******************************************************************/
 #***************** Initializing files and folders ******************/
 #*******************************************************************/

@@ -9,8 +9,6 @@ The LoCod tool then provides a simple C code API for executing one or more funct
 
 LoCod uses the [Panda-Bambu](https://github.com/ferrandi/PandA-bambu) tool to convert the C code of accelerated functions into HDL language for bitstream generation. An entire HDL architecture is then automatically generated to easily interface these accelerators with the CPU, so that the use of accelerated functions is as similar as possible to conventional CPU execution. More details on how the LoCod tool works can be found in [locod_operation.md](doc/locod_operation.md) file.
 
-<br>
-
 ## Support
 Three target boards are currently supported by the LoCod tool, 2 from Xilinx and 1 from NanoXplore:
 
@@ -22,10 +20,17 @@ Three target boards are currently supported by the LoCod tool, 2 from Xilinx and
 
 The [add_new_target.md](doc/add_new_target.md) file describes the main steps to add a new target to the LoCod project.
 
- <br>
+## Clone LoCod repo
+To clone the LoCod repo and all its submodules:
+```console
+git clone https://github.com/viveris/LoCod.git
+cd LoCod
+git submodule update --init --recursive
+```
 
 ## Requierments
 
+### LoCod requirements
 The LoCod tool requires different development environments to operate.
 
 Most of these environments/dependencies have been dockerised to facilitate porting to different machines. The various Dockers are available as submodules in the [submodules/docker/](submodules/docker/) folder.
@@ -44,11 +49,31 @@ Here are the LoCod NanoXplore dependencies:
 - the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: https://github.com/viveris/LoCod-docker-nanoxplore
 - the NG-Ultra SDK docker for compiling on NG-Ultra: https://github.com/viveris/LoCod-docker-sdk-ngultra
 
-<br>
+### Vivado requirements
+Vivado need this library `libtinfo.so.5`, to install it, use the following command:
+```console
+sudo apt install libncurses5
+```
+
+If you have this error message (generally with WSL):
+```console
+/tools/Xilinx/Vivado/2022.2/bin/rdiArgs.sh: line 31: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8): No such file or directory
+/bin/bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+terminate called after throwing an instance of 'std::runtime_error'
+  what():  locale::facet::_S_create_c_locale name not valid
+/tools/Xilinx/Vivado/2022.2/bin/rdiArgs.sh: line 312:  6582 Aborted
+                (core dumped) "$RDI_PROG" "$@"
+```
+
+You need to install and configure locales
+```console
+sudo apt install locales
+sudo localectl set-locale LANG=en_US.UTF-8
+```
 
 ## Install
 
-The LoCod tool does not require any specific installation. The only requirement is that the necessary dockers and tools are present on the system, and that their names match those in the main LoCod script:
+The LoCod tool does not require any specific installation. The only requirement is that the necessary dockers and tools are present on the system, and that their names match those in the main LoCod script ([](locod.sh) at line 45):
 
 ```console
 # Docker images
@@ -58,21 +83,120 @@ ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
 NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
 NX_DOCKER_IMG=nx-tools:2.0
 
-#Impulse license
+#Impulse Tool license of NanoXplore
 NX_HOSTNAME=localhost.localdomain
 NX_MAC_ADDR=86:8a:dd:8d:51:a8
 ```
 
-<br>
+At least you need the panda-bambu and sdk docker images.
+
+### Import docker images
+
+If you already have exported the docker images (for archiving), you can load it into your docker environment:
+```console
+docker load < [docker image]
+
+example:
+docker load < panda-bambu_9.8.0.tar.gz
+```
+This solution is interesting for quickly migrating the environment to another platform.
+
+### Build docker images
+
+If you have only the Dockerfile for exemple [panda/Dockerfile](https://github.com/viveris/LoCod-docker-PandA/blob/master/panda/Dockerfile)
+
+```console
+docker build -f [Dockerfile] -t [Dockername]:X.Y .
+docker tag [Dockername]:X.Y [Dockername]:latest
+
+example:
+docker build -f panda/Dockerfile -t panda-bambu:9.8.0 .
+docker tag panda-bambu:9.8.0 panda-bambu:latest
+```
 
 ## Usage
 
 To illustrate how the LoCod tool works, let's take a simple example. Let's say, for example, that we wish to execute 2 functions in the FPGA:
 - the first takes two integers as input and multiplies them
-
 - the second takes an array of floats as input and returns 2 float results, the first being the sum of all inputs and the second the subtraction of all inputs
 
-<br>
+### Verify installation
+
+You can verify the installation of all packages with the following commande :
+```console
+./locod.sh  
+./locod.sh --check -t ultra96
+
+The result is:
+********************************************************************************
+                    ____                  _
+                   | __ )  __ _ _ __ ___ | |_   _   _
+                   |  _ \ / _` | '_ ` _ \| '_ \| | | |
+                   | |_) | (_| | | | | | | |_) | |_| |
+                   |____/ \__,_|_| |_| |_|_.__/ \__,_|
+
+********************************************************************************
+                         High-Level Synthesis Tool
+
+                         Politecnico di Milano - DEIB
+                          System Architectures Group
+********************************************************************************
+                Copyright (C) 2004-2022 Politecnico di Milano
+  Version: PandA 0.9.8 - Revision eda4c22d5adaec44fd8489ae49b854b244d2cf70-HEAD
+
+- Panda docker found
+- Ultra96 SDK docker found
+- Vivado found
+End of checking
+```
+
+
+### Launching the LoCod tool
+
+Now that the C input code has been developed with the correct syntax for launching code in the FPGA, it needs to be passed to the LoCod tool to generate :
+- CPU executable
+- FPGA bitstream
+
+The tool is launched with a **locod.sh** bash script, which calls the various tools one after the other to compile the C code, convert the functions passed in the FPGA() macros into VHDL and generate the FPGA VHDL system including the hardwares accelerators corresponding to these functions.
+
+The **locod.sh** script must be used as follows:
+```console
+./locod.sh  
+    [ -t | --target ] < target board : enclustra, ultra96, ngultra >
+    [ -f | --file ] < main C file >
+    [ --no-hard ] don't generate bitstream
+    [ --no-soft ] don't generate executable
+    [ -c | --check ] Verify all the dependancies installation
+    [ -h | --help  ]
+```
+
+The execution of the LoCod tool can then be monitored with logs in the console.
+
+Depending on the target (--target) selected, the various Dockers and tools requiered must be available on the machine. If one is missing, the script will stop.
+Warning: A valid Vivado license is also required, as the Enclustra embeds a Zynq Ultrascale+ XCZU6EG not available with the free version.
+
+For our example, let's say we want to test it on an ultra96 board. Assuming the dockers are present, we still need to source the Vivado environment script required for VHDL synthesis. 
+
+We will then run the following commands:
+```console
+source <Vivado 2022.1 install directory>/settings64.sh
+./locod.sh -t ultra96 -f demo/example_readme/main.c
+```
+
+Once the locod has been compiled, our two outputs **fpga.bit** and **locod-cpu** can be found in the **locod-output/** folder. The name of outputs may vary depending on the selected target.
+
+We can then take these files, send them to the ultra96 board, flash the FPGA, run the locod-cpu executable, and finally observe the results in the console:
+```console
+fpgautil -b fpga.bit
+...
+
+./locod-cpu
+...
+Acc 0 result : 3 * 7 = 21
+Acc 1 result : sum of input values = 190.000000, substraction of input values = -190.000000
+```
+
+As we can see, we get good results.
 
 ### Input code syntax
 
@@ -218,51 +342,4 @@ Finally, the locod can be de-initialized with the **deinit_locod** function, to 
 } //End main()
 #endif //LOCOD_FPGA
 ```
-<br>
-
-### Launching the LoCod tool
-
-Now that the C input code has been developed with the correct syntax for launching code in the FPGA, it needs to be passed to the LoCod tool to generate :
-- CPU executable
-- FPGA bitstream
-
-The tool is launched with a **locod.sh** bash script, which calls the various tools one after the other to compile the C code, convert the functions passed in the FPGA() macros into VHDL and generate the FPGA VHDL system including the hardwares accelerators corresponding to these functions.
-
-The **locod.sh** script must be is used as follows:
-```console
-./locod.sh  
-    [ -t | --target ] < target board : enclustra, ultra96, ngultra >
-    [ -f | --file ] < main C file >
-    [ --no-hard ] < don't generate bitstream >
-    [ --no-soft ] < don't generate executable >
-    [ -h | --help  ]
-```
-
-The execution of the LoCod tool can then be monitored with logs in the console.
-
-Depending on the target (--target) selected, the various Dockers and tools requiered must be available on the machine. If one is missing, the script will stop.
-
-For our example, let's say we want to test it on an Enclustra board. Assuming the dockers are present, we still need to source the Vivado environment script required for VHDL synthesis. A valid Vivado license is also required, as the Enclustra embeds a Zynq Ultrascale+ XCZU6EG not available with the free version.
-
-We will then run the following commands:
-```console
-source <Vivado 2022.1 install directory>/settings64.sh
-./locod.sh -t enclustra -f demo/example_readme/main.c
-```
-
-Once the locod has been compiled, our two outputs **fpga.bit** and **locod-cpu** can be found in the **locod-output/** folder. The name of outputs may vary depending on the selected target.
-
-We can then take these files, send them to the enclustra board, flash the FPGA, run the locod-cpu executable, and finally observe the results in the console:
-```console
-fpgautil -b fpga.bit
-...
-
-./locod-cpu
-...
-Acc 0 result : 3 * 7 = 21
-Acc 1 result : sum of input values = 190.000000, substraction of input values = -190.000000
-```
-
-As we can see, we get good results.
-
 <br>
