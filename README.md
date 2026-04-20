@@ -3,6 +3,8 @@
 ## Overview
 LoCod is a hardware/software co-design tool designed to simplify the development of applications for system-on-chip (SoC) devices.
 
+Viveris Technologies was responsible for designing and implementing LoCod during two CNES R&T projects from 2020-2021 and 2022-2023. Now it is maintained by Viveris Technologies.
+
 It facilitates the implementation and testing of hybrid applications, i.e. with a CPU component and an FPGA component. For example, a classic CPU program where we want to execute a processing function in the FPGA.
 
 The LoCod tool then provides a simple C code API for executing one or more functions in the SoC FPGA, known as hardware accelerators, then monitoring its execution and retrieving its outputs and some performance metrics.
