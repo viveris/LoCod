@@ -82,7 +82,9 @@ function get_fct_acc_number()
 #******************************************************/
 #***************** LoCod environment ******************/
 #******************************************************/
-source ${SCRIPT_DIR}/locod_env.sh
+if ! source ${SCRIPT_DIR}/locod_env.sh; then
+	echo "You must first launch the install.sh to create the docker images and link the environnement(s) !"
+fi
 
 
 #******************************************************/
