@@ -2,6 +2,17 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   XILINXD_LICENSE_FILE: "2100@172.20.1.108"
   VIVADO_PATH: /data2/Xilinx/Vivado/2022.2/settings64.sh
+  # Docker images
+  PANDA_DOCKER_IMG=panda-bambu:9.8.0
+  ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
+  ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
+  NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
+  NX_DOCKER_IMG=nx-tools:2.0
+
+  #Impulse Tool license of NanoXplore
+  NX_HOSTNAME=localhost.localdomain
+  NX_MAC_ADDR=86:8a:dd:8d:51:a8
+
 
 
 Build-multi-parallel:
