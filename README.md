@@ -3,11 +3,15 @@
 ## Overview
 LoCod is a hardware/software co-design tool designed to simplify the development of applications for system-on-chip (SoC) devices.
 
+Viveris Technologies was responsible for designing and implementing LoCod during two CNES R&T projects from 2020-2021 and 2022-2023. Now it is maintained by Viveris Technologies.
+
 It facilitates the implementation and testing of hybrid applications, i.e. with a CPU component and an FPGA component. For example, a classic CPU program where we want to execute a processing function in the FPGA.
 
 The LoCod tool then provides a simple C code API for executing one or more functions in the SoC FPGA, known as hardware accelerators, then monitoring its execution and retrieving its outputs and some performance metrics.
 
 LoCod uses the [Panda-Bambu](https://github.com/ferrandi/PandA-bambu) tool to convert the C code of accelerated functions into HDL language for bitstream generation. An entire HDL architecture is then automatically generated to easily interface these accelerators with the CPU, so that the use of accelerated functions is as similar as possible to conventional CPU execution. More details on how the LoCod tool works can be found in [locod_operation.md](doc/locod_operation.md) file.
+
+Conference paper introducing LoCod available [here](https://indico.cern.ch/event/1381060/contributions/5923282/) or [here](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/supplementalcontent/10.1117/12.3061330/38m.pdf).
 
 ## Support
 Three target boards are currently supported by the LoCod tool, 2 from Xilinx and 1 from NanoXplore:
