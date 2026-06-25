@@ -1,4 +1,4 @@
-ifeq ($(TARGET), $(filter $(TARGET), ultra96 enclustra))
+ifeq ($(TARGET), $(filter $(TARGET), ultra96 enclustra pynqz2))
 # Directory structure
 INCLUDEDIR = include
 LIBDIR = lib

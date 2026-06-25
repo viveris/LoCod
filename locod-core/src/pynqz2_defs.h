@@ -30,38 +30,26 @@
  *
  */
 
-#ifndef LOCOD_H
-#define LOCOD_H
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <errno.h>
 
 
-#if defined(TARGET_ultra96)
-	#include "ultra96_defs.h"
-#elif defined(TARGET_enclustra)
-	#include "enclustra_defs.h"
-#elif defined(TARGET_pynqz2)
-	#include "pynqz2_defs.h"
-#elif defined(TARGET_ngultra)
-	#include "ngultra_defs.h"
-#endif //TARGET
 
+//Registers ADDR
+#define REG_AXI_ADDR				0x43C00000
 
-#define CPU(fct, param_ptr, result_ptr) do { fct(param_ptr, result_ptr); } while(0)
+//Physical memory ADDR
+#define DMA_BASE_ADDR 				0x10000000
 
-#define FPGA(fct, param_ptr, result_ptr, accel) do {\
-	init_accelerator_memory(sizeof(*param_ptr), sizeof(*result_ptr), accel);\
-	cp_param_and_result_to_accel_memory(param_ptr, result_ptr, accel);\
-	start_accelerator(accel);\
-} while(0)
+#define FPGA_FREQ_HZ 				100000000
 
+#define POLL_PERIOD_US         		1
 
-int init_locod(int nb_acc);
-int init_accelerator_memory(int param_len, int result_len, int accel);
-int cp_param_and_result_to_accel_memory(void *param_addr, void *result_addr, int accel);
-int cp_result_from_accel_memory(void *result_addr, int accel);
-int start_accelerator(int accel);
-int wait_accelerator(void *result_addr, int accel);
-int get_time_ns_FPGA(int accel);
-int deinit_locod(void);
+#define DEBUG
 
-
-#endif /* LOCOD_H */
+#define LINUX
