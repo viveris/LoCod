@@ -20,6 +20,7 @@ Three target boards are currently supported by the LoCod tool, 2 from Xilinx and
 | ---------------------- |:-----------------:|:-------------:|
 | Avnet Ultra96          |       OK          |      OK       |
 | Enclustra Mercury+ XU7 |       OK          |      OK       |
+| TUL PYNQ -Z2           |       OK          |      OK       |
 | NanoXplore NG-Ultra    |       OK          |      KO       |
 
 The [add_new_target.md](doc/add_new_target.md) file describes the main steps to add a new target to the LoCod project.
@@ -166,7 +167,7 @@ The tool is launched with a **locod.sh** bash script, which calls the various to
 The **locod.sh** script must be used as follows:
 ```console
 ./locod.sh  
-    [ -t | --target ] < target board : enclustra, ultra96, ngultra >
+    [ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
     [ -f | --file ] < main C file >
     [ --no-hard ] don't generate bitstream
     [ --no-soft ] don't generate executable
