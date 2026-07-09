@@ -41,6 +41,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 INSTALL_ULTRA96=0
 INSTALL_ENCLUSTRA=0
+INSTALL_PYNQZ2=0
 INSTALL_NGULTRA=0
 
 
@@ -49,6 +50,7 @@ function help() {
 echo "Usage: install.sh
     [--enable-ultra96]      < install requierments for Xilinx Ultra96 board >
     [--enable-enclustra]    < install requierments for Xilinx Enclustra XU7 board >
+    [--enable-pynqz2]       < install requierments for Xilinx Pynq-Z2 board >
     [--enable-ngultra]      < install requierments for NanoXplore NG-Ultra board >
     [--help]                < display this help >"
     exit 1
@@ -62,6 +64,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --enable-enclustra)
             INSTALL_ENCLUSTRA=1
+            shift # past argument
+            ;;
+        --enable-pynqz2)
+            INSTALL_PYNQZ2=1
             shift # past argument
             ;;
         --enable-ngultra)
@@ -80,7 +86,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # If no target is specified, exit
-if [[ $INSTALL_ULTRA96 == 0 && $INSTALL_ENCLUSTRA == 0 && $INSTALL_NGULTRA == 0 ]]; then
+if [[ $INSTALL_ULTRA96 == 0 && $INSTALL_ENCLUSTRA == 0 && $INSTALL_PYNQZ2 == 0 && $INSTALL_NGULTRA == 0 ]]; then
     echo "You need to specify at list one target board"
     exit 1
 fi
@@ -88,7 +94,7 @@ fi
 
 # ========== User inputs ==========
 function get_user_inputs() {
-    if [[ $INSTALL_ULTRA96 == 1 || $INSTALL_ENCLUSTRA == 1 ]]; then
+    if [[ $INSTALL_ULTRA96 == 1 || $INSTALL_ENCLUSTRA == 1 || $INSTALL_PYNQZ2 == 1 ]]; then
         read -p "Enter path of the Vivado 2022.2 environment script : " -e VIVADO_ENVIRONMENT_SCRIPT
     fi
     if [[ $INSTALL_ULTRA96 == 1 ]]; then
@@ -96,6 +102,9 @@ function get_user_inputs() {
     fi
     if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
         read -p "Enter Enclustra XU7 SDK 'sdk-enclustra.sh' installation script : " -e SDK_ENCLUSTRA_INSTALL_SCRIPT
+    fi
+    if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+        read -p "Enter Pynq-Z2 SDK 'sdk-pynqz2.sh' installation script : " -e SDK_PYNQZ2_INSTALL_SCRIPT
     fi
     if [[ $INSTALL_NGULTRA == 1 ]]; then
         read -p "Enter NanoXplore Gitlab username : " -e NX_USERNAME
@@ -119,6 +128,9 @@ function print_user_inputs() {
     fi
     if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
         echo "SDK_ENCLUSTRA_INSTALL_SCRIPT=${SDK_ENCLUSTRA_INSTALL_SCRIPT}"
+    fi
+    if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+        echo "SDK_PYNQZ2_INSTALL_SCRIPT=${SDK_PYNQZ2_INSTALL_SCRIPT}"
     fi
     if [[ $INSTALL_NGULTRA == 1 ]]; then
         echo "NX_USERNAME=${NX_USERNAME}"
@@ -160,6 +172,9 @@ function get_docker_images_names() {
     if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
         read -p "Enclustra XU7 SDK docker image : " -i "sdk_enclustra:latest" -e SDK_ENCLUSTRA_DOCKER_IMG
     fi
+    if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+        read -p "Pynq-Z2 SDK docker image : " -i "sdk_pynqz2:latest" -e SDK_PYNQZ2_DOCKER_IMG
+    fi
     if [[ $INSTALL_NGULTRA == 1 ]]; then
         read -p "NX Design Suite docker image : " -i "nx_design_suite:latest" -e NX_DESIGN_SUITE_DOCKER_IMG
         read -p "NG-Ultra SDK docker image : " -i "sdk_ngultra:latest" -e SDK_NGULTRA_DOCKER_IMG
@@ -174,6 +189,9 @@ function print_docker_images_names() {
     fi
     if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
         echo "SDK_ENCLUSTRA_DOCKER_IMG=${SDK_ENCLUSTRA_DOCKER_IMG}"
+    fi
+    if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+        echo "SDK_PYNQZ2_DOCKER_IMG=${SDK_PYNQZ2_DOCKER_IMG}"
     fi
     if [[ $INSTALL_NGULTRA == 1 ]]; then
         echo "NX_DESIGN_SUITE_DOCKER_IMG=${NX_DESIGN_SUITE_DOCKER_IMG}"
@@ -211,6 +229,9 @@ fi
 if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
     cp ${SDK_ENCLUSTRA_INSTALL_SCRIPT} ${SCRIPT_DIR}/tmp
 fi
+if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+    cp ${SDK_PYNQZ2_INSTALL_SCRIPT} ${SCRIPT_DIR}/tmp
+fi
 if [[ $INSTALL_NGULTRA == 1 ]]; then
     cp ${NX_LICENSE_FILE} ${SCRIPT_DIR}/tmp
     cp ${NXDESIGNSUITE_23_5_1_2_TAR_ARCHIVE} ${SCRIPT_DIR}/tmp
@@ -231,6 +252,11 @@ if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
     docker build -t ${SDK_ENCLUSTRA_DOCKER_IMG} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-sdk-enclustra/Dockerfile ${SCRIPT_DIR}/tmp
 fi
 
+# Build Pynq-Z2 SDK image
+if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+    docker build -t ${SDK_PYNQZ2_DOCKER_IMG} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-sdk-pynqz2/Dockerfile ${SCRIPT_DIR}/tmp
+fi
+
 # Build NX Design Suite and NG-Ultra SDK image
 if [[ $INSTALL_NGULTRA == 1 ]]; then
     docker build -t ${NX_DESIGN_SUITE_DOCKER_IMG} --build-arg NX_USERNAME=${NX_USERNAME} --build-arg NX_PERSONAL_ACCESS_TOKEN=${NX_PERSONAL_ACCESS_TOKEN} -f ${SCRIPT_DIR}/submodules/docker/LoCod-docker-nanoxplore/Dockerfile ${SCRIPT_DIR}/tmp
@@ -248,7 +274,7 @@ touch ${SCRIPT_DIR}/locod_env.sh
 echo "#!/bin/bash
 export PANDA_DOCKER_IMG=${PANDA_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
 
-if [[ $INSTALL_ULTRA96 == 1 || $INSTALL_ENCLUSTRA == 1 ]]; then
+if [[ $INSTALL_ULTRA96 == 1 || $INSTALL_ENCLUSTRA == 1 || $INSTALL_PYNQZ2 == 1 ]]; then
     echo "source ${VIVADO_ENVIRONMENT_SCRIPT}" >> ${SCRIPT_DIR}/locod_env.sh
 fi
 
@@ -258,6 +284,10 @@ fi
 
 if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
     echo "export SDK_ENCLUSTRA_DOCKER_IMG=${SDK_ENCLUSTRA_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
+fi
+
+if [[ $INSTALL_PYNQZ2 == 1 ]]; then
+    echo "export SDK_PYNQZ2_DOCKER_IMG=${SDK_PYNQZ2_DOCKER_IMG}" >> ${SCRIPT_DIR}/locod_env.sh
 fi
 
 if [[ $INSTALL_NGULTRA == 1 ]]; then

@@ -36,9 +36,6 @@ set -e
 #**********************************************/
 #***************** Variables ******************/
 #**********************************************/
-# Execution dir
-BASE_DIR=$(pwd)
-
 # Script dir
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
@@ -190,12 +187,12 @@ if [[ $TARGET == enclustra ]]; then
 	fi
 fi
 
-#Docker Petalinux SDK pynqz2
+#Docker Petalinux SDK Pynq-Z2
 if [[ $TARGET == pynqz2 ]]; then
-	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${PYNQZ2_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;echo $CC' | tr -d '[:space:]') != "" ]; then
-		echo "- Pynq Z2 SDK docker found"
+	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${SDK_PYNQZ2_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;echo $CC' | tr -d '[:space:]') != "" ]; then
+		echo "- Pynq-Z2 SDK docker found"
 	else
-		echo "- Pynq Z2 SDK docker not found"
+		echo "- Pynq-Z2 SDK docker not found"
 		exit 1
 	fi
 fi
@@ -267,10 +264,10 @@ case $TARGET in
 		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	pynqz2)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${PYNQZ2_SDK_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_PYNQZ2_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;\
 			make re'
-		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
+		cp ${LOCOD_CPU_DIR}/bin/locod-cpu locod-output/locod-cpu
 		;;
 	ngultra)
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
