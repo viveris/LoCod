@@ -1,3 +1,34 @@
+#                     __            ___             _ 
+#                    / /    ___    / __\  ___    __| |
+#                   / /    / _ \  / /    / _ \  / _` |
+#                  / /___ | (_) |/ /___ | (_) || (_| |
+#                  \____/  \___/ \____/  \___/  \__,_|
+#
+#            ***********************************************
+#                             LoCod Project
+#                 URL: https://github.com/viveris/LoCod
+#            ***********************************************
+#                 Copyright © 2024 Viveris Technologies
+#
+#                  Developed in partnership with CNES
+#              (DTN/TVO/ET: On-Board Data Handling Office)
+#
+#  This file is part of the LoCod framework.
+#
+#  The LoCod framework is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 #!/bin/bash
 set -e
 
@@ -58,34 +89,23 @@ fi
 # ========== User inputs ==========
 function get_user_inputs() {
     if [[ $INSTALL_ULTRA96 == 1 || $INSTALL_ENCLUSTRA == 1 ]]; then
-        echo "Enter path of the Vivado 2022.2 environment script :"
-        read -e VIVADO_ENVIRONMENT_SCRIPT
+        read -p "Enter path of the Vivado 2022.2 environment script : " -e VIVADO_ENVIRONMENT_SCRIPT
     fi
     if [[ $INSTALL_ULTRA96 == 1 ]]; then
-        echo "Enter Ultra96 SDK 'sdk-ultra96.sh' installation script :"
-        read -e SDK_ULTRA96_INSTALL_SCRIPT
+        read -p "Enter Ultra96 SDK 'sdk-ultra96.sh' installation script : " -e SDK_ULTRA96_INSTALL_SCRIPT
     fi
     if [[ $INSTALL_ENCLUSTRA == 1 ]]; then
-        echo "Enter Enclustra XU7 SDK 'sdk-enclustra.sh' installation script :"
-        read -e SDK_ENCLUSTRA_INSTALL_SCRIPT
+        read -p "Enter Enclustra XU7 SDK 'sdk-enclustra.sh' installation script : " -e SDK_ENCLUSTRA_INSTALL_SCRIPT
     fi
     if [[ $INSTALL_NGULTRA == 1 ]]; then
-        echo "Enter NanoXplore Gitlab username :"
-        read NX_USERNAME
-        echo "Enter NanoXplore Gitlab personal acces token :"
-        read NX_PERSONAL_ACCES_TOKEN
-        echo "Enter NanoXplore 'license.lic' license file :"
-        read -e NX_LICENSE_FILE
-        echo "Enter Hostame used with the NanoXplore license :"
-        read NX_LICENSE_HOSTNAME
-        echo "Enter Mac Address used with the NanoXplore license :"
-        read NX_LICENSE_MAC_ADDR
-        echo "Enter NX Design Suite 23.5.1.2 'nxdesignsuite-23.5.1.2.tar.gz' installation archive :"
-        read -e NXDESIGNSUITE_23_5_1_2_TAR_ARCHIVE
-        echo "Enter NxBase2 2.5.3 'NxBase2-2.5.3.tar.gz' installation archive :"
-        read -e NXBASE2_2_5_3_TAR_ARCHIVE
-        echo "Enter NXLMD 2.2 'NXLMD-2.2-linux.tar.gz' installation archive :"
-        read -e NXLMD_2_2_TAR_ARCHIVE
+        read -p "Enter NanoXplore Gitlab username : " -e NX_USERNAME
+        read -p "Enter NanoXplore Gitlab personal acces token : " -e NX_PERSONAL_ACCESS_TOKEN
+        read -p "Enter NanoXplore 'license.lic' license file : " -e NX_LICENSE_FILE
+        read -p "Enter Hostame used with the NanoXplore license : " -e NX_LICENSE_HOSTNAME
+        read -p "Enter Mac Address used with the NanoXplore license : " -e NX_LICENSE_MAC_ADDR
+        read -p "Enter NX Design Suite 23.5.1.2 'nxdesignsuite-23.5.1.2.tar.gz' installation archive : " -e NXDESIGNSUITE_23_5_1_2_TAR_ARCHIVE
+        read -p "Enter NxBase2 2.5.3 'NxBase2-2.5.3.tar.gz' installation archive : " -e NXBASE2_2_5_3_TAR_ARCHIVE
+        read -p "Enter NXLMD 2.2 'NXLMD-2.2-linux.tar.gz' installation archive : " -e NXLMD_2_2_TAR_ARCHIVE
     fi
 }
 
@@ -102,7 +122,7 @@ function print_user_inputs() {
     fi
     if [[ $INSTALL_NGULTRA == 1 ]]; then
         echo "NX_USERNAME=${NX_USERNAME}"
-        echo "NX_PERSONAL_ACCES_TOKEN=${NX_PERSONAL_ACCES_TOKEN}"
+        echo "NX_PERSONAL_ACCESS_TOKEN=${NX_PERSONAL_ACCESS_TOKEN}"
         echo "NX_LICENSE_FILE=${NX_LICENSE_FILE}"
         echo "NX_LICENSE_HOSTNAME=${NX_LICENSE_HOSTNAME}"
         echo "NX_LICENSE_MAC_ADDR=${NX_LICENSE_MAC_ADDR}"
