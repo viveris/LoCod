@@ -46,6 +46,7 @@ LOCOD_FPGA_DIR=submodules/locod-fpga
 PANDA_DOCKER_IMG=panda-bambu:9.8.0
 ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
 ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
+PYNQZ2_SDK_DOCKER_IMG=sdk-pynqz2:1.0
 NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.1
 NX_DOCKER_IMG=nx-tools:2.1
 
@@ -91,7 +92,7 @@ function get_fct_acc_number()
 help()
 {
 	echo "Usage: locod	
-		[ -t | --target ] < target board : enclustra, ultra96, ngultra >
+		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
 		[ -f | --file ] < main C file >
 		[ --no-hard ] don't generate bitstream
 		[ --no-soft ] don't generate executable
@@ -105,7 +106,7 @@ POSITIONAL_ARGS=()
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		-t|--target)
-			if [[ $2 != ultra96 && $2 != enclustra && $2 != ngultra ]]; then
+			if [[ $2 != ultra96 && $2 != pynqz2 && $2 != enclustra && $2 != ngultra ]]; then
 				echo "Unknown target $2, Chosen between [enclustra, ultra96, or ngultra]"
 				exit 1
 			fi
@@ -195,6 +196,16 @@ if [[ $TARGET == enclustra ]]; then
 	fi
 fi
 
+#Docker Petalinux SDK pynqz2
+if [[ $TARGET == pynqz2 ]]; then
+	if [ $(docker run --rm -t -u $(id -u):$(id -g) ${PYNQZ2_SDK_DOCKER_IMG} bash -c 'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;echo $CC' | tr -d '[:space:]') != "" ]; then
+		echo "- Pynq Z2 SDK docker found"
+	else
+		echo "- Pynq Z2 SDK docker not found"
+		exit 1
+	fi
+fi
+
 #Docker ngultra SDK
 if [[ $TARGET == ngultra ]]; then
 	if docker run --rm -t -u $(id -u):$(id -g) ${NG_ULTRA_SDK_DOCKER_IMG} arm-none-eabi-gcc --version; then
@@ -206,7 +217,7 @@ if [[ $TARGET == ngultra ]]; then
 fi
 
 #Vivado
-if [[ $TARGET == ultra96 || $TARGET == enclustra ]]; then
+if [[ $TARGET == ultra96 || $TARGET == enclustra || $TARGET == pynqz2 ]]; then
 	if vivado -version &> /dev/null; then
 		echo "- Vivado found"
 	else
@@ -258,6 +269,12 @@ case $TARGET in
 	enclustra)
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${ENCLUSTRA_SDK_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
+			make re'
+		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
+		;;
+	pynqz2)
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v $BASE_DIR/$LOCOD_CPU_DIR:/workdir ${PYNQZ2_SDK_DOCKER_IMG} bash -c \
+			'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;\
 			make re'
 		cp $LOCOD_CPU_DIR/bin/locod-cpu locod-output/locod-cpu
 		;;
@@ -349,12 +366,16 @@ if [[ $FPGA == 1 ]]; then
 echo -n "Synthesis of the FPGA design ... "
 
 case $TARGET in
-	ultra96 | enclustra)
+	ultra96 | enclustra | pynqz2)
 		cd $LOCOD_FPGA_DIR/xilinx
 		vivado -mode tcl -nojournal -nolog -source generate_vivado_project.tcl -tclargs ${TARGET}
 		cp fpga.bit $BASE_DIR/locod-output/
+		cp fpga.bin $BASE_DIR/locod-output/
 		rm -rf fpga.bit
+		rm -rf fpga.bin
+		rm -rf fpga.prm
 		rm -rf locod-vivado_*
+		rm -rf vivado_pid*
 		cd $BASE_DIR
 		;;
 	ngultra)
