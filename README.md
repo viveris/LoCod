@@ -46,9 +46,10 @@ Here are the LoCod common dependencies:
 - the Panda-Bambu docker, which includes the Panda-Bambu tool for converting functions into HDL code: https://github.com/viveris/LoCod-docker-PandA
 
 Here are the LoCod Xilinx dependencies:
-- Vivado 2022.1 and with working ML Entreprise license (mandatory to synthesize FPGA design for the Enclustra board)
+- Vivado 2022.2 and with working ML Entreprise license (mandatory to synthesize FPGA design for the Enclustra board)
 - the Ultra96 SDK docker for compiling on Ultra96: https://github.com/viveris/LoCod-docker-sdk-ultra96
 - the Enclustra SDK docker for compiling on Enclustra: https://github.com/viveris/LoCod-docker-sdk-enclustra
+- the Pynq-Z2 SDK docker for compiling on Pynq-Z2: https://github.com/viveris/LoCod-docker-sdk-pynqz2
 
 Here are the LoCod NanoXplore dependencies:
 - the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: https://github.com/viveris/LoCod-docker-nanoxplore
@@ -84,6 +85,7 @@ The LoCod tool can be installed using the [install.sh](install.sh) bash script. 
 Usage: install.sh
     [--enable-ultra96]      < install requierments for Xilinx Ultra96 board >
     [--enable-enclustra]    < install requierments for Xilinx Enclustra XU7 board >
+    [--enbale-pynqz2]       < install requirements for Xilinx Pynq-Z2 board >
     [--enable-ngultra]      < install requierments for NanoXplore NG-Ultra board >
     [--help]                < display this help >
 ```
@@ -96,6 +98,7 @@ A list of the items required for each option is shown in the following table:
 | ------------ |-------|-------------|
 | Avnet Ultra96 | Vivado 2022.2 env script<br>Ultra96 SDK 'sdk-ultra96.sh' install script | - |
 | Enclustra Mercury+ XU7 | Vivado 2022.2 env script<br>Enclustra XU7 SDK 'sdk-enclustra.sh' install script | - |
+| Pynq-Z2 | Vivado 2022.2 env script<br>Pynq-Z2 SDK 'sdk-pynqz2.sh' install script | - |
 | NanoXplore NG-Ultra | NanoXplore 'license.lic' license file<br>NX Design Suite 23.5.1.2 'nxdesignsuite-23.5.1.2.tar.gz' install archive<br>NxBase2 2.5.3 'NxBase2-2.5.3.tar.gz' install archive<br>NXLMD 2.2 'NXLMD-2.2-linux.tar.gz' install archive | NanoXplore Gitlab username<br>NanoXplore Gitlab personal acces token<br>Hostame used with the NanoXplore license<br>Mac Address used with the NanoXplore license |
 
 The installation script also asks for a name for the docker images if you want to customize them. Otherwise, you can leave the name as default.
