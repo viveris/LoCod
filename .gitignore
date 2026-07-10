@@ -1,3 +1,4 @@
 locod-output
-temp
+tmp
 .vscode
+locod_env.sh

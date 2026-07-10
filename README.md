@@ -46,9 +46,10 @@ Here are the LoCod common dependencies:
 - the Panda-Bambu docker, which includes the Panda-Bambu tool for converting functions into HDL code: https://github.com/viveris/LoCod-docker-PandA
 
 Here are the LoCod Xilinx dependencies:
-- Vivado 2022.1 and with working ML Entreprise license (mandatory to synthesize FPGA design for the Enclustra board)
+- Vivado 2022.2 and with working ML Entreprise license (mandatory to synthesize FPGA design for the Enclustra board)
 - the Ultra96 SDK docker for compiling on Ultra96: https://github.com/viveris/LoCod-docker-sdk-ultra96
 - the Enclustra SDK docker for compiling on Enclustra: https://github.com/viveris/LoCod-docker-sdk-enclustra
+- the Pynq-Z2 SDK docker for compiling on Pynq-Z2: https://github.com/viveris/LoCod-docker-sdk-pynqz2
 
 Here are the LoCod NanoXplore dependencies:
 - the NanoXplore docker with the NX Design Suite to synthesize FPGA design for NanoXplore targets: https://github.com/viveris/LoCod-docker-nanoxplore
@@ -76,48 +77,37 @@ sudo apt install locales
 sudo localectl set-locale LANG=en_US.UTF-8
 ```
 
-## Install
+## Installation
 
-The LoCod tool does not require any specific installation. The only requirement is that the necessary dockers and tools are present on the system, and that their names match those in the main LoCod script ([](locod.sh) at line 45):
-
-```console
-# Docker images
-PANDA_DOCKER_IMG=panda-bambu:9.8.0
-ULTRA96_SDK_DOCKER_IMG=sdk-ultra96:1.0
-ENCLUSTRA_SDK_DOCKER_IMG=sdk-enclustra:1.0
-NG_ULTRA_SDK_DOCKER_IMG=sdk-ngultra:1.0
-NX_DOCKER_IMG=nx-tools:2.0
-
-#Impulse Tool license of NanoXplore
-NX_HOSTNAME=localhost.localdomain
-NX_MAC_ADDR=86:8a:dd:8d:51:a8
-```
-
-At least you need the panda-bambu and sdk docker images.
-
-### Import docker images
-
-If you already have exported the docker images (for archiving), you can load it into your docker environment:
-```console
-docker load < [docker image]
-
-example:
-docker load < panda-bambu_9.8.0.tar.gz
-```
-This solution is interesting for quickly migrating the environment to another platform.
-
-### Build docker images
-
-If you have only the Dockerfile for exemple [panda/Dockerfile](https://github.com/viveris/LoCod-docker-PandA/blob/master/panda/Dockerfile)
+The LoCod tool can be installed using the [install.sh](install.sh) bash script. This script takes as arguments the various targets for which support is wanted. Installation options can be listed by displaying the help file:
 
 ```console
-docker build -f [Dockerfile] -t [Dockername]:X.Y .
-docker tag [Dockername]:X.Y [Dockername]:latest
-
-example:
-docker build -f panda/Dockerfile -t panda-bambu:9.8.0 .
-docker tag panda-bambu:9.8.0 panda-bambu:latest
+Usage: install.sh
+    [--enable-ultra96]      < install requierments for Xilinx Ultra96 board >
+    [--enable-enclustra]    < install requierments for Xilinx Enclustra XU7 board >
+    [--enbale-pynqz2]       < install requirements for Xilinx Pynq-Z2 board >
+    [--enable-ngultra]      < install requierments for NanoXplore NG-Ultra board >
+    [--help]                < display this help >
 ```
+
+Depending on the options selected, you will then be asked for the inputs required to install all dependencies, such as tool installation files, license keys, etc...
+
+A list of the items required for each option is shown in the following table:
+
+| Target board | Files | Credentials |
+| ------------ |-------|-------------|
+| Avnet Ultra96 | Vivado 2022.2 env script<br>Ultra96 SDK 'sdk-ultra96.sh' install script | - |
+| Enclustra Mercury+ XU7 | Vivado 2022.2 env script<br>Enclustra XU7 SDK 'sdk-enclustra.sh' install script | - |
+| Pynq-Z2 | Vivado 2022.2 env script<br>Pynq-Z2 SDK 'sdk-pynqz2.sh' install script | - |
+| NanoXplore NG-Ultra | NanoXplore 'license.lic' license file<br>NX Design Suite 23.5.1.2 'nxdesignsuite-23.5.1.2.tar.gz' install archive<br>NxBase2 2.5.3 'NxBase2-2.5.3.tar.gz' install archive<br>NXLMD 2.2 'NXLMD-2.2-linux.tar.gz' install archive | NanoXplore Gitlab username<br>NanoXplore Gitlab personal acces token<br>Hostame used with the NanoXplore license<br>Mac Address used with the NanoXplore license |
+
+The installation script also asks for a name for the docker images if you want to customize them. Otherwise, you can leave the name as default.
+
+At the end of the installation script, once all the docker images have been built, a [locod_env.sh](locod_env.sh) script is created in the repository, containing the various environment parameters needed to run the locod, i.e. the credentials and name of the installed docker images. This script can be modified manually if, for example, you want to use customized docker images.
+
+The environment script does not need to be run manually. It is automatically sourced when the main LoCod script is launched.
+
+<br>
 
 ## Usage
 

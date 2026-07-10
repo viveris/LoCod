@@ -21,4 +21,4 @@
 	url = ../LoCod-docker-sdk-ultra96.git
 [submodule "submodules/docker/LoCod-docker-sdk-pynqz2"]
 	path = submodules/docker/LoCod-docker-sdk-pynqz2
-	url = ../locod-docker-sdk-pynq-z2.git
+	url = ../LoCod-docker-sdk-pynq-z2.git
