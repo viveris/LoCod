@@ -36,6 +36,9 @@
 //Registers
 #define REG_VALUE(reg_index)		*((int*)reg_ptr + reg_index)
 
+#define REG_VALUE_GPIO(reg_index_gpio)		*((int*)reg_ptr_gpio + reg_index_gpio)
+
+
 #ifdef DEBUG
 #define DEBUG_PRINT(...) do{ printf(__VA_ARGS__ ); } while( 0 )
 #else
@@ -62,6 +65,7 @@ typedef struct {
 #if defined(LINUX)
 //Memory file descriptor
 int fd = -1;
+static int fd_opened_by_gpio = 0;
 #endif //LINUX
 
 //Control registers pointer
@@ -127,6 +131,173 @@ int init_locod(int nb_acc)
 
 	return 0;
 }
+#if defined(GPIO)
+
+int init_gpio(void)
+{
+#if defined(LINUX)
+
+    /* if LoCod isn't initialized */
+    if (fd < 0)
+    {
+        DEBUG_PRINT("%s - Open mem file descriptor... ", __func__);
+        fd = open("/dev/mem", O_RDWR | O_SYNC);
+        if (fd == -1)
+        {
+            DEBUG_PRINT("open fd failed\n");
+            return -1;
+        }
+		fd_opened_by_gpio = 1;
+        DEBUG_PRINT("open fd succeed\n");
+    }
+    DEBUG_PRINT("%s - Mmap GPIO registers at address 0x%x... ", __func__, REG_AXI_ADDR_GPIO);
+    reg_ptr_gpio = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, REG_AXI_ADDR_GPIO);
+    if (reg_ptr_gpio == MAP_FAILED)
+    {
+        DEBUG_PRINT("mmap failed\n");
+        return -1;
+    }
+    DEBUG_PRINT("mmap succeed\n");
+#elif defined(BAREMETAL)
+    reg_ptr_gpio = (void *)REG_AXI_ADDR_GPIO;
+#endif
+    return 0;
+}
+
+
+int gpio_pin_mode(unsigned int connector, unsigned int pin, unsigned int mode){
+	if((mode != OUTPUT) && (mode != INPUT)){
+		DEBUG_PRINT("selected mode not supported !\n")
+		return -1;
+	}
+	unsigned int max_pin;
+	unsigned int used_GPIO;
+	switch (connector)
+	{
+	case arduino_a0_a5:
+		used_GPIO=GPIO_TRI;	
+		max_pin=5;
+		break;
+	case arduino_ar0_ar13:
+		used_GPIO=GPIO2_TRI;
+		max_pin=13;
+		break;
+	default:
+		DEBUG_PRINT("Wrong connector !\n");
+		return -1;
+		break;
+	}
+	if(pin>max_pin){
+		DEBUG_PRINT("selected pin outside of range !\n")
+		return -1;
+	}
+	if(mode==INPUT){
+		REG_VALUE_GPIO(used_GPIO)|=(1<<pin);
+	}
+	else{
+		REG_VALUE_GPIO(used_GPIO)&=~(1<<pin);
+	}
+	return 0;
+}
+
+int gpio_pin_write(unsigned int connector, unsigned int pin, unsigned int value){
+	if((mode != HIGH) && (mode != LOW)){
+		DEBUG_PRINT("selected mode not supported !\n")
+		return -1;
+	}
+	unsigned int max_pin;
+	unsigned int used_GPIO;
+	switch (connector)
+	{
+	case arduino_a0_a5:
+		used_GPIO=GPIO_TRI;	
+		max_pin=5;
+		break;
+	case arduino_ar0_ar13:
+		used_GPIO=GPIO2_TRI;
+		max_pin=13;
+		break;
+	default:
+		DEBUG_PRINT("Wrong connector !\n");
+		return -1;
+		break;
+	}
+	if(pin>max_pin){
+		DEBUG_PRINT("selected pin outside of range !\n")
+		return -1;
+	}
+	if(mode==INPUT){
+		REG_VALUE_GPIO(used_GPIO)|=(1<<pin);
+	}
+	else{
+		REG_VALUE_GPIO(used_GPIO)&=~(1<<pin);
+	}
+	return 0;
+}
+
+int gpio_pin_read(unsigned int connector, unsigned int pin){
+	if((mode != OUTPUT) && (mode != INPUT)){
+		DEBUG_PRINT("selected mode not supported !\n")
+		return -1;
+	}
+	unsigned int max_pin;
+	unsigned int used_GPIO;
+	switch (connector)
+	{
+	case arduino_a0_a5:
+		used_GPIO=GPIO_TRI;	
+		max_pin=5;
+		break;
+	case arduino_ar0_ar13:
+		used_GPIO=GPIO2_TRI;
+		max_pin=13;
+		break;
+	default:
+		DEBUG_PRINT("Wrong connector !\n");
+		return -1;
+		break;
+	}
+	if(pin>max_pin){
+		DEBUG_PRINT("selected pin outside of range !\n")
+		return -1;
+	}
+	return((REG_VALUE_GPIO(used_GPIO)&(1<<pin))>>pin);
+}
+
+
+
+
+int deinit_gpio(void)
+{
+#if defined(LINUX)
+    DEBUG_PRINT("%s - Deinitializing GPIO...\n", __func__);
+    if (reg_ptr_gpio != NULL)
+    {
+        DEBUG_PRINT("%s - Munmap GPIO registers at address 0x%x... ", __func__, REG_AXI_ADDR_GPIO);
+        if (munmap(reg_ptr_gpio, 0x1000) == -1)
+        {
+            DEBUG_PRINT("munmap failed\n");
+            return -1;
+        }
+        reg_ptr_gpio = NULL;
+        DEBUG_PRINT("munmap succeed\n");
+    }
+	if (fd_opened_by_gpio)
+    {
+        DEBUG_PRINT("%s - Closing mem file descriptor... ", __func__);
+        close(fd);
+        fd = -1;
+        fd_opened_by_gpio = 0;
+        DEBUG_PRINT("succeed\n");
+    }
+#elif defined(BAREMETAL)
+    reg_ptr_gpio = NULL;
+#endif
+    return 0;
+}
+
+
+#endif
 
 
 int init_accelerator_memory(int param_len, int result_len, int accel)

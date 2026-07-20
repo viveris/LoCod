@@ -38,10 +38,28 @@
 #include <fcntl.h>
 #include <errno.h>
 
+//GPIO offsets
+#define GPIO_DATA   0
+#define GPIO_TRI    1
+#define GPIO2_DATA  2
+#define GPIO2_TRI   3
 
 
-//Registers ADDR
+//Connectors GPIO
+#define arduino_a0_a5       1
+#define arduino_ar0_ar13    2
+
+//Pin modes
+#define INPUT   1
+#define OUTPUT  0
+
+
+
+//Registers ADDR DDR
 #define REG_AXI_ADDR				0x43C00000
+
+//Registers ADDR GPIO
+#define REG_AXI_ADDR_GPIO			0x81200000
 
 //Physical memory ADDR
 #define DMA_BASE_ADDR 				0x10000000
@@ -53,3 +71,5 @@
 #define DEBUG
 
 #define LINUX
+
+#define GPIO
