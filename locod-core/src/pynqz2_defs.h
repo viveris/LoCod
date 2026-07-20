@@ -44,22 +44,72 @@
 #define GPIO2_DATA  2
 #define GPIO2_TRI   3
 
+#define MAX_PINS    45 //for this board with the pins configured below
 
-//Connectors GPIO
-#define arduino_a0_a5       1
-#define arduino_ar0_ar13    2
+//Pins :
+#define PIN_AR0     0
+#define PIN_AR1     1
+#define PIN_AR2     2
+#define PIN_AR3     3
+#define PIN_AR4     4
+#define PIN_AR5     5
+#define PIN_AR6     6
+#define PIN_AR7     7
+#define PIN_AR8     8
+#define PIN_AR9     9
+#define PIN_AR10    10
+#define PIN_AR11    11
+#define PIN_AR12    12
+#define PIN_AR13    13
+
+#define PIN_A0      14
+#define PIN_A1      15
+#define PIN_A2      16
+#define PIN_A3      17
+#define PIN_A4      18
+#define PIN_A5      19
+
+#define PIN_RPIO2   20
+#define PIN_RPIO3   21
+#define PIN_RPIO4   22
+#define PIN_RPIO5   23
+#define PIN_RPIO6   24
+#define PIN_RPIO7   25
+#define PIN_RPIO8   26
+#define PIN_RPIO9   27
+#define PIN_RPIO10  28
+#define PIN_RPIO11  29
+#define PIN_RPIO12  30
+#define PIN_RPIO13  31
+#define PIN_RPIO14  32
+#define PIN_RPIO15  33
+#define PIN_RPIO16  34
+#define PIN_RPIO17  35
+#define PIN_RPIO18  36
+#define PIN_RPIO19  37
+#define PIN_RPIO20  38
+#define PIN_RPIO21  39
+#define PIN_RPIO22  40
+#define PIN_RPIO23  41
+#define PIN_RPIO24  42
+#define PIN_RPIO25  43
+#define PIN_RPIO26  44
+
+
 
 //Pin modes
 #define INPUT   1
 #define OUTPUT  0
 
-
+//Pin states
+#define LOW     0
+#define HIGH    1
 
 //Registers ADDR DDR
 #define REG_AXI_ADDR				0x43C00000
 
 //Registers ADDR GPIO
-#define REG_AXI_ADDR_GPIO			0x81200000
+#define REG_AXI_ADDR_GPIO			0x41200000
 
 //Physical memory ADDR
 #define DMA_BASE_ADDR 				0x10000000

@@ -70,6 +70,7 @@ static int fd_opened_by_gpio = 0;
 
 //Control registers pointer
 void *reg_ptr = NULL;
+void *reg_ptr_gpio = NULL;
 
 //Shared memory for each accelerator
 accel_memory_t *accel_memory;
@@ -165,31 +166,23 @@ int init_gpio(void)
 }
 
 
-int gpio_pin_mode(unsigned int connector, unsigned int pin, unsigned int mode){
+int gpio_pin_mode(unsigned int pin, unsigned int mode){
 	if((mode != OUTPUT) && (mode != INPUT)){
-		DEBUG_PRINT("selected mode not supported !\n")
+		DEBUG_PRINT("selected mode not supported !\n");
 		return -1;
-	}
-	unsigned int max_pin;
+	}	
 	unsigned int used_GPIO;
-	switch (connector)
-	{
-	case arduino_a0_a5:
-		used_GPIO=GPIO_TRI;	
-		max_pin=5;
-		break;
-	case arduino_ar0_ar13:
-		used_GPIO=GPIO2_TRI;
-		max_pin=13;
-		break;
-	default:
-		DEBUG_PRINT("Wrong connector !\n");
-		return -1;
-		break;
+	if(pin<32){
+		used_GPIO=GPIO_TRI;
 	}
-	if(pin>max_pin){
-		DEBUG_PRINT("selected pin outside of range !\n")
-		return -1;
+	else{
+		if(pin<MAX_PINS){
+			used_GPIO=GPIO2_TRI;
+			pin-=32;
+		}
+		else{
+			DEBUG_PRINT("Wrong pin !\n");
+		}
 	}
 	if(mode==INPUT){
 		REG_VALUE_GPIO(used_GPIO)|=(1<<pin);
@@ -200,33 +193,25 @@ int gpio_pin_mode(unsigned int connector, unsigned int pin, unsigned int mode){
 	return 0;
 }
 
-int gpio_pin_write(unsigned int connector, unsigned int pin, unsigned int value){
-	if((mode != HIGH) && (mode != LOW)){
-		DEBUG_PRINT("selected mode not supported !\n")
+int gpio_pin_write(unsigned int pin, unsigned int value){
+	if((value != HIGH) && (value != LOW)){
+		DEBUG_PRINT("selected mode not supported !\n");
 		return -1;
 	}
-	unsigned int max_pin;
 	unsigned int used_GPIO;
-	switch (connector)
-	{
-	case arduino_a0_a5:
-		used_GPIO=GPIO_TRI;	
-		max_pin=5;
-		break;
-	case arduino_ar0_ar13:
-		used_GPIO=GPIO2_TRI;
-		max_pin=13;
-		break;
-	default:
-		DEBUG_PRINT("Wrong connector !\n");
-		return -1;
-		break;
+	if(pin<32){
+		used_GPIO=GPIO_DATA;
 	}
-	if(pin>max_pin){
-		DEBUG_PRINT("selected pin outside of range !\n")
-		return -1;
+	else{
+		if(pin<MAX_PINS){
+			used_GPIO=GPIO2_DATA;
+			pin-=32;
+		}
+		else{
+			DEBUG_PRINT("Wrong pin !\n");
+		}
 	}
-	if(mode==INPUT){
+	if(value==HIGH){
 		REG_VALUE_GPIO(used_GPIO)|=(1<<pin);
 	}
 	else{
@@ -235,31 +220,19 @@ int gpio_pin_write(unsigned int connector, unsigned int pin, unsigned int value)
 	return 0;
 }
 
-int gpio_pin_read(unsigned int connector, unsigned int pin){
-	if((mode != OUTPUT) && (mode != INPUT)){
-		DEBUG_PRINT("selected mode not supported !\n")
-		return -1;
-	}
-	unsigned int max_pin;
+int gpio_pin_read(unsigned int pin){
 	unsigned int used_GPIO;
-	switch (connector)
-	{
-	case arduino_a0_a5:
-		used_GPIO=GPIO_TRI;	
-		max_pin=5;
-		break;
-	case arduino_ar0_ar13:
-		used_GPIO=GPIO2_TRI;
-		max_pin=13;
-		break;
-	default:
-		DEBUG_PRINT("Wrong connector !\n");
-		return -1;
-		break;
+	if(pin<32){
+		used_GPIO=GPIO_DATA;
 	}
-	if(pin>max_pin){
-		DEBUG_PRINT("selected pin outside of range !\n")
-		return -1;
+	else{
+		if(pin<MAX_PINS){
+			used_GPIO=GPIO2_DATA;
+			pin-=32;
+		}
+		else{
+			DEBUG_PRINT("Wrong pin !\n");
+		}
 	}
 	return((REG_VALUE_GPIO(used_GPIO)&(1<<pin))>>pin);
 }
@@ -276,11 +249,11 @@ int deinit_gpio(void)
         DEBUG_PRINT("%s - Munmap GPIO registers at address 0x%x... ", __func__, REG_AXI_ADDR_GPIO);
         if (munmap(reg_ptr_gpio, 0x1000) == -1)
         {
-            DEBUG_PRINT("munmap failed\n");
+            DEBUG_PRINT("munmap GPIO failed\n");
             return -1;
         }
         reg_ptr_gpio = NULL;
-        DEBUG_PRINT("munmap succeed\n");
+        DEBUG_PRINT("munmap GPIO succeed\n");
     }
 	if (fd_opened_by_gpio)
     {

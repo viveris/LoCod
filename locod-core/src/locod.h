@@ -63,5 +63,12 @@ int wait_accelerator(void *result_addr, int accel);
 int get_time_ns_FPGA(int accel);
 int deinit_locod(void);
 
+#if defined(GPIO)
+int init_gpio(void);
+int gpio_pin_mode(unsigned int pin, unsigned int mode);
+int gpio_pin_write(unsigned int pin, unsigned int value);
+int gpio_pin_read(unsigned int pin);
+int deinit_gpio(void);
+#endif
 
 #endif /* LOCOD_H */
