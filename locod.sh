@@ -301,10 +301,9 @@ for ACC in $FPGA_FUNC; do
 		cp *.mem ../;\
 		cd ..;\
 		rm -rf bambu"
-	cp temp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
-	cp temp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
-	sed -i 's|/workdir/bambu/||g' \
-    ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
+	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
+	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
+	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
 done
 
 echo "Done !"
