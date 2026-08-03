@@ -9,11 +9,10 @@ The **PYNQ-Z2** is a development board based on the **Xilinx Zynq-7000 SoC (XC7Z
 - DDR3 memory
 - Ethernet connectivity
 - USB interfaces
-- HDMI Input/Output
 - Arduino and Raspberry Pi compatible headers
 - General-Purpose I/O (GPIO)
 
-The board is commonly used for embedded Linux, FPGA development, hardware acceleration, and PYNQ-based applications.
+The board is commonly used for embedded Linux, FPGA development and hardware acceleration.
 
 
 
@@ -25,10 +24,13 @@ A jumper located on the board permits the selection of the boot mode.
 Before powering on the board :
 
 1. Insert the prepared microSD card.
-2. Configure the power selection jumper.
-3. Connect power.
-4. Power on the board.
-5. Wait for Linux to finish booting.
+2. Choose the SD boot mode with the jumper.
+3. Configure the power selection jumper.
+4. Connect power.
+5. Power on the board.
+6. Wait for Linux to finish booting.
+
+There is a blinking led on the board when you power it on, it doesn't mean linux is booted or CPU is runing ! It just means that FPGA circuit is working properly. (That LED is blinking with internal FPGA programm and not linked to anything related to CPU)
 
 ⚠️ Be extra delicate when inserting the SD card, the SD card reader is fragile ! 
 
@@ -46,8 +48,6 @@ To choose the power source of the PYNQ-Z2 you can move the jumper to select the 
 Verify the jumper position before turning on the board.
 
 ⚠️ If more power is required the regulator is recommended. 
-
-
 
 
 ## Connecting to the Board
@@ -111,7 +111,7 @@ Connect the board directly to your computer using an Ethernet cable.
 With the tool of your choice connect to the board :
 
 ```text
-ip : 192.168.0.10
+IP Address : 192.168.0.10
 port : 22
 ```
 
@@ -119,21 +119,19 @@ port : 22
 
 ## Login Credentials
 
-### Root User
+### Root
 
 ```text
 Username: root
 Password: <none>
 ```
 
-### PetaLinux User
+### User
 
 ```text
-Username: petalinux
-Password: TODO
+Username: user
+Password: user
 ```
-
-
 
 ## GPIO Pinout
 
