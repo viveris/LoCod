@@ -36,6 +36,9 @@
 //Registers
 #define REG_VALUE(reg_index)		*((int*)reg_ptr + reg_index)
 
+#define REG_VALUE_GPIO(reg_index_gpio)		*((int*)reg_ptr_gpio + reg_index_gpio)
+
+
 #ifdef DEBUG
 #define DEBUG_PRINT(...) do{ printf(__VA_ARGS__ ); } while( 0 )
 #else
@@ -62,10 +65,12 @@ typedef struct {
 #if defined(LINUX)
 //Memory file descriptor
 int fd = -1;
+static int fd_opened_by_gpio = 0;
 #endif //LINUX
 
 //Control registers pointer
 void *reg_ptr = NULL;
+void *reg_ptr_gpio = NULL;
 
 //Shared memory for each accelerator
 accel_memory_t *accel_memory;
@@ -127,6 +132,145 @@ int init_locod(int nb_acc)
 
 	return 0;
 }
+#if defined(GPIO)
+
+int init_gpio(void)
+{
+#if defined(LINUX)
+
+    /* if LoCod isn't initialized */
+    if (fd < 0)
+    {
+        DEBUG_PRINT("%s - Open mem file descriptor... ", __func__);
+        fd = open("/dev/mem", O_RDWR | O_SYNC);
+        if (fd == -1)
+        {
+            DEBUG_PRINT("open fd failed\n");
+            return -1;
+        }
+		fd_opened_by_gpio = 1;
+        DEBUG_PRINT("open fd succeed\n");
+    }
+    DEBUG_PRINT("%s - Mmap GPIO registers at address 0x%x... ", __func__, REG_AXI_ADDR_GPIO);
+    reg_ptr_gpio = mmap(NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, fd, REG_AXI_ADDR_GPIO);
+    if (reg_ptr_gpio == MAP_FAILED)
+    {
+        DEBUG_PRINT("mmap failed\n");
+        return -1;
+    }
+    DEBUG_PRINT("mmap succeed\n");
+#elif defined(BAREMETAL)
+    reg_ptr_gpio = (void *)REG_AXI_ADDR_GPIO;
+#endif
+    return 0;
+}
+
+
+int gpio_pin_mode(unsigned int pin, unsigned int mode){
+	if((mode != OUTPUT) && (mode != INPUT)){
+		DEBUG_PRINT("selected mode not supported !\n");
+		return -1;
+	}	
+	unsigned int used_GPIO;
+	if(pin<32){
+		used_GPIO=GPIO_TRI;
+	}
+	else{
+		if(pin<MAX_PINS){
+			used_GPIO=GPIO2_TRI;
+			pin-=32;
+		}
+		else{
+			DEBUG_PRINT("Wrong pin !\n");
+		}
+	}
+	if(mode==INPUT){
+		REG_VALUE_GPIO(used_GPIO)|=(1<<pin);
+	}
+	else{
+		REG_VALUE_GPIO(used_GPIO)&=~(1<<pin);
+	}
+	return 0;
+}
+
+int gpio_pin_write(unsigned int pin, unsigned int value){
+	if((value != HIGH) && (value != LOW)){
+		DEBUG_PRINT("selected mode not supported !\n");
+		return -1;
+	}
+	unsigned int used_GPIO;
+	if(pin<32){
+		used_GPIO=GPIO_DATA;
+	}
+	else{
+		if(pin<MAX_PINS){
+			used_GPIO=GPIO2_DATA;
+			pin-=32;
+		}
+		else{
+			DEBUG_PRINT("Wrong pin !\n");
+		}
+	}
+	if(value==HIGH){
+		REG_VALUE_GPIO(used_GPIO)|=(1<<pin);
+	}
+	else{
+		REG_VALUE_GPIO(used_GPIO)&=~(1<<pin);
+	}
+	return 0;
+}
+
+int gpio_pin_read(unsigned int pin){
+	unsigned int used_GPIO;
+	if(pin<32){
+		used_GPIO=GPIO_DATA;
+	}
+	else{
+		if(pin<MAX_PINS){
+			used_GPIO=GPIO2_DATA;
+			pin-=32;
+		}
+		else{
+			DEBUG_PRINT("Wrong pin !\n");
+		}
+	}
+	return((REG_VALUE_GPIO(used_GPIO)&(1<<pin))>>pin);
+}
+
+
+
+
+int deinit_gpio(void)
+{
+#if defined(LINUX)
+    DEBUG_PRINT("%s - Deinitializing GPIO...\n", __func__);
+    if (reg_ptr_gpio != NULL)
+    {
+        DEBUG_PRINT("%s - Munmap GPIO registers at address 0x%x... ", __func__, REG_AXI_ADDR_GPIO);
+        if (munmap(reg_ptr_gpio, 0x1000) == -1)
+        {
+            DEBUG_PRINT("munmap GPIO failed\n");
+            return -1;
+        }
+        reg_ptr_gpio = NULL;
+        DEBUG_PRINT("munmap GPIO succeed\n");
+    }
+	if (fd_opened_by_gpio)
+    {
+        DEBUG_PRINT("%s - Closing mem file descriptor... ", __func__);
+        close(fd);
+        fd = -1;
+        fd_opened_by_gpio = 0;
+        DEBUG_PRINT("succeed\n");
+    }
+#elif defined(BAREMETAL)
+    reg_ptr_gpio = NULL;
+#endif
+    return 0;
+}
+
+
+#endif
 
 
 int init_accelerator_memory(int param_len, int result_len, int accel)
