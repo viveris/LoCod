@@ -22,3 +22,4 @@
 [submodule "submodules/docker/LoCod-docker-sdk-pynqz2"]
 	path = submodules/docker/LoCod-docker-sdk-pynqz2
 	url = ../LoCod-docker-sdk-pynq-z2.git
+	branch = main
