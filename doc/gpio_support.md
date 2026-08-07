@@ -166,6 +166,16 @@ They are located on the board at theses locations:
 <img src="images/pynq_gpios.png" width="800em"/><br>
 
 
+### ⚠️ Note for input config :
+
+When in input mode pins are pulled up or down depending on the pins you're using: 
+
+- Raspberry Pi GPIO Header → INPUT_PULLUP
+- Arduino Digital Header → INPUT_PULLUP
+- Arduino Analog Header → INPUT_PULLDOWN
+
+To change the state you'll need to pull to GND with INPUT_PULLUP or you'll need to pull to +3.3v for INPUT_PULLDOWN.
+
 ## Available functions
 
 ### GPIO initialization
