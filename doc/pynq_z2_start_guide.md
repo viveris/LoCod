@@ -1,5 +1,6 @@
 # PYNQ-Z2 Quick Start Guide
 <img src="images/pynq_z2.png" width="500em"/><br>
+
 ## Overview
 
 The **PYNQ-Z2** is a development board based on the **Xilinx Zynq-7000 SoC (XC7Z020)**, combining:
@@ -11,9 +12,11 @@ The **PYNQ-Z2** is a development board based on the **Xilinx Zynq-7000 SoC (XC7Z
 - USB interfaces
 - Arduino and Raspberry Pi compatible headers
 - General-Purpose I/O (GPIO)
+- SD card slot
 
 The board is commonly used for embedded Linux, FPGA development and hardware acceleration.
 
+The SD card slot is utilized to boot up an embedded linux image. This gives us the advantage to have a complete linux system on the board. It's easier to test different programs on the go without having to reflash everytime an SD card or the board directly. When linux is booted on the board we can connect to it and add our files via  USB key or SFTP (network protocol). We can then run our programs directly on the board via the terminal. 
 
 
 ## First Boot
@@ -21,10 +24,10 @@ A jumper located on the board permits the selection of the boot mode.
 
 <img src="images/pynq_z2_boot.png" width="500em"/><br>
 
-Before powering on the board :
+Before powering the board :
 
 1. Insert the prepared microSD card.
-2. Choose the SD boot mode with the jumper.
+2. Choose the SD boot mode with the jumper (JP1).
 3. Configure the power selection jumper.
 4. Connect power.
 5. Power on the board.
@@ -41,13 +44,13 @@ There is a blinking led on the board when you power it on, it doesn't mean linux
 <img src="images/pynq_z2_power.png" width="500em"/><br>
 
 
-To choose the power source of the PYNQ-Z2 you can move the jumper to select the source. It can be powered using either:
+To choose the power source of the PYNQ-Z2 you can move the jumper (JP9) to select the source. It can be powered using either:
 - **USB** : up position → Power from Micro-USB
-- **REG** : down position → Power from 12V barrel jack or Vin pin
+- **REG** : down position → Power from 12V power jack or Vin pin
 
 Verify the jumper position before turning on the board.
 
-⚠️ If more power is required the regulator is recommended. 
+⚠️ If more power is required the regulator (REG) is recommended. 
 
 
 ## Connecting to the Board
@@ -56,7 +59,7 @@ Possible connection types :
 - Serial Console
 - Ethernet / SSH Access
 
-The easiest way to monitor boot messages and access the Linux console is through the serial interface. But the ssh offers the possibility to connect to the board remotely (to avoid damaging it or to share it with multiple clients remotely). If using software like MobaXterm ssh enables SSH browser : a neat way of transfering files to or from the board. 
+The easiest way to monitor boot messages and access the Linux console is through the serial interface. However, the SSH access mekes it possible to connect to the board remotely, thus avoid damaging the board. It is useful when the board is shared with multiple clients remotely. If using software like MobaXterm SSH enables SSH browser : a neat way of transferring files to or from the board. 
 
 Examples of terminal software:
 
@@ -65,6 +68,8 @@ Examples of terminal software:
 - screen
 
 ### Serial
+
+You need to use this configuration to connect to the board: 
 
 ```text
 Baud rate: 115200
@@ -95,7 +100,7 @@ Netmask    : 255.255.255.0
 Where:
 
 - `x` must be between `1` and `254`
-- Do **not** use `10` (already used by the board)
+- **Do not use** `10` (already used by the board)
 
 Example:
 
@@ -104,7 +109,7 @@ IP Address : 192.168.0.100
 Netmask    : 255.255.255.0
 ```
 
-#### Connect through ssh
+#### Connect through SSH
 
 Connect the board directly to your computer using an Ethernet cable.
 
@@ -139,14 +144,7 @@ Password: user
 
 Applying higher voltages may permanently damage the board.
 
-GPIO documentation and pinout reference:
-
-- See the GPIO documentation available in this repository `gpio_readme`.
-- Official board documentation also contains detailed pin mappings for:
-  - Arduino Header
-  - Raspberry Pi Header
-  - PMOD Connectors
-
+See the [GPIO documentation](gpio_support.md) available in this repository.
 
 
 ## Useful Commands
@@ -166,7 +164,7 @@ ping 192.168.0.10
 
 ---
 
-## Notes
+## Tips
 
 - Use the serial console when debugging boot issues.
 - Ensure the microSD card is properly inserted before power-up → ⚠️ SD card reader fragile ! 
