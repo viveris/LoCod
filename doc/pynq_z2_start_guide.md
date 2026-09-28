@@ -59,7 +59,7 @@ Possible connection types :
 - Serial Console
 - Ethernet / SSH Access
 
-The easiest way to monitor boot messages and access the Linux console is through the serial interface. However, the SSH access mekes it possible to connect to the board remotely, thus avoid damaging the board. It is useful when the board is shared with multiple clients remotely. If using software like MobaXterm SSH enables SSH browser : a neat way of transferring files to or from the board. 
+The easiest way to monitor boot messages and access the Linux console is through the serial interface. However, the SSH access makes it possible to connect to the board remotely, thus avoid damaging the board. It is useful when the board is shared with multiple clients remotely. If using software like MobaXterm SSH enables SSH browser : a neat way of transferring files to or from the board. 
 
 Examples of terminal software:
 
@@ -146,6 +146,21 @@ Applying higher voltages may permanently damage the board.
 
 See the [GPIO documentation](gpio_support.md) available in this repository.
 
+## Soft Reset
+
+The PYNQ-Z2 provides a **soft reset button** that can be used to restart the system without disconnecting the board from power.
+
+Pressing the soft reset button resets the **processor (CPU)** and restarts the Linux system. The FPGA configuration and power remain active.
+
+The soft reset can be useful when:
+
+- Linux becomes unresponsive.
+- You want to restart the system without unplugging the board.
+- You need to reboot after making system-level changes.
+
+⚠️ **Any unsaved data may be lost when using the soft reset.** Make sure files and programs are saved before resetting the board.
+
+After pressing the button, wait for Linux to boot again before reconnecting through SSH or using the terminal.
 
 ## Useful Commands
 
@@ -161,7 +176,30 @@ Verify Ethernet connectivity:
 ping 192.168.0.10
 ```
 
+## Transfering Files
 
+### USB Key
+
+The recommended method for transferring files is using a USB key.
+
+- Insert the USB key into one of the board's USB ports.
+- Wait a few seconds for Linux to detect and mount the USB key.
+- The USB key should be available under:
+
+```text
+/media/TODO: INSERT PATH
+````
+
+You can check the contents of the USB key with:
+
+```text
+ls /media/store
+````
+
+- ⚠️ Always safely unmount the USB key before removing it to avoid data corruption:
+```text
+umount /media/store
+````
 ---
 
 ## Tips
