@@ -178,11 +178,11 @@ source <Vivado 2022.1 install directory>/settings64.sh
 ./locod.sh -t ultra96 -f demo/example_readme/main.c
 ```
 
-Once the locod has been compiled, our two outputs **fpga.bit** and **locod-cpu** can be found in the **locod-output/** folder. The name of outputs may vary depending on the selected target.
+Once the locod has been compiled, our three outputs **fpga.bit**, **fpga.bin** and **locod-cpu** can be found in the **locod-output/** folder. The name of outputs may vary depending on the selected target.
 
 We can then take these files, send them to the ultra96 board, flash the FPGA, run the locod-cpu executable, and finally observe the results in the console:
 ```console
-fpgautil -b fpga.bit
+fpgautil -b fpga.bin
 ...
 
 ./locod-cpu
