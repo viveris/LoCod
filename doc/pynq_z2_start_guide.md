@@ -187,18 +187,18 @@ The recommended method for transferring files is using a USB key.
 - The USB key should be available under:
 
 ```text
-/media/TODO: INSERT PATH
+/run/media/<your_usb_key>
 ````
 
 You can check the contents of the USB key with:
 
 ```text
-ls /media/store
+ls /run/media/<your_usb_key>
 ````
 
 - ⚠️ Always safely unmount the USB key before removing it to avoid data corruption:
 ```text
-umount /media/store
+umount /run/media/<your_usb_key>
 ````
 ---
 
