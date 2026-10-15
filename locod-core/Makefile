@@ -13,7 +13,8 @@ CPPFLAGS +=
 LDFLAGS +=
 LDLIBS += -lm
 
-OBJS = $(addprefix $(OBJDIR)/, main.o locod.o)
+SRCS = $(wildcard $(SRCDIR)/*.c)
+OBJS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRCS))
 
 all: locod-cpu
 
