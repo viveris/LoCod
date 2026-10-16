@@ -44,7 +44,7 @@ LOCOD_CPU_DIR=${SCRIPT_DIR}/locod-core
 LOCOD_FPGA_DIR=${SCRIPT_DIR}/submodules/locod-fpga
 
 # Panda-Bambu compilation parameters
-BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -DLOCOD_FPGA -O0"
+BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -I/workdir -DLOCOD_FPGA -O0"
 
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1
@@ -90,7 +90,8 @@ fi
 help() {
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
-		[ -f | --file ] < main C file >
+		[ --hard-file ] < C files for the FPGA >
+		[ --soft-file ] < C and H files for the CPU >
 		[ --no-hard ] don't generate bitstream
 		[ --no-soft ] don't generate executable
 		[ -c | --check ] Verify all the dependancies installation
@@ -114,10 +115,23 @@ while [[ $# -gt 0 ]]; do
 			shift # past argument
 			echo "Check activated"
 			;;
-		-f|--file)
-			FILE="$2"
-			shift # past argument
-			shift # past value
+		--hard-file)
+    		shift # past argument
+			HARD_FILES=()
+
+			while [[ $# -gt 0 && "$1" != -* ]]; do
+				HARD_FILES+=("$1")
+				shift
+			done
+			;;
+		--soft-file)
+    		shift # past argument
+			SOFT_FILES=()
+
+			while [[ $# -gt 0 && "$1" != -* ]]; do
+				SOFT_FILES+=("$1")
+				shift
+			done
 			;;
 		--no-soft)
 			CPU=0
@@ -135,8 +149,12 @@ while [[ $# -gt 0 ]]; do
 			echo "Unknown option $1"
 			exit 1
 			;;
+		
 	esac
 done
+
+#Temp file to store the main C file name, used in some functions
+FILE="${HARD_FILES[0]}"
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
@@ -248,8 +266,13 @@ if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
 
-cp ${FILE} ${LOCOD_CPU_DIR}/src/main.c
+for HARD_FILE in "${HARD_FILES[@]}"; do
+    cp "$HARD_FILE" "${LOCOD_CPU_DIR}/src/"
+done
 
+for SOFT_FILE in "${SOFT_FILES[@]}"; do
+	cp "$SOFT_FILE" "${LOCOD_CPU_DIR}/src/"
+done
 case $TARGET in
 	ultra96)
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
@@ -290,13 +313,27 @@ echo -n "Generating RTL code of accelerators functions ... "
 
 FPGA_FUNC=$(get_fpga_func $FILE)
 
-cp $FILE ${SCRIPT_DIR}/tmp/main.c
+
+
+for HARD_FILE in "${HARD_FILES[@]}"; do
+	cp "$HARD_FILE" ${SCRIPT_DIR}/tmp/
+done
+for SOFT_FILE in "${SOFT_FILES[@]}"; do
+	cp "$SOFT_FILE" ${SCRIPT_DIR}/tmp/
+done
+
+
+FILE_ARGS=()
+for f in "${HARD_FILES[@]}"; do
+    FILE_ARGS+=("../$(basename "$f")")
+done
+
 
 for ACC in $FPGA_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"mkdir bambu;\
 		cd bambu;\
-		bambu ${BAMBU_OPT} --top-fname=${ACC} ../main.c;\
+		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
 		cp ${ACC}.v ../;\
 		cp *.mem ../;\
 		cd ..;\
@@ -392,3 +429,10 @@ fi
 #***************** Removing temporary files and folders ******************/
 #*************************************************************************/
 rm -rf ${SCRIPT_DIR}/tmp
+for HARD_FILE in "${HARD_FILES[@]}"; do
+	rm -f "${LOCOD_CPU_DIR}/src/$(basename "$HARD_FILE")"
+done
+
+for SOFT_FILE in "${SOFT_FILES[@]}"; do
+	rm -f "${LOCOD_CPU_DIR}/src/$(basename "$SOFT_FILE")"
+done
