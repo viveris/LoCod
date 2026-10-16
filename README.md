@@ -158,11 +158,12 @@ The **locod.sh** script must be used as follows:
 ```console
 ./locod.sh  
     [ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
-    [ -f | --file ] < main C file >
-    [ --no-hard ] don't generate bitstream
-    [ --no-soft ] don't generate executable
-    [ -c | --check ] Verify all the dependancies installation
-    [ -h | --help  ]
+	[ --hard-file ] < C files for the FPGA >
+	[ --soft-file ] < C and H files for the CPU >
+	[ --no-hard ] don't generate bitstream
+	[ --no-soft ] don't generate executable
+	[ -c | --check ] Verify all the dependancies installation
+	[ -h | --help  ]
 ```
 
 The execution of the LoCod tool can then be monitored with logs in the console.
