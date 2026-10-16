@@ -115,7 +115,7 @@ while [[ $# -gt 0 ]]; do
 			shift # past argument
 			echo "Check activated"
 			;;
-		--hard-file)
+		-f|--hard-file)
     		shift # past argument
 			HARD_FILES=()
 
@@ -124,7 +124,7 @@ while [[ $# -gt 0 ]]; do
 				shift
 			done
 			;;
-		--soft-file)
+		-s|--soft-file)
     		shift # past argument
 			SOFT_FILES=()
 
@@ -361,25 +361,29 @@ USED_ACC_NB=$(get_used_acc_number $FILE)
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
+FPGA_FUNC=$(get_fpga_func $FILE | sort -u)
+
 for ACC in $FPGA_FUNC; do
-	ACC_NUM=$(get_fct_acc_number $FILE $ACC)
-	cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
-	sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
-	sed -i "s/generated_ip_inst : entity work.XXXX/generated_ip_inst : entity work.${ACC}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
-	echo 	"accelerator_${ACC_NUM}_inst : entity work.accelerator_${ACC_NUM}
-			port map(
-				clk					    => clk_i,
-				rst 				    => rstn_i,
-				start 				    => registers_out(0)(2*${ACC_NUM}),
-				reset 				    => registers_out(0)(2*${ACC_NUM}+1),
-				param 				    => registers_out(2*${ACC_NUM}+1),
-				result  			    => registers_out(2*${ACC_NUM}+1+1),
-				status_end_process 	    => registers_in(0)(${ACC_NUM}),
-				duration_count_latched  => registers_in(${ACC_NUM}+1),
-				M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
-				M_AXI_in                => M_AXIL_in_array(${ACC_NUM})
-			);
-			" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
+	ACC_NUMS=$(get_fct_acc_number $FILE $ACC)
+    for ACC_NUM in $ACC_NUMS; do
+		cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
+		sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
+		sed -i "s/generated_ip_inst : entity work.XXXX/generated_ip_inst : entity work.${ACC}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
+		echo 	"accelerator_${ACC_NUM}_inst : entity work.accelerator_${ACC_NUM}
+				port map(
+					clk					    => clk_i,
+					rst 				    => rstn_i,
+					start 				    => registers_out(0)(2*${ACC_NUM}),
+					reset 				    => registers_out(0)(2*${ACC_NUM}+1),
+					param 				    => registers_out(2*${ACC_NUM}+1),
+					result  			    => registers_out(2*${ACC_NUM}+1+1),
+					status_end_process 	    => registers_in(0)(${ACC_NUM}),
+					duration_count_latched  => registers_in(${ACC_NUM}+1),
+					M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
+					M_AXI_in                => M_AXIL_in_array(${ACC_NUM})
+				);
+				" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
+	done
 done
 
 echo "end Behavioral;" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
