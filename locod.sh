@@ -44,7 +44,7 @@ LOCOD_CPU_DIR=${SCRIPT_DIR}/locod-core
 LOCOD_FPGA_DIR=${SCRIPT_DIR}/submodules/locod-fpga
 
 # Panda-Bambu compilation parameters
-BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -I/workdir -DLOCOD_FPGA -O0"
+BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -I/workdir -D_FORTIFY_SOURCE=0 -DLOCOD_FPGA -O2"
 
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1
