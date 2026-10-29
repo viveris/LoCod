@@ -115,21 +115,11 @@ while [[ $# -gt 0 ]]; do
 			shift # past argument
 			echo "Check activated"
 			;;
-		-f|--hard-file)
+		-f|--file)
     		shift # past argument
-			HARD_FILES=()
-
+			FILES=()
 			while [[ $# -gt 0 && "$1" != -* ]]; do
-				HARD_FILES+=("$1")
-				shift
-			done
-			;;
-		-s|--soft-file)
-    		shift # past argument
-			SOFT_FILES=()
-
-			while [[ $# -gt 0 && "$1" != -* ]]; do
-				SOFT_FILES+=("$1")
+				FILES+=("$1")
 				shift
 			done
 			;;
@@ -154,12 +144,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 #Temp file to store the main C file name, used in some functions
-FILE="${HARD_FILES[0]}"
+MAIN_FILE="${FILES[0]}"
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 if [[ $CHECK == 0 ]]; then
-	if [[ $FILE == "" ]]; then
+	if [[ $MAIN_FILE == "" ]]; then
 		echo "No file specified"
 		help
 		exit 1
@@ -266,13 +256,11 @@ if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
 
-for HARD_FILE in "${HARD_FILES[@]}"; do
-    cp "$HARD_FILE" "${LOCOD_CPU_DIR}/src/"
+for FILE in "${FILES[@]}"; do
+    cp "$FILE" "${LOCOD_CPU_DIR}/src/"
 done
 
-for SOFT_FILE in "${SOFT_FILES[@]}"; do
-	cp "$SOFT_FILE" "${LOCOD_CPU_DIR}/src/"
-done
+
 case $TARGET in
 	ultra96)
 		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
@@ -311,21 +299,22 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
 
-FPGA_FUNC=$(get_fpga_func $FILE)
+FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
 
 
 
-for HARD_FILE in "${HARD_FILES[@]}"; do
-	cp "$HARD_FILE" ${SCRIPT_DIR}/tmp/
+for FILE in "${FILES[@]}"; do
+	cp "$FILE" ${SCRIPT_DIR}/tmp/
 done
-for SOFT_FILE in "${SOFT_FILES[@]}"; do
-	cp "$SOFT_FILE" ${SCRIPT_DIR}/tmp/
-done
+
 
 
 FILE_ARGS=()
-for f in "${HARD_FILES[@]}"; do
-    FILE_ARGS+=("../$(basename "$f")")
+for f in "${FILES[@]}"; do	
+	# if file is a C file, add it to the list of files to compile
+	if [[ "$f" == *.c ]]; then
+    	FILE_ARGS+=("../$(basename "$f")")
+	fi
 done
 
 
@@ -355,16 +344,16 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
 
-MAX_ACC_NB=$(get_max_acc_number $FILE)
-USED_ACC_NB=$(get_used_acc_number $FILE)
+MAX_ACC_NB=$(get_max_acc_number $MAIN_FILE)
+USED_ACC_NB=$(get_used_acc_number $MAIN_FILE)
 
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
-FPGA_FUNC=$(get_fpga_func $FILE | sort -u)
+FPGA_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
 
 for ACC in $FPGA_FUNC; do
-	ACC_NUMS=$(get_fct_acc_number $FILE $ACC)
+	ACC_NUMS=$(get_fct_acc_number $MAIN_FILE $ACC)
     for ACC_NUM in $ACC_NUMS; do
 		cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
 		sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
@@ -433,10 +422,6 @@ fi
 #***************** Removing temporary files and folders ******************/
 #*************************************************************************/
 rm -rf ${SCRIPT_DIR}/tmp
-for HARD_FILE in "${HARD_FILES[@]}"; do
-	rm -f "${LOCOD_CPU_DIR}/src/$(basename "$HARD_FILE")"
-done
-
-for SOFT_FILE in "${SOFT_FILES[@]}"; do
-	rm -f "${LOCOD_CPU_DIR}/src/$(basename "$SOFT_FILE")"
+for FILE in "${FILES[@]}"; do
+	rm -f "${LOCOD_CPU_DIR}/src/$(basename "$FILE")"
 done
