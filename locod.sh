@@ -326,8 +326,8 @@ for ACC in $FPGA_FUNC; do
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
 		cp ${ACC}.v ../;\
 		cp *.mem ../;"
-	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
-	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
+	cp ${SCRIPT_DIR}/tmp/src/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
+	cp ${SCRIPT_DIR}/tmp/src/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
 	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
 done
 
