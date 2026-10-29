@@ -121,8 +121,10 @@ You can verify the installation of all packages with the following commande :
 ```console
 ./locod.sh  
 ./locod.sh --check -t ultra96
+```
 
 The result is:
+```console
 ********************************************************************************
                     ____                  _
                    | __ )  __ _ _ __ ___ | |_   _   _
@@ -158,12 +160,17 @@ The **locod.sh** script must be used as follows:
 ```console
 ./locod.sh  
     [ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
-	[ --hard-file ] < C files for the FPGA >
-	[ --soft-file ] < C and H files for the CPU >
-	[ --no-hard ] don't generate bitstream
-	[ --no-soft ] don't generate executable
-	[ -c | --check ] Verify all the dependancies installation
-	[ -h | --help  ]
+    [ -f | --file ] < C and H files of the application, separated by spaces >
+    [ --no-hard ] don't generate bitstream
+    [ --no-soft ] don't generate executable
+    [ -c | --check ] Verify all the dependancies installation
+    [ -h | --help  ]
+```
+
+**File order matters.** The first file given to `-f` must be the one containing the `init_locod()` call and the `FPGA()` macro calls (usually the file with `main()`). LoCod only scans this first file to find the accelerators to generate, so `FPGA()` calls located in any other file are ignored. All the `.c` files are also passed to Panda-Bambu, so any code that cannot be synthesized (system includes, `main()`, I/O...) must be wrapped in `#ifndef LOCOD_FPGA`.
+
+```console
+./locod.sh -t ultra96 -f demo/example_readme/main.c utils.c utils.h
 ```
 
 The execution of the LoCod tool can then be monitored with logs in the console.
