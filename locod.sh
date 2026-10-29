@@ -245,6 +245,8 @@ fi
 rm -rf ${LOCOD_FPGA_DIR}/src/generated_files/*
 mkdir -p ${SCRIPT_DIR}/tmp
 rm -rf ${SCRIPT_DIR}/tmp/*
+mkdir -p ${SCRIPT_DIR}/tmp/src
+rm -rf ${SCRIPT_DIR}/tmp/src/*
 mkdir -p ${SCRIPT_DIR}/locod-output
 rm -rf ${SCRIPT_DIR}/locod-output/*
 
@@ -256,34 +258,37 @@ if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
 
+cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
+cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
+
 for FILE in "${FILES[@]}"; do
-    cp "$FILE" "${LOCOD_CPU_DIR}/src/"
+	cp "$FILE" ${SCRIPT_DIR}/tmp/src/
 done
 
 
 case $TARGET in
 	ultra96)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
-		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	enclustra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
-		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	pynqz2)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_PYNQZ2_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/workdir ${SDK_PYNQZ2_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;\
 			make re'
-		cp ${LOCOD_CPU_DIR}/bin/locod-cpu locod-output/locod-cpu
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	ngultra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
 			'make'
-		cp ${LOCOD_CPU_DIR}/out/locod-cpu.elf ${SCRIPT_DIR}/locod-output/locod-cpu.elf
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 esac
 
@@ -303,9 +308,6 @@ FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
 
 
 
-for FILE in "${FILES[@]}"; do
-	cp "$FILE" ${SCRIPT_DIR}/tmp/
-done
 
 
 
@@ -313,20 +315,17 @@ FILE_ARGS=()
 for f in "${FILES[@]}"; do	
 	# if file is a C file, add it to the list of files to compile
 	if [[ "$f" == *.c ]]; then
-    	FILE_ARGS+=("../$(basename "$f")")
+    	FILE_ARGS+=("$(basename "$f")")
 	fi
 done
 
 
 for ACC in $FPGA_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
-		"mkdir bambu;\
-		cd bambu;\
+		"cd /workdir/src;\
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
 		cp ${ACC}.v ../;\
-		cp *.mem ../;\
-		cd ..;\
-		rm -rf bambu"
+		cp *.mem ../;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
 	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
@@ -422,6 +421,4 @@ fi
 #***************** Removing temporary files and folders ******************/
 #*************************************************************************/
 rm -rf ${SCRIPT_DIR}/tmp
-for FILE in "${FILES[@]}"; do
-	rm -f "${LOCOD_CPU_DIR}/src/$(basename "$FILE")"
-done
+
