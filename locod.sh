@@ -315,7 +315,7 @@ FILE_ARGS=()
 for f in "${FILES[@]}"; do	
 	# if file is a C file, add it to the list of files to compile
 	if [[ "$f" == *.c ]]; then
-    	FILE_ARGS+=("../$(basename "$f")")
+    	FILE_ARGS+=("$(basename "$f")")
 	fi
 done
 
@@ -323,14 +323,9 @@ done
 for ACC in $FPGA_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
-		mkdir bambu;\
-		cd bambu;\
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
-		ls;\
-		mv ${ACC}.v ../../;\
-		mv *.mem ../../;\
-		cd ..;\
-		rm -rf bambu"
+		mv ${ACC}.v ../;\
+		mv *.mem ../ || true;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
 	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
