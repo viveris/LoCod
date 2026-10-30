@@ -324,10 +324,10 @@ for ACC in $FPGA_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
-		cp ${ACC}.v ../;\
-		cp *.mem ../;"
-	cp ${SCRIPT_DIR}/tmp/src/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
-	cp ${SCRIPT_DIR}/tmp/src/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
+		mv ${ACC}.v ../;\
+		mv *.mem ../;"
+	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
+	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
 	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
 done
 
