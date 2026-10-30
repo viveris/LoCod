@@ -325,8 +325,9 @@ for f in "${FILES[@]}"; do
 	fi
 done
 
-FPGA_FUNC=$(get_fpga_func $FILE)
-FPGA_UNIQUE_FUNC=$(get_fpga_func $FILE | sort -u)
+
+
+FPGA_UNIQUE_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
 for ACC in $FPGA_UNIQUE_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
