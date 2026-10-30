@@ -57,22 +57,28 @@ CHECK=0
 #**********************************************/
 function get_max_acc_number()
 {
-	grep -oP '(?<=init_locod\().*?(?=\))' $1
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP '(?<=init_locod\().*?(?=\))'
 }
 
 function get_fpga_func()
 {
-	grep -oP '(?<=FPGA\().*?(?=,)' $1
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP '(?<=FPGA\().*?(?=,)'
 }
 
 function get_used_acc_number()
 {
-	grep -oP '(?<=FPGA\().*?(?=,)' $1 | wc -l
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP '(?<=FPGA\().*?(?=,)' | wc -l
 }
 
 function get_fct_acc_number()
 {
-	grep -oP "(?<=FPGA\($2).*" $1 | grep -oP ',\s*[0-9]+\s*\)' | grep -oP '[0-9]+'
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP "(?<=FPGA\($2).*" |
+        grep -oP ',\s*[0-9]+\s*\)' |
+        grep -oP '[0-9]+'
 }
 
 
