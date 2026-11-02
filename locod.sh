@@ -90,8 +90,7 @@ fi
 help() {
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
-		[ --hard-file ] < C files for the FPGA >
-		[ --soft-file ] < C and H files for the CPU >
+		[ -f | --file ] < C and H files of the application, separated by spaces >
 		[ --no-hard ] don't generate bitstream
 		[ --no-soft ] don't generate executable
 		[ -c | --check ] Verify all the dependancies installation
@@ -305,11 +304,6 @@ if [[ $FPGA == 1 ]]; then
 echo -n "Generating RTL code of accelerators functions ... "
 
 FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
-
-
-
-
-
 
 FILE_ARGS=()
 for f in "${FILES[@]}"; do	
