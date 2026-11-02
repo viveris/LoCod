@@ -44,7 +44,7 @@ LOCOD_CPU_DIR=${SCRIPT_DIR}/locod-core
 LOCOD_FPGA_DIR=${SCRIPT_DIR}/submodules/locod-fpga
 
 # Panda-Bambu compilation parameters
-BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -DLOCOD_FPGA -O0"
+BAMBU_OPT="--writer=V --generate-interface=MINIMAL --memory-allocation-policy=LSS --channels-type=MEM_ACC_11 --memory-ctrl-type=D21 --addr-bus-bitsize=32 --data-bus-bitsize=32 -I/workdir -D_FORTIFY_SOURCE=0 -DLOCOD_FPGA -O2"
 
 # Varaibles to select wich part we want to build (exectable or bitstream)
 CPU=1
@@ -90,7 +90,7 @@ fi
 help() {
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
-		[ -f | --file ] < main C file >
+		[ -f | --file ] < C and H files of the application, separated by spaces >
 		[ --no-hard ] don't generate bitstream
 		[ --no-soft ] don't generate executable
 		[ -c | --check ] Verify all the dependancies installation
@@ -115,9 +115,12 @@ while [[ $# -gt 0 ]]; do
 			echo "Check activated"
 			;;
 		-f|--file)
-			FILE="$2"
-			shift # past argument
-			shift # past value
+    		shift # past argument
+			FILES=()
+			while [[ $# -gt 0 && "$1" != -* ]]; do
+				FILES+=("$1")
+				shift
+			done
 			;;
 		--no-soft)
 			CPU=0
@@ -135,13 +138,17 @@ while [[ $# -gt 0 ]]; do
 			echo "Unknown option $1"
 			exit 1
 			;;
+		
 	esac
 done
+
+#Temp file to store the main C file name, used in some functions
+MAIN_FILE="${FILES[0]}"
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 if [[ $CHECK == 0 ]]; then
-	if [[ $FILE == "" ]]; then
+	if [[ $MAIN_FILE == "" ]]; then
 		echo "No file specified"
 		help
 		exit 1
@@ -237,6 +244,8 @@ fi
 rm -rf ${LOCOD_FPGA_DIR}/src/generated_files/*
 mkdir -p ${SCRIPT_DIR}/tmp
 rm -rf ${SCRIPT_DIR}/tmp/*
+mkdir -p ${SCRIPT_DIR}/tmp/src
+rm -rf ${SCRIPT_DIR}/tmp/src/*
 mkdir -p ${SCRIPT_DIR}/locod-output
 rm -rf ${SCRIPT_DIR}/locod-output/*
 
@@ -248,31 +257,37 @@ if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
 
-cp ${FILE} ${LOCOD_CPU_DIR}/src/main.c
+cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
+cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
+
+for FILE in "${FILES[@]}"; do
+	cp "$FILE" ${SCRIPT_DIR}/tmp/src/
+done
+
 
 case $TARGET in
 	ultra96)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/workdir ${SDK_ULTRA96_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
-		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	enclustra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/workdir ${SDK_ENCLUSTRA_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa72-cortexa53-xilinx-linux;\
 			make re'
-		cp ${LOCOD_CPU_DIR}/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	pynqz2)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/workdir ${SDK_PYNQZ2_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/workdir ${SDK_PYNQZ2_DOCKER_IMG} bash -c \
 			'source /opt/petalinux-sdk/environment-setup-cortexa9t2hf-neon-xilinx-linux-gnueabi;\
 			make re'
-		cp ${LOCOD_CPU_DIR}/bin/locod-cpu locod-output/locod-cpu
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 	ngultra)
-		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${LOCOD_CPU_DIR}:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
+		docker run --rm -t -u $(id -u):$(id -g) -e TARGET=${TARGET} -v ${SCRIPT_DIR}/tmp:/opt/ngultra_bsp/apps/locod ${SDK_NGULTRA_DOCKER_IMG} bash -c \
 			'make'
-		cp ${LOCOD_CPU_DIR}/out/locod-cpu.elf ${SCRIPT_DIR}/locod-output/locod-cpu.elf
+		cp ${SCRIPT_DIR}/tmp/bin/locod-cpu ${SCRIPT_DIR}/locod-output/locod-cpu
 		;;
 esac
 
@@ -288,19 +303,23 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
 
-FPGA_FUNC=$(get_fpga_func $FILE)
+FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
 
-cp $FILE ${SCRIPT_DIR}/tmp/main.c
+FILE_ARGS=()
+for f in "${FILES[@]}"; do	
+	# if file is a C file, add it to the list of files to compile
+	if [[ "$f" == *.c ]]; then
+    	FILE_ARGS+=("$(basename "$f")")
+	fi
+done
+
 
 for ACC in $FPGA_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
-		"mkdir bambu;\
-		cd bambu;\
-		bambu ${BAMBU_OPT} --top-fname=${ACC} ../main.c;\
-		cp ${ACC}.v ../;\
-		cp *.mem ../;\
-		cd ..;\
-		rm -rf bambu"
+		"cd /workdir/src;\
+		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
+		mv ${ACC}.v ../;\
+		mv *.mem ../ || true;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
 	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
@@ -318,31 +337,35 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
 
-MAX_ACC_NB=$(get_max_acc_number $FILE)
-USED_ACC_NB=$(get_used_acc_number $FILE)
+MAX_ACC_NB=$(get_max_acc_number $MAIN_FILE)
+USED_ACC_NB=$(get_used_acc_number $MAIN_FILE)
 
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
+FPGA_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
+
 for ACC in $FPGA_FUNC; do
-	ACC_NUM=$(get_fct_acc_number $FILE $ACC)
-	cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
-	sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
-	sed -i "s/generated_ip_inst : entity work.XXXX/generated_ip_inst : entity work.${ACC}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
-	echo 	"accelerator_${ACC_NUM}_inst : entity work.accelerator_${ACC_NUM}
-			port map(
-				clk					    => clk_i,
-				rst 				    => rstn_i,
-				start 				    => registers_out(0)(2*${ACC_NUM}),
-				reset 				    => registers_out(0)(2*${ACC_NUM}+1),
-				param 				    => registers_out(2*${ACC_NUM}+1),
-				result  			    => registers_out(2*${ACC_NUM}+1+1),
-				status_end_process 	    => registers_in(0)(${ACC_NUM}),
-				duration_count_latched  => registers_in(${ACC_NUM}+1),
-				M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
-				M_AXI_in                => M_AXIL_in_array(${ACC_NUM})
-			);
-			" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
+	ACC_NUMS=$(get_fct_acc_number $MAIN_FILE $ACC)
+    for ACC_NUM in $ACC_NUMS; do
+		cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
+		sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
+		sed -i "s/generated_ip_inst : entity work.XXXX/generated_ip_inst : entity work.${ACC}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
+		echo 	"accelerator_${ACC_NUM}_inst : entity work.accelerator_${ACC_NUM}
+				port map(
+					clk					    => clk_i,
+					rst 				    => rstn_i,
+					start 				    => registers_out(0)(2*${ACC_NUM}),
+					reset 				    => registers_out(0)(2*${ACC_NUM}+1),
+					param 				    => registers_out(2*${ACC_NUM}+1),
+					result  			    => registers_out(2*${ACC_NUM}+1+1),
+					status_end_process 	    => registers_in(0)(${ACC_NUM}),
+					duration_count_latched  => registers_in(${ACC_NUM}+1),
+					M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
+					M_AXI_in                => M_AXIL_in_array(${ACC_NUM})
+				);
+				" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
+	done
 done
 
 echo "end Behavioral;" >> $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
