@@ -73,6 +73,12 @@ function get_used_acc_number()
         grep -oP '(?<=FPGA\().*?(?=,)' | wc -l
 }
 
+function get_rel_path()
+{
+	# Path of a file once the root (see ROOT) is removed
+	realpath -s --relative-to="$ROOT" -- "$1"
+}
+
 function get_fct_acc_number()
 {
     sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
@@ -166,17 +172,28 @@ fi
 
 
 # Get all header and source files in the specified folder if the folder is specified 
-if [[MAIN_FILE == "" && $FOLDER != "" ]]; then
+if [[ -z "$MAIN_FILE" && -n "$FOLDER" ]]; then
 	FILES=()
 	while IFS= read -r -d '' f; do
-		# Preserve the path inside FOLDER, e.g. include/toto.h.
-		relative_file="${f#"$FOLDER"/}"
-		FILES+=("$relative_file")
+		# Keep the path as found: usable as is from the current directory
+		FILES+=("$f")
 		# If the file is named main.c, set it as the main file
 		if [[ $(basename "$f") == "main.c" ]]; then
-			MAIN_FILE="$relative_file"
+			MAIN_FILE="$f"
 		fi
 	done < <(find "$FOLDER" -type f \( -name '*.c' -o -name '*.h' \) -print0)
+fi
+
+# Root removed from every path when copying into tmp/src: the --folder,
+# or (with -f) the common parent directory of the files
+ROOT="$FOLDER"
+if [[ -z "$ROOT" && ${#FILES[@]} -gt 0 ]]; then
+	ROOT=$(dirname "$(realpath -s -- "${FILES[0]}")")
+	for f in "${FILES[@]}"; do
+		while [[ "$(realpath -s -- "$f")" != "${ROOT%/}"/* ]]; do
+			ROOT=$(dirname "$ROOT")
+		done
+	done
 fi
 
 if [[ $CHECK == 0 ]]; then
@@ -293,8 +310,9 @@ done
 
 
 for FILE in "${FILES[@]}"; do
-	mkdir -p "${SCRIPT_DIR}/tmp/src/$(dirname "$FILE")"
-	cp "$FOLDER/$FILE" "${SCRIPT_DIR}/tmp/src/$FILE"
+	REL_FILE=$(get_rel_path "$FILE")
+	mkdir -p "${SCRIPT_DIR}/tmp/src/$(dirname "$REL_FILE")"
+	cp "$FILE" "${SCRIPT_DIR}/tmp/src/$REL_FILE"
 done
 
 
@@ -336,7 +354,7 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
 
-FPGA_FUNC=$(get_fpga_func $FOLDER/$MAIN_FILE)
+FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
 
 FILE_ARGS=()
 for f in "${FILES[@]}"; do	
@@ -372,16 +390,16 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
 
-MAX_ACC_NB=$(get_max_acc_number $FOLDER/$MAIN_FILE)
-USED_ACC_NB=$(get_used_acc_number $FOLDER/$MAIN_FILE)
+MAX_ACC_NB=$(get_max_acc_number $MAIN_FILE)
+USED_ACC_NB=$(get_used_acc_number $MAIN_FILE)
 
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
-FPGA_FUNC=$(get_fpga_func $FOLDER/$MAIN_FILE | sort -u)
+FPGA_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
 
 for ACC in $FPGA_FUNC; do
-	ACC_NUMS=$(get_fct_acc_number $FOLDER/$MAIN_FILE $ACC)
+	ACC_NUMS=$(get_fct_acc_number $MAIN_FILE $ACC)
     for ACC_NUM in $ACC_NUMS; do
 		cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
 		sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
