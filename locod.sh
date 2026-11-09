@@ -354,16 +354,13 @@ echo -n "Generating RTL code of accelerators functions ... "
 FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
 
 # Every folder of tmp/src is an include root (same as the Makefile), seen from the container
-INC_ARGS=()
-while IFS= read -r d; do
-	INC_ARGS+=("-I/workdir/${d#"${SCRIPT_DIR}/tmp/"}")
-done < <(find "${SCRIPT_DIR}/tmp/src" -type d)
+mapfile -t INC_ARGS < <(find "${SCRIPT_DIR}/tmp/src" -type d -printf '-I/workdir/src/%P\n')
 
 FILE_ARGS=()
-for f in "${FILES[@]}"; do	
+for f in "${FILES[@]}"; do
 	# if file is a C file, add it to the list of files to compile
 	if [[ "$f" == *.c ]]; then
-    	FILE_ARGS+=("$(get_rel_path "$f")")
+		FILE_ARGS+=("$(get_rel_path "$f")")
 	fi
 done
 
