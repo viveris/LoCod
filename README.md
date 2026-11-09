@@ -168,13 +168,13 @@ The **locod.sh** script must be used as follows:
     [ -h | --help  ]
 ```
 
-**File order matters.** The first file given to `-f` must be the one containing the `init_locod()` call and the `FPGA()` macro calls (usually the file with `main()`). LoCod only scans this first file to find the accelerators to generate, so `FPGA()` calls located in any other file are ignored. All the `.c` files are also passed to Panda-Bambu, so any code that cannot be synthesized (system includes, `main()`, I/O...) must be wrapped in `#ifndef LOCOD_FPGA`.
+**The main file must be named `main.c`.** It must contain the `init_locod()` call and the `FPGA()` macro calls. LoCod only scans this file to find the accelerators to generate, so `FPGA()` calls located in any other file are ignored. The order of the files given to `-f` does not matter. All the `.c` files are also passed to Panda-Bambu, so any code that cannot be synthesized (system includes, `main()`, I/O...) must be wrapped in `#ifndef LOCOD_FPGA`.
 
 ```console
 ./locod.sh -t ultra96 -f demo/example_readme/main.c utils.c utils.h
 ```
 
-**Using a folder.** Instead of listing the files, `--folder` takes a folder and uses all the `.c` and `.h` files found in it, subfolders included. The file containing `init_locod()` and the `FPGA()` calls must be named `main.c`: it plays the role of the first file of `-f`. `-f` and `--folder` cannot be used together.
+**Using a folder.** Instead of listing the files, `--folder` takes a folder and uses all the `.c` and `.h` files found in it, subfolders included. As with `-f`, the file containing `init_locod()` and the `FPGA()` calls must be named `main.c`. `-f` and `--folder` cannot be used together.
 
 ```console
 ./locod.sh -t ultra96 --folder demo/example_readme
