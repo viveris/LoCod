@@ -57,22 +57,28 @@ CHECK=0
 #**********************************************/
 function get_max_acc_number()
 {
-	grep -oP '(?<=init_locod\().*?(?=\))' $1
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP '(?<=init_locod\().*?(?=\))'
 }
 
 function get_fpga_func()
 {
-	grep -oP '(?<=FPGA\().*?(?=,)' $1
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP '(?<=FPGA\().*?(?=,)'
 }
 
 function get_used_acc_number()
 {
-	grep -oP '(?<=FPGA\().*?(?=,)' $1 | wc -l
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP '(?<=FPGA\().*?(?=,)' | wc -l
 }
 
 function get_fct_acc_number()
 {
-	grep -oP "(?<=FPGA\($2).*" $1 | grep -oP ',\s*[0-9]+\s*\)' | grep -oP '[0-9]+'
+    sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
+        grep -oP "(?<=FPGA\($2).*" |
+        grep -oP ',\s*[0-9]+\s*\)' |
+        grep -oP '[0-9]+'
 }
 
 
@@ -314,7 +320,9 @@ for f in "${FILES[@]}"; do
 done
 
 
-for ACC in $FPGA_FUNC; do
+
+FPGA_UNIQUE_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
+for ACC in $FPGA_UNIQUE_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
 		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
@@ -355,10 +363,10 @@ for ACC in $FPGA_FUNC; do
 				port map(
 					clk					    => clk_i,
 					rst 				    => rstn_i,
-					start 				    => registers_out(0)(2*${ACC_NUM}),
-					reset 				    => registers_out(0)(2*${ACC_NUM}+1),
-					param 				    => registers_out(2*${ACC_NUM}+1),
-					result  			    => registers_out(2*${ACC_NUM}+1+1),
+					start 				    => registers_out(0)(${ACC_NUM}),
+					reset 				    => registers_out(1)(${ACC_NUM}),
+					param 				    => registers_out(2*${ACC_NUM}+1+1),
+					result  			    => registers_out(2*${ACC_NUM}+1+1+1),
 					status_end_process 	    => registers_in(0)(${ACC_NUM}),
 					duration_count_latched  => registers_in(${ACC_NUM}+1),
 					M_AXI_out               => M_AXIL_out_array(${ACC_NUM}),
