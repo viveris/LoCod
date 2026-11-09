@@ -168,6 +168,13 @@ if [[ ${#FILES[@]} -gt 0 && -n "$FOLDER" ]]; then
 	exit 1
 fi
 
+#check if the target is specified
+if [[ $TARGET == "" ]]; then
+	echo "No target specified"
+	help
+
+
+
 #**********************************************************/
 #***************** Checking requierments ******************/
 #**********************************************************/
