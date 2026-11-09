@@ -164,13 +164,6 @@ set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 MAIN_FILE="${FILES[0]}"
 
-if [[ $TARGET == "" ]]; then
-	echo "No target specified"
-	help
-	exit 1
-fi
-
-
 # Get all header and source files in the specified folder if the folder is specified 
 if [[ -z "$MAIN_FILE" && -n "$FOLDER" ]]; then
 	FILES=()
@@ -302,13 +295,8 @@ echo -n "Compiling C code ... "
 cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
 cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
 
-# Print all files from the folder that will be compiled for debugging.
-echo "Files to compile:"
-for FILE in "${FILES[@]}"; do
-	echo "  ${FILE}"
-done
-
-
+# Copy the sources into tmp/src, keeping their layout below ROOT
+#   ../app/dnn/x.c  ->  tmp/src/dnn/x.c
 for FILE in "${FILES[@]}"; do
 	REL_FILE=$(get_rel_path "$FILE")
 	mkdir -p "${SCRIPT_DIR}/tmp/src/$(dirname "$REL_FILE")"
