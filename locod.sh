@@ -162,6 +162,11 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
+if [[ ${#FILES[@]} -gt 0 && -n "$FOLDER" ]]; then
+	echo "Use -f or --folder, not both"
+	exit 1
+fi
+
 MAIN_FILE="${FILES[0]}"
 
 # Get all header and source files in the specified folder if the folder is specified 
@@ -191,10 +196,14 @@ fi
 
 if [[ $CHECK == 0 ]]; then
 	if [[ $MAIN_FILE == "" ]]; then
-		echo "No file specified or no file in the folder specified"
+		if [[ -n "$FOLDER" ]]; then
+			echo "No main.c file found in the folder specified or no folder specified"
+		else
+			echo "No file specified"
+		fi
 		help
 		exit 1
-	fi
+ 	fi
 fi
 
 #**********************************************************/
@@ -284,16 +293,7 @@ rm -rf ${SCRIPT_DIR}/tmp/src/*
 mkdir -p ${SCRIPT_DIR}/locod-output
 rm -rf ${SCRIPT_DIR}/locod-output/*
 
-
-#**************************************************************/
-#***************** Step 1 : Compiling C code ******************/
-#**************************************************************/
-if [[ $CPU == 1 ]]; then
-
-echo -n "Compiling C code ... "
-
 cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
-cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
 
 # Copy the sources into tmp/src, keeping their layout below ROOT
 #   ../app/dnn/x.c  ->  tmp/src/dnn/x.c
@@ -303,6 +303,15 @@ for FILE in "${FILES[@]}"; do
 	cp "$FILE" "${SCRIPT_DIR}/tmp/src/$REL_FILE"
 done
 
+
+#**************************************************************/
+#***************** Step 1 : Compiling C code ******************/
+#**************************************************************/
+if [[ $CPU == 1 ]]; then
+
+echo -n "Compiling C code ... "
+
+cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
 
 case $TARGET in
 	ultra96)
