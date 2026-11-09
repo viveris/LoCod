@@ -97,6 +97,7 @@ help() {
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
 		[ -f | --file ] < C and H files of the application, separated by spaces >
+		[ --folder ] < folder containing the C and H files of the application >
 		[ --no-hard ] don't generate bitstream
 		[ --no-soft ] don't generate executable
 		[ -c | --check ] Verify all the dependancies installation
@@ -128,6 +129,11 @@ while [[ $# -gt 0 ]]; do
 				shift
 			done
 			;;
+		--folder)
+			shift # past argument
+			FOLDER="${1%/}"
+			shift # past value
+			;;
 		--no-soft)
 			CPU=0
 			shift # past argument
@@ -148,18 +154,9 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-#Temp file to store the main C file name, used in some functions
-MAIN_FILE="${FILES[0]}"
-
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ $CHECK == 0 ]]; then
-	if [[ $MAIN_FILE == "" ]]; then
-		echo "No file specified"
-		help
-		exit 1
-	fi
-fi
+MAIN_FILE="${FILES[0]}"
 
 if [[ $TARGET == "" ]]; then
 	echo "No target specified"
@@ -167,6 +164,28 @@ if [[ $TARGET == "" ]]; then
 	exit 1
 fi
 
+
+# Get all header and source files in the specified folder if the folder is specified 
+if [[MAIN_FILE == "" && $FOLDER != "" ]]; then
+	FILES=()
+	while IFS= read -r -d '' f; do
+		# Preserve the path inside FOLDER, e.g. include/toto.h.
+		relative_file="${f#"$FOLDER"/}"
+		FILES+=("$relative_file")
+		# If the file is named main.c, set it as the main file
+		if [[ $(basename "$f") == "main.c" ]]; then
+			MAIN_FILE="$relative_file"
+		fi
+	done < <(find "$FOLDER" -type f \( -name '*.c' -o -name '*.h' \) -print0)
+fi
+
+if [[ $CHECK == 0 ]]; then
+	if [[ $MAIN_FILE == "" ]]; then
+		echo "No file specified or no file in the folder specified"
+		help
+		exit 1
+	fi
+fi
 
 #**********************************************************/
 #***************** Checking requierments ******************/
@@ -266,8 +285,16 @@ echo -n "Compiling C code ... "
 cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
 cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
 
+# Print all files from the folder that will be compiled for debugging.
+echo "Files to compile:"
 for FILE in "${FILES[@]}"; do
-	cp "$FILE" ${SCRIPT_DIR}/tmp/src/
+	echo "  ${FILE}"
+done
+
+
+for FILE in "${FILES[@]}"; do
+	mkdir -p "${SCRIPT_DIR}/tmp/src/$(dirname "$FILE")"
+	cp "$FOLDER/$FILE" "${SCRIPT_DIR}/tmp/src/$FILE"
 done
 
 
@@ -309,7 +336,7 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
 
-FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
+FPGA_FUNC=$(get_fpga_func $FOLDER/$MAIN_FILE)
 
 FILE_ARGS=()
 for f in "${FILES[@]}"; do	
@@ -345,16 +372,16 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating VHDL components from generated IPs ... "
 
-MAX_ACC_NB=$(get_max_acc_number $MAIN_FILE)
-USED_ACC_NB=$(get_used_acc_number $MAIN_FILE)
+MAX_ACC_NB=$(get_max_acc_number $FOLDER/$MAIN_FILE)
+USED_ACC_NB=$(get_used_acc_number $FOLDER/$MAIN_FILE)
 
 cp $LOCOD_FPGA_DIR/src/top_design/rtl/top_template.vhd $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 sed -i "s/NB_ACCELERATORS/${MAX_ACC_NB}/g" $LOCOD_FPGA_DIR/src/generated_files/locod_top.vhd
 
-FPGA_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
+FPGA_FUNC=$(get_fpga_func $FOLDER/$MAIN_FILE | sort -u)
 
 for ACC in $FPGA_FUNC; do
-	ACC_NUMS=$(get_fct_acc_number $MAIN_FILE $ACC)
+	ACC_NUMS=$(get_fct_acc_number $FOLDER/$MAIN_FILE $ACC)
     for ACC_NUM in $ACC_NUMS; do
 		cp $LOCOD_FPGA_DIR/src/accelerator/rtl/accelerator_template.vhd $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
 		sed -i "s/accelerator_X/accelerator_${ACC_NUM}/g" $LOCOD_FPGA_DIR/src/generated_files/accelerator_${ACC_NUM}.vhd
