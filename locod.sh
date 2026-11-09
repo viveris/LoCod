@@ -172,8 +172,7 @@ fi
 if [[ $TARGET == "" ]]; then
 	echo "No target specified"
 	help
-
-
+fi
 
 #**********************************************************/
 #***************** Checking requierments ******************/
@@ -331,10 +330,8 @@ fi
 # Get the application C files of the src folder, relative to it (locod.c is the CPU runtime, not for bambu)
 mapfile -t FILES < <(find "${SCRIPT_DIR}/tmp/src" -type f -name "*.c" ! -name "locod.c" -printf '%P\n')
 
-FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
-
-
 FPGA_UNIQUE_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
+
 for ACC in $FPGA_UNIQUE_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
