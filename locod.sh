@@ -73,12 +73,6 @@ function get_used_acc_number()
         grep -oP '(?<=FPGA\().*?(?=,)' | wc -l
 }
 
-function get_rel_path()
-{
-	# Path of a file once the root (see ROOT) is removed
-	realpath -s --relative-to="$ROOT" -- "$1"
-}
-
 function get_fct_acc_number()
 {
     sed 's@/\*.*\*/@@g; s@//.*@@' "$1" |
@@ -162,48 +156,16 @@ done
 
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
+# Check if either files or folder is specified
+if [[ $CHECK == 0 && ${#FILES[@]} -eq 0 && -z "$FOLDER" ]]; then
+    echo "Error: You must specify either a file or a folder."
+    exit 1
+fi
+
+# Check if both -f and --folder are used
 if [[ ${#FILES[@]} -gt 0 && -n "$FOLDER" ]]; then
 	echo "Use -f or --folder, not both"
 	exit 1
-fi
-
-MAIN_FILE="${FILES[0]}"
-
-# Get all header and source files in the specified folder if the folder is specified 
-if [[ -z "$MAIN_FILE" && -n "$FOLDER" ]]; then
-	FILES=()
-	while IFS= read -r -d '' f; do
-		# Keep the path as found: usable as is from the current directory
-		FILES+=("$f")
-		# If the file is named main.c, set it as the main file
-		if [[ $(basename "$f") == "main.c" ]]; then
-			MAIN_FILE="$f"
-		fi
-	done < <(find "$FOLDER" -type f \( -name '*.c' -o -name '*.h' \) -print0)
-fi
-
-# Root removed from every path when copying into tmp/src: the --folder,
-# or (with -f) the common parent directory of the files
-ROOT="$FOLDER"
-if [[ -z "$ROOT" && ${#FILES[@]} -gt 0 ]]; then
-	ROOT=$(dirname "$(realpath -s -- "${FILES[0]}")")
-	for f in "${FILES[@]}"; do
-		while [[ "$(realpath -s -- "$f")" != "${ROOT%/}"/* ]]; do
-			ROOT=$(dirname "$ROOT")
-		done
-	done
-fi
-
-if [[ $CHECK == 0 ]]; then
-	if [[ $MAIN_FILE == "" ]]; then
-		if [[ -n "$FOLDER" ]]; then
-			echo "No main.c file found in the folder specified or no folder specified"
-		else
-			echo "No file specified"
-		fi
-		help
-		exit 1
- 	fi
 fi
 
 #**********************************************************/
@@ -294,14 +256,16 @@ mkdir -p ${SCRIPT_DIR}/locod-output
 rm -rf ${SCRIPT_DIR}/locod-output/*
 
 cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
+cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
 
-# Copy the sources into tmp/src, keeping their layout below ROOT
-#   ../app/dnn/x.c  ->  tmp/src/dnn/x.c
-for FILE in "${FILES[@]}"; do
-	REL_FILE=$(get_rel_path "$FILE")
-	mkdir -p "${SCRIPT_DIR}/tmp/src/$(dirname "$REL_FILE")"
-	cp "$FILE" "${SCRIPT_DIR}/tmp/src/$REL_FILE"
-done
+if [[ -n "$FOLDER" ]]; then
+    cp -r "$FOLDER"/* "${SCRIPT_DIR}/tmp/src/"
+else
+    for FILE in "${FILES[@]}"; do
+        cp "$FILE" "${SCRIPT_DIR}/tmp/src/"
+    done
+fi
+
 
 
 #**************************************************************/
@@ -310,8 +274,6 @@ done
 if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
-
-cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
 
 case $TARGET in
 	ultra96)
@@ -351,26 +313,25 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
 
+# Get the main file (the one containing the init_locod function)\
+MAIN_FILE=$(find ${SCRIPT_DIR}/tmp/src -name "main.c")
+
+if [[ -z "$MAIN_FILE" ]]; then
+	echo "Error: main.c file not found in the src folder."
+	exit 1
+fi
+
+# Get the application C files of the src folder, relative to it (locod.c is the CPU runtime, not for bambu)
+mapfile -t FILES < <(find "${SCRIPT_DIR}/tmp/src" -type f -name "*.c" ! -name "locod.c" -printf '%P\n')
+
 FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
-
-# Every folder of tmp/src is an include root (same as the Makefile), seen from the container
-mapfile -t INC_ARGS < <(find "${SCRIPT_DIR}/tmp/src" -type d -printf '-I/workdir/src/%P\n')
-
-FILE_ARGS=()
-for f in "${FILES[@]}"; do
-	# if file is a C file, add it to the list of files to compile
-	if [[ "$f" == *.c ]]; then
-		FILE_ARGS+=("$(get_rel_path "$f")")
-	fi
-done
-
 
 
 FPGA_UNIQUE_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
 for ACC in $FPGA_UNIQUE_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
-		bambu ${BAMBU_OPT} ${INC_ARGS[*]} --top-fname=${ACC} ${FILE_ARGS[*]};\
+		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILES[*]};\
 		mv ${ACC}.v ../;\
 		mv *.mem ../ || true;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
@@ -381,6 +342,7 @@ done
 echo "Done !"
 
 fi
+
 
 
 #*******************************************************************************************/
