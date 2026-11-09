@@ -161,6 +161,7 @@ The **locod.sh** script must be used as follows:
 ./locod.sh  
     [ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
     [ -f | --file ] < C and H files of the application, separated by spaces >
+	[ --folder ] < folder containing the C and H files of the application >
     [ --no-hard ] don't generate bitstream
     [ --no-soft ] don't generate executable
     [ -c | --check ] Verify all the dependancies installation

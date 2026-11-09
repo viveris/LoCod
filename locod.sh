@@ -356,11 +356,17 @@ echo -n "Generating RTL code of accelerators functions ... "
 
 FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
 
+# Every folder of tmp/src is an include root (same as the Makefile), seen from the container
+INC_ARGS=()
+while IFS= read -r d; do
+	INC_ARGS+=("-I/workdir/${d#"${SCRIPT_DIR}/tmp/"}")
+done < <(find "${SCRIPT_DIR}/tmp/src" -type d)
+
 FILE_ARGS=()
 for f in "${FILES[@]}"; do	
 	# if file is a C file, add it to the list of files to compile
 	if [[ "$f" == *.c ]]; then
-    	FILE_ARGS+=("$(basename "$f")")
+    	FILE_ARGS+=("$(get_rel_path "$f")")
 	fi
 done
 
@@ -370,7 +376,7 @@ FPGA_UNIQUE_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
 for ACC in $FPGA_UNIQUE_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
-		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
+		bambu ${BAMBU_OPT} ${INC_ARGS[*]} --top-fname=${ACC} ${FILE_ARGS[*]};\
 		mv ${ACC}.v ../;\
 		mv *.mem ../ || true;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
