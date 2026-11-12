@@ -345,7 +345,7 @@ for ACC in $FPGA_UNIQUE_FUNC; do
 		mv *.mem ../ || true;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
-	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
+	sed -i 's|/workdir/bambu/||g; s|/workdir/src/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
 done
 
 echo "Done !"
