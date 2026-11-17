@@ -13,8 +13,13 @@ CPPFLAGS +=
 LDFLAGS +=
 LDLIBS += -lm
 
-SRCS = $(wildcard $(SRCDIR)/*.c)
+SRCS = $(shell find $(SRCDIR) -name '*.c')
 OBJS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SRCS))
+
+# Every folder under src/ is an include root, so "include/forward.h" and
+# "dnn/include/forward.h" both resolve whatever the depth of the .c file
+INCDIRS := $(shell find $(SRCDIR) -type d)
+CFLAGS += $(addprefix -I,$(INCDIRS))
 
 all: locod-cpu
 
@@ -25,6 +30,7 @@ $(BINDIR)/locod-cpu: $(OBJS) | $(BINDIR)
 
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
+	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 

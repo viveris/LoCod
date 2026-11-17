@@ -97,6 +97,7 @@ help() {
 	echo "Usage: locod	
 		[ -t | --target ] < target board : enclustra, ultra96, pynqz2, ngultra >
 		[ -f | --file ] < C and H files of the application, separated by spaces >
+		[ --folder ] < folder containing the C and H files of the application >
 		[ --no-hard ] don't generate bitstream
 		[ --no-soft ] don't generate executable
 		[ -c | --check ] Verify all the dependancies installation
@@ -128,6 +129,11 @@ while [[ $# -gt 0 ]]; do
 				shift
 			done
 			;;
+		--folder)
+			shift # past argument
+			FOLDER="${1%/}"
+			shift # past value
+			;;
 		--no-soft)
 			CPU=0
 			shift # past argument
@@ -148,25 +154,25 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-#Temp file to store the main C file name, used in some functions
-MAIN_FILE="${FILES[0]}"
-
 set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
-if [[ $CHECK == 0 ]]; then
-	if [[ $MAIN_FILE == "" ]]; then
-		echo "No file specified"
-		help
-		exit 1
-	fi
+# Check if either files or folder is specified
+if [[ $CHECK == 0 && ${#FILES[@]} -eq 0 && -z "$FOLDER" ]]; then
+    echo "Error: You must specify either a file or a folder."
+    exit 1
 fi
 
-if [[ $TARGET == "" ]]; then
-	echo "No target specified"
-	help
+# Check if both -f and --folder are used
+if [[ ${#FILES[@]} -gt 0 && -n "$FOLDER" ]]; then
+	echo "Use -f or --folder, not both"
 	exit 1
 fi
 
+#check if the target is specified
+if [[ $TARGET == "" ]]; then
+	echo "No target specified"
+	help
+fi
 
 #**********************************************************/
 #***************** Checking requierments ******************/
@@ -255,6 +261,18 @@ rm -rf ${SCRIPT_DIR}/tmp/src/*
 mkdir -p ${SCRIPT_DIR}/locod-output
 rm -rf ${SCRIPT_DIR}/locod-output/*
 
+cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
+cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
+
+if [[ -n "$FOLDER" ]]; then
+    cp -r "$FOLDER"/* "${SCRIPT_DIR}/tmp/src/"
+else
+    for FILE in "${FILES[@]}"; do
+        cp "$FILE" "${SCRIPT_DIR}/tmp/src/"
+    done
+fi
+
+
 
 #**************************************************************/
 #***************** Step 1 : Compiling C code ******************/
@@ -262,14 +280,6 @@ rm -rf ${SCRIPT_DIR}/locod-output/*
 if [[ $CPU == 1 ]]; then
 
 echo -n "Compiling C code ... "
-
-cp ${SCRIPT_DIR}/locod-core/src/* ${SCRIPT_DIR}/tmp/src/
-cp ${SCRIPT_DIR}/locod-core/Makefile ${SCRIPT_DIR}/tmp/
-
-for FILE in "${FILES[@]}"; do
-	cp "$FILE" ${SCRIPT_DIR}/tmp/src/
-done
-
 
 case $TARGET in
 	ultra96)
@@ -309,33 +319,39 @@ if [[ $FPGA == 1 ]]; then
 
 echo -n "Generating RTL code of accelerators functions ... "
 
-FPGA_FUNC=$(get_fpga_func $MAIN_FILE)
+# Get the main file (the one containing the init_locod function)\
+MAIN_FILE=$(find ${SCRIPT_DIR}/tmp/src -name "main.c")
 
-FILE_ARGS=()
-for f in "${FILES[@]}"; do	
-	# if file is a C file, add it to the list of files to compile
-	if [[ "$f" == *.c ]]; then
-    	FILE_ARGS+=("$(basename "$f")")
-	fi
-done
+if [[ -z "$MAIN_FILE" ]]; then
+	echo "Error: main.c file not found in the src folder."
+	exit 1
+fi
 
-
+# Get the application C files of the src folder, relative to it (locod.c is the CPU runtime, not for bambu)
+mapfile -t FILES < <(find "${SCRIPT_DIR}/tmp/src" -type f -name "*.c" ! -name "locod.c" -printf '%P\n')
 
 FPGA_UNIQUE_FUNC=$(get_fpga_func $MAIN_FILE | sort -u)
+
+if [[ -z "$FPGA_UNIQUE_FUNC" ]]; then
+	echo "No FPGA() call found, skipping hardware generation."
+	FPGA=0
+fi
+
 for ACC in $FPGA_UNIQUE_FUNC; do
 	docker run --rm -t -u $(id -u):$(id -g) -v ${SCRIPT_DIR}/tmp:/workdir ${PANDA_DOCKER_IMG} bash -c \
 		"cd /workdir/src;\
-		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILE_ARGS[*]};\
+		bambu ${BAMBU_OPT} --top-fname=${ACC} ${FILES[*]};\
 		mv ${ACC}.v ../;\
 		mv *.mem ../ || true;"
 	cp ${SCRIPT_DIR}/tmp/${ACC}.v ${LOCOD_FPGA_DIR}/src/generated_files/
 	cp ${SCRIPT_DIR}/tmp/*.mem ${LOCOD_FPGA_DIR}/src/generated_files/ 2>/dev/null || true
-	sed -i 's|/workdir/bambu/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
+	sed -i 's|/workdir/bambu/||g; s|/workdir/src/||g' ${LOCOD_FPGA_DIR}/src/generated_files/${ACC}.v
 done
 
 echo "Done !"
 
 fi
+
 
 
 #*******************************************************************************************/
